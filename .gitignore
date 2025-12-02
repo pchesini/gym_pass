@@ -1,0 +1,28 @@
+# Java/Spring Boot
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+.iml
+.project
+.classpath
+
+# VS Code
+.vscode/
+
+# Docker volumes (no subir)
+docker/postgres_data/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
