@@ -93,9 +93,6 @@ public class MembresiaService {
         if (request.getFechaVencimiento() != null) {
             entity.setFechaVencimiento(request.getFechaVencimiento());
         }
-        if (request.getEstado() != null) {
-            entity.setEstado(request.getEstado());
-        }
         if (request.getPrecioLista() != null) {
             entity.setPrecioLista(request.getPrecioLista());
         }
@@ -106,6 +103,8 @@ public class MembresiaService {
             } else if (request.getSaldoPendiente().compareTo(BigDecimal.ZERO) == 0) {
                 entity.setEstado(EstadoMembresia.ACTIVA);
             }
+        } else if (request.getEstado() != null) {
+            entity.setEstado(request.getEstado());
         }
 
         MembresiaEntity actualizada = membresiaRepository.save(entity);
