@@ -54,7 +54,7 @@ public class SocioService {
             socios = socioRepository.findAll();
         }
 
-        // TODO: si querés que "vencidos=true" filtre por fechaVencimiento < hoy, acá se hace.
+        
 
         if (vencidos != null) {
             socios = socios.stream()
@@ -90,7 +90,7 @@ public class SocioService {
             entity.setFechaNacimiento(request.getFechaNacimiento());
         }
 
-        // planId lo vamos a usar cuando integremos Planes/Membresías
+        // planId se va a usar cuando integre Planes/Membresías
 
         SocioEntity actualizado = socioRepository.save(entity);
         return SocioMapper.toResponse(actualizado);
@@ -109,7 +109,7 @@ public class SocioService {
         SocioEntity entity = socioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado"));
 
-        String baseUrl = "https://mi-gym.com/qr/"; // placeholder, después lo cambiamos
+        String baseUrl = "https://mi-gym.com/qr/"; // placeholder, después lo cambio
 
         SocioQrResponse dto = new SocioQrResponse();
         dto.setQr(entity.getQrCode());
