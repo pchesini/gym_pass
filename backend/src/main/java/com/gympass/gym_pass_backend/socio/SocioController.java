@@ -25,10 +25,10 @@ public class SocioController {
     @GetMapping
     public List<SocioResponse> listarSocios(
             @RequestParam(required = false) EstadoSocio estado,
-            //@RequestParam(required = false) Boolean vencidos,
+            @RequestParam(required = false) Boolean vencidos,
             @RequestParam(required = false) String busqueda
     ) {
-        return socioService.listarSocios(estado, busqueda);
+        return socioService.listarSocios(estado, vencidos, busqueda);
     }
 
     @GetMapping("/{id}")

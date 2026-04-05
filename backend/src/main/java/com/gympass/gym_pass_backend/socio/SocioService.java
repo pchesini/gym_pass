@@ -1,5 +1,8 @@
 package com.gympass.gym_pass_backend.socio;
 
+import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
+import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
+import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
 import com.gympass.gym_pass_backend.socio.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,9 +19,11 @@ import java.util.stream.Collectors;
 public class SocioService {
 
     private final SocioRepository socioRepository;
+    private final MembresiaRepository membresiaRepository;
 
-    public SocioService(SocioRepository socioRepository) {
+    public SocioService(SocioRepository socioRepository, MembresiaRepository membresiaRepository) {
         this.socioRepository = socioRepository;
+        this.membresiaRepository = membresiaRepository;
     }
 
     public SocioResponse crearSocio(SocioCrearRequest request) {
@@ -38,7 +43,7 @@ public class SocioService {
         return SocioMapper.toResponse(guardado);
     }
 
-    public List<SocioResponse> listarSocios(EstadoSocio estado,  String busqueda) {
+    public List<SocioResponse> listarSocios(EstadoSocio estado, Boolean vencidos, String busqueda) {
         List<SocioEntity> socios;
 
         if (busqueda != null && !busqueda.isBlank()) {
@@ -50,6 +55,12 @@ public class SocioService {
         }
 
         // TODO: si querés que "vencidos=true" filtre por fechaVencimiento < hoy, acá se hace.
+
+        if (vencidos != null) {
+            socios = socios.stream()
+                    .filter(socio -> esSocioVencido(socio) == vencidos)
+                    .collect(Collectors.toList());
+        }
 
         return socios.stream()
                 .map(SocioMapper::toResponse)
@@ -113,5 +124,21 @@ public class SocioService {
                 .substring(0, 8)
                 .toUpperCase();
         return "S-" + random;
+    }
+
+    private boolean esSocioVencido(SocioEntity socio) {
+        List<MembresiaEntity> membresiasActivas = membresiaRepository.findBySocioIdAndEstado(
+                socio.getId(),
+                EstadoMembresia.ACTIVA
+        );
+
+        if (membresiasActivas.isEmpty()) {
+            return true;
+        }
+
+        LocalDate hoy = LocalDate.now();
+
+        return membresiasActivas.stream()
+                .noneMatch(membresia -> !membresia.getFechaVencimiento().isBefore(hoy));
     }
 }
