@@ -34,7 +34,7 @@ public class AsistenciaEntity {
     // Mas adelante podra existir un cierre automatico al final del dia.
     @Column(name = "fecha_hora_salida")
     private LocalDateTime fechaHoraSalida;
-
+    // puede quedar en null mientras la asistencia siga abierta
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
 
