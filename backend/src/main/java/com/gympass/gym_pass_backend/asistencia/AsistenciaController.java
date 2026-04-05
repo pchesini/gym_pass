@@ -28,6 +28,11 @@ public class AsistenciaController {
         return asistenciaService.obtenerPorId(id);
     }
 
+    @PatchMapping("/{id}/salida")
+    public AsistenciaResponse registrarSalida(@PathVariable Long id) {
+        return asistenciaService.registrarSalida(id);
+    }
+
     @GetMapping("/socio/{socioId}")
     public List<AsistenciaResponse> listarPorSocio(@PathVariable Long socioId) {
         return asistenciaService.listarPorSocio(socioId);

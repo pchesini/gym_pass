@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,9 @@ public class AsistenciaService {
     public AsistenciaResponse registrarEntrada(AsistenciaCrearRequest request) {
         if (request.getCredencialId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La credencial es obligatoria");
+        }
+        if (request.getSocioId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio es obligatorio");
         }
 
         SocioEntity socio = socioRepository.findById(request.getSocioId())
@@ -85,6 +89,22 @@ public class AsistenciaService {
         AsistenciaEntity entity = asistenciaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asistencia no encontrada"));
         return AsistenciaMapper.toResponse(entity);
+    }
+
+    public AsistenciaResponse registrarSalida(Long asistenciaId) {
+        AsistenciaEntity entity = asistenciaRepository.findById(asistenciaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asistencia no encontrada"));
+
+        if (entity.getFechaHoraSalida() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La asistencia ya fue cerrada");
+        }
+
+        LocalDateTime fechaHoraSalida = LocalDateTime.now();
+        entity.setFechaHoraSalida(fechaHoraSalida);
+        entity.setDuracionMinutos((int) Duration.between(entity.getFechaHoraEntrada(), fechaHoraSalida).toMinutes());
+
+        AsistenciaEntity actualizada = asistenciaRepository.save(entity);
+        return AsistenciaMapper.toResponse(actualizada);
     }
 
     @Transactional(readOnly = true)
