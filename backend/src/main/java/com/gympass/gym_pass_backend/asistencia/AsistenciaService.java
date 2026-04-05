@@ -92,20 +92,24 @@ public class AsistenciaService {
     }
 
     public AsistenciaResponse registrarSalida(Long asistenciaId) {
-        AsistenciaEntity entity = asistenciaRepository.findById(asistenciaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asistencia no encontrada"));
+            AsistenciaEntity entity = asistenciaRepository.findById(asistenciaId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asistencia no encontrada"));
 
-        if (entity.getFechaHoraSalida() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La asistencia ya fue cerrada");
+            if (entity.getFechaHoraSalida() != null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La asistencia ya fue cerrada");
+            }
+
+            if (entity.getFechaHoraEntrada() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La asistencia no tiene fecha de entrada registrada");
+            }
+
+            LocalDateTime fechaHoraSalida = LocalDateTime.now();
+            entity.setFechaHoraSalida(fechaHoraSalida);
+            entity.setDuracionMinutos((int) Duration.between(entity.getFechaHoraEntrada(), fechaHoraSalida).toMinutes());
+
+            AsistenciaEntity actualizada = asistenciaRepository.save(entity);
+            return AsistenciaMapper.toResponse(actualizada);
         }
-
-        LocalDateTime fechaHoraSalida = LocalDateTime.now();
-        entity.setFechaHoraSalida(fechaHoraSalida);
-        entity.setDuracionMinutos((int) Duration.between(entity.getFechaHoraEntrada(), fechaHoraSalida).toMinutes());
-
-        AsistenciaEntity actualizada = asistenciaRepository.save(entity);
-        return AsistenciaMapper.toResponse(actualizada);
-    }
 
     @Transactional(readOnly = true)
     public List<AsistenciaResponse> listarPorSocio(Long socioId) {
