@@ -4,7 +4,8 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +18,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { EstadoSocio, PlanSocio, Socio, SocioRequest } from '../../models/socio.model';
+import {
+  mapSocioFormValueToCreateApiRequest,
+  mapSocioFormValueToUpdateApiRequest
+} from '../../mappers/socio.mapper';
+import { EstadoSocio, SocioFormValue, SocioViewModel } from '../../models/socio.model';
 import { SociosService } from '../../services/socios.service';
 
 @Component({
@@ -49,31 +54,27 @@ export class SocioFormComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly estados: EstadoSocio[] = ['ACTIVO', 'INACTIVO', 'MOROSO'];
-  protected readonly planes = signal<PlanSocio[]>([]);
+  protected readonly estados: EstadoSocio[] = ['ACTIVO', 'INACTIVO'];
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly isEditMode = signal(false);
-  protected readonly currentSocio = signal<Socio | null>(null);
+  protected readonly currentSocio = signal<SocioViewModel | null>(null);
   protected readonly pageTitle = computed(() =>
     this.isEditMode() ? 'Editar socio' : 'Alta de socio'
   );
   protected readonly pageDescription = computed(() =>
     this.isEditMode()
-      ? 'Actualiza los datos principales del socio y su plan vigente.'
-      : 'Registra un nuevo socio con los datos necesarios para integrar membresias y pagos.'
+      ? 'Actualiza los datos principales del socio segun el contrato real del backend.'
+      : 'Registra un nuevo socio con los datos disponibles actualmente en la API.'
   );
   protected readonly form = this.formBuilder.group({
     nombre: ['', [Validators.required, Validators.maxLength(60)]],
-    apellido: ['', [Validators.required, Validators.maxLength(60)]],
+    apellido: ['', [Validators.maxLength(80)]],
     dni: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(120)]],
     telefono: ['', [Validators.required, Validators.maxLength(30)]],
-    fechaNacimiento: [null as Date | null, [Validators.required]],
-    direccion: ['', [Validators.required, Validators.maxLength(150)]],
-    fechaAlta: [new Date() as Date | null, [Validators.required]],
-    estado: ['ACTIVO' as EstadoSocio, [Validators.required]],
-    planId: [null as number | null, [Validators.required]]
+    fechaNacimiento: [null as Date | null],
+    estado: ['ACTIVO' as EstadoSocio, [Validators.required]]
   });
 
   constructor() {
@@ -88,25 +89,55 @@ export class SocioFormComponent {
 
     const payload = this.buildPayload();
     const socioId = this.currentSocio()?.id;
-    const request$ =
-      this.isEditMode() && socioId
-        ? this.sociosService.updateSocio(socioId, payload)
-        : this.sociosService.createSocio(payload);
-
     this.saving.set(true);
 
-    request$
+    if (this.isEditMode() && socioId) {
+      this.sociosService
+        .updateSocio(socioId, payload.updateRequest)
+        .pipe(
+          switchMap((updatedSocio) => {
+            if (updatedSocio.estado !== payload.estado) {
+              return this.sociosService.updateEstado(updatedSocio.id, payload.estado);
+            }
+
+            return of(updatedSocio);
+          }),
+          finalize(() => this.saving.set(false)),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe({
+          next: (socio) => {
+            this.snackBar.open('Socio actualizado correctamente.', 'Cerrar', {
+              duration: 3000
+            });
+            void this.router.navigate(['/socios', socio.id]);
+          },
+          error: (error) => {
+            this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4500 });
+          }
+        });
+
+      return;
+    }
+
+    this.sociosService
+      .createSocio(payload.createRequest)
       .pipe(
+        switchMap((createdSocio) => {
+          if (payload.estado !== 'ACTIVO') {
+            return this.sociosService.updateEstado(createdSocio.id, payload.estado);
+          }
+
+          return of(createdSocio);
+        }),
         finalize(() => this.saving.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (socio) => {
-          this.snackBar.open(
-            this.isEditMode() ? 'Socio actualizado correctamente.' : 'Socio creado correctamente.',
-            'Cerrar',
-            { duration: 3000 }
-          );
+          this.snackBar.open('Socio creado correctamente.', 'Cerrar', {
+            duration: 3000
+          });
           void this.router.navigate(['/socios', socio.id]);
         },
         error: (error) => {
@@ -142,28 +173,32 @@ export class SocioFormComponent {
   }
 
   private loadFormData(): void {
-    const socioIdParam = this.route.snapshot.paramMap.get('id');
-    const socioId = socioIdParam ? Number(socioIdParam) : null;
-    const isEditMode = Number.isFinite(socioId) && socioId !== null;
-
-    this.isEditMode.set(isEditMode);
     this.loading.set(true);
 
-    forkJoin({
-      planes: this.sociosService.getPlanes(),
-      socio: isEditMode && socioId ? this.sociosService.getSocioById(socioId) : of(null)
-    })
+    this.route.paramMap
       .pipe(
+        switchMap((params) => {
+          const socioIdParam = params.get('id');
+          const socioId = socioIdParam ? Number(socioIdParam) : null;
+          const isEditMode = Number.isFinite(socioId) && socioId !== null;
+
+          this.isEditMode.set(isEditMode);
+
+          if (!isEditMode || !socioId) {
+            return of(null);
+          }
+
+          return this.sociosService.getSocioById(socioId);
+        }),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: ({ planes, socio }) => {
-          this.planes.set(planes);
-
+        next: (socio) => {
           if (socio) {
             this.currentSocio.set(socio);
             this.patchForm(socio);
+            this.form.controls.dni.disable({ emitEvent: false });
           }
         },
         error: (error) => {
@@ -172,7 +207,7 @@ export class SocioFormComponent {
       });
   }
 
-  private patchForm(socio: Socio): void {
+  private patchForm(socio: SocioViewModel): void {
     this.form.patchValue({
       nombre: socio.nombre,
       apellido: socio.apellido,
@@ -180,42 +215,32 @@ export class SocioFormComponent {
       email: socio.email,
       telefono: socio.telefono,
       fechaNacimiento: socio.fechaNacimiento ? new Date(socio.fechaNacimiento) : null,
-      direccion: socio.direccion,
-      fechaAlta: socio.fechaAlta ? new Date(socio.fechaAlta) : null,
-      estado: socio.estado,
-      planId: socio.planId
+      estado: socio.estado
     });
   }
 
-  private buildPayload(): SocioRequest {
+  private buildPayload(): {
+    createRequest: ReturnType<typeof mapSocioFormValueToCreateApiRequest>;
+    updateRequest: ReturnType<typeof mapSocioFormValueToUpdateApiRequest>;
+    estado: EstadoSocio;
+  } {
     const rawValue = this.form.getRawValue();
-    const estado = rawValue.estado ?? 'ACTIVO';
 
-    return {
+    const formValue: SocioFormValue = {
       nombre: (rawValue.nombre ?? '').trim(),
       apellido: (rawValue.apellido ?? '').trim(),
       dni: (rawValue.dni ?? '').trim(),
       email: (rawValue.email ?? '').trim(),
       telefono: (rawValue.telefono ?? '').trim(),
-      fechaNacimiento: this.formatDate(rawValue.fechaNacimiento),
-      direccion: (rawValue.direccion ?? '').trim(),
-      fechaAlta: this.formatDate(rawValue.fechaAlta),
-      estado,
-      planId: rawValue.planId
+      estado: rawValue.estado ?? 'ACTIVO',
+      fechaNacimiento: rawValue.fechaNacimiento
     };
-  }
 
-  private formatDate(date: Date | null): string {
-    if (!date) {
-      return '';
-    }
-
-    const localDate = new Date(date);
-    const year = localDate.getFullYear();
-    const month = `${localDate.getMonth() + 1}`.padStart(2, '0');
-    const day = `${localDate.getDate()}`.padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
+    return {
+      createRequest: mapSocioFormValueToCreateApiRequest(formValue),
+      updateRequest: mapSocioFormValueToUpdateApiRequest(formValue),
+      estado: formValue.estado
+    };
   }
 
   private resolveErrorMessage(error: unknown): string {

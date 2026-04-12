@@ -104,21 +104,11 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="fechaAlta">
-            <th mat-header-cell *matHeaderCellDef>Fecha alta</th>
-            <td mat-cell *matCellDef="let socio">{{ socio.fechaAlta | date: 'dd/MM/yyyy' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="fechaVencimiento">
-            <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
+          <ng-container matColumnDef="fechaNacimiento">
+            <th mat-header-cell *matHeaderCellDef>Fecha nacimiento</th>
             <td mat-cell *matCellDef="let socio">
-              {{ socio.fechaVencimiento ? (socio.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+              {{ socio.fechaNacimiento ? (socio.fechaNacimiento | date: 'dd/MM/yyyy') : '-' }}
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="planNombre">
-            <th mat-header-cell *matHeaderCellDef>Plan</th>
-            <td mat-cell *matCellDef="let socio">{{ socio.planNombre ?? 'Sin plan' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="acciones">

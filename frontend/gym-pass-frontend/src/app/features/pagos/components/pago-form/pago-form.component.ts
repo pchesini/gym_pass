@@ -17,7 +17,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { Socio } from '../../../socios/models/socio.model';
+import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
 import { Membresia } from '../../../membresias/models/membresia.model';
 import { MembresiasService } from '../../../membresias/services/membresias.service';
@@ -62,7 +62,7 @@ export class PagoFormComponent {
     'TARJETA',
     'MERCADO_PAGO'
   ];
-  protected readonly socios = signal<Socio[]>([]);
+  protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly membresias = signal<Membresia[]>([]);
   protected readonly preview = signal<PagoPreview | null>(null);
   protected readonly loading = signal(true);

@@ -7,12 +7,11 @@ import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { Socio } from '../../models/socio.model';
+import { SocioViewModel } from '../../models/socio.model';
 import { SociosService } from '../../services/socios.service';
 
 @Component({
@@ -25,7 +24,6 @@ import { SociosService } from '../../services/socios.service';
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
-    MatDividerModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule
@@ -39,7 +37,7 @@ export class SocioDetailComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly socio = signal<Socio | null>(null);
+  protected readonly socio = signal<SocioViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly estadoChipClass = computed(() => {

@@ -52,25 +52,11 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Direccion</mat-label>
-            <input matInput formControlName="direccion" />
-            <mat-error>{{ getErrorMessage('direccion') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
             <mat-label>Fecha de nacimiento</mat-label>
             <input matInput [matDatepicker]="fechaNacimientoPicker" formControlName="fechaNacimiento" />
             <mat-datepicker-toggle matIconSuffix [for]="fechaNacimientoPicker" />
             <mat-datepicker #fechaNacimientoPicker />
             <mat-error>{{ getErrorMessage('fechaNacimiento') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha de alta</mat-label>
-            <input matInput [matDatepicker]="fechaAltaPicker" formControlName="fechaAlta" />
-            <mat-datepicker-toggle matIconSuffix [for]="fechaAltaPicker" />
-            <mat-datepicker #fechaAltaPicker />
-            <mat-error>{{ getErrorMessage('fechaAlta') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
@@ -81,16 +67,6 @@
               }
             </mat-select>
             <mat-error>{{ getErrorMessage('estado') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Plan</mat-label>
-            <mat-select formControlName="planId">
-              @for (plan of planes(); track plan.id) {
-                <mat-option [value]="plan.id">{{ plan.nombre }}</mat-option>
-              }
-            </mat-select>
-            <mat-error>{{ getErrorMessage('planId') }}</mat-error>
           </mat-form-field>
         </div>
 

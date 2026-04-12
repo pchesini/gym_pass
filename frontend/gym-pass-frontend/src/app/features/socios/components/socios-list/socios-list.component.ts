@@ -17,7 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 
-import { EstadoSocio, Socio } from '../../models/socio.model';
+import { EstadoSocio, SocioViewModel } from '../../models/socio.model';
 import { SociosService } from '../../services/socios.service';
 
 @Component({
@@ -56,13 +56,11 @@ export class SociosListComponent {
     'email',
     'telefono',
     'estado',
-    'fechaAlta',
-    'fechaVencimiento',
-    'planNombre',
+    'fechaNacimiento',
     'acciones'
   ];
-  protected readonly estados: EstadoSocio[] = ['ACTIVO', 'INACTIVO', 'MOROSO'];
-  protected readonly socios = signal<Socio[]>([]);
+  protected readonly estados: EstadoSocio[] = ['ACTIVO', 'INACTIVO'];
+  protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly actionLoadingId = signal<number | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
@@ -107,7 +105,7 @@ export class SociosListComponent {
     void this.router.navigate(['/socios', id, 'editar']);
   }
 
-  protected toggleEstado(socio: Socio): void {
+  protected toggleEstado(socio: SocioViewModel): void {
     const nextEstado: EstadoSocio = socio.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
     const confirmationText =
       nextEstado === 'ACTIVO'
@@ -148,7 +146,7 @@ export class SociosListComponent {
       });
   }
 
-  protected trackBySocioId(_: number, socio: Socio): number {
+  protected trackBySocioId(_: number, socio: SocioViewModel): number {
     return socio.id;
   }
 

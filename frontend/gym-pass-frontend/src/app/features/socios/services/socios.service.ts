@@ -1,14 +1,18 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
+import { apiBaseUrl } from '../../../core/config/api.config';
+import { mapSocioApiResponseToViewModel } from '../mappers/socio.mapper';
 import {
   EstadoSocio,
   EstadoSocioUpdateRequest,
-  PlanSocio,
-  Socio,
+  SocioApiResponse,
+  SocioCreateApiRequest,
   SocioFilters,
-  SocioRequest
+  SocioQrApiResponse,
+  SocioUpdateApiRequest,
+  SocioViewModel
 } from '../models/socio.model';
 
 @Injectable({
@@ -16,10 +20,9 @@ import {
 })
 export class SociosService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/socios';
-  private readonly planesUrl = 'http://localhost:8080/api/v1/planes';
+  private readonly apiUrl = `${apiBaseUrl}/socios`;
 
-  getSocios(filters?: SocioFilters): Observable<Socio[]> {
+  getSocios(filters?: SocioFilters): Observable<SocioViewModel[]> {
     let params = new HttpParams();
 
     if (filters?.busqueda?.trim()) {
@@ -30,36 +33,46 @@ export class SociosService {
       params = params.set('estado', filters.estado);
     }
 
-    return this.http.get<Socio[]>(this.apiUrl, { params });
+    return this.http
+      .get<SocioApiResponse[]>(this.apiUrl, { params })
+      .pipe(map((socios) => socios.map(mapSocioApiResponseToViewModel)));
   }
 
-  getSocioById(id: number): Observable<Socio> {
-    return this.http.get<Socio>(`${this.apiUrl}/${id}`);
+  getSocioById(id: number): Observable<SocioViewModel> {
+    return this.http
+      .get<SocioApiResponse>(`${this.apiUrl}/${id}`)
+      .pipe(map(mapSocioApiResponseToViewModel));
   }
 
-  createSocio(payload: SocioRequest): Observable<Socio> {
-    return this.http.post<Socio>(this.apiUrl, payload);
+  createSocio(payload: SocioCreateApiRequest): Observable<SocioViewModel> {
+    return this.http
+      .post<SocioApiResponse>(this.apiUrl, payload)
+      .pipe(map(mapSocioApiResponseToViewModel));
   }
 
-  updateSocio(id: number, payload: SocioRequest): Observable<Socio> {
-    return this.http.put<Socio>(`${this.apiUrl}/${id}`, payload);
+  updateSocio(id: number, payload: SocioUpdateApiRequest): Observable<SocioViewModel> {
+    return this.http
+      .put<SocioApiResponse>(`${this.apiUrl}/${id}`, payload)
+      .pipe(map(mapSocioApiResponseToViewModel));
   }
 
-  updateEstado(id: number, estado: EstadoSocio): Observable<Socio> {
+  updateEstado(id: number, estado: EstadoSocio): Observable<SocioViewModel> {
     const payload: EstadoSocioUpdateRequest = { estado };
 
-    return this.http.patch<Socio>(`${this.apiUrl}/${id}/estado`, payload);
+    return this.http
+      .patch<SocioApiResponse>(`${this.apiUrl}/${id}/estado`, payload)
+      .pipe(map(mapSocioApiResponseToViewModel));
   }
 
-  activarSocio(id: number): Observable<Socio> {
+  activarSocio(id: number): Observable<SocioViewModel> {
     return this.updateEstado(id, 'ACTIVO');
   }
 
-  desactivarSocio(id: number): Observable<Socio> {
+  desactivarSocio(id: number): Observable<SocioViewModel> {
     return this.updateEstado(id, 'INACTIVO');
   }
 
-  getPlanes(): Observable<PlanSocio[]> {
-    return this.http.get<PlanSocio[]>(this.planesUrl);
+  getQr(id: number): Observable<SocioQrApiResponse> {
+    return this.http.get<SocioQrApiResponse>(`${this.apiUrl}/${id}/qr`);
   }
 }
