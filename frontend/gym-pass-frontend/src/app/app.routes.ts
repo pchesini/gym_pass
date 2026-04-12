@@ -34,10 +34,7 @@ export const routes: Routes = [
       },
       {
         path: 'pagos',
-        loadComponent: () =>
-          import('./features/pagos/pages/pagos-page/pagos-page.component').then(
-            (m) => m.PagosPageComponent
-          )
+        loadChildren: () => import('./features/pagos/pagos.routes').then((m) => m.pagosRoutes)
       }
     ]
   },

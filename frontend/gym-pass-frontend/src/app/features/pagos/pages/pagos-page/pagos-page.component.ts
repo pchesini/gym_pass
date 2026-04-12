@@ -1,16 +1,13 @@
 import { Component } from '@angular/core';
 
-import { FeaturePlaceholderComponent } from '../../../../shared/components/feature-placeholder/feature-placeholder.component';
+import { PagosListComponent } from '../../components/pagos-list/pagos-list.component';
+import { PagosSummaryComponent } from '../../components/pagos-summary/pagos-summary.component';
 
 @Component({
   selector: 'app-pagos-page',
   standalone: true,
-  imports: [FeaturePlaceholderComponent],
-  template: `
-    <app-feature-placeholder
-      title="Pagos"
-      description="Pantalla inicial para futuros listados, formularios y reportes de pagos conectados a la API REST."
-    />
-  `
+  imports: [PagosSummaryComponent, PagosListComponent],
+  templateUrl: './pagos-page.component.html',
+  styleUrl: './pagos-page.component.css'
 })
 export class PagosPageComponent {}

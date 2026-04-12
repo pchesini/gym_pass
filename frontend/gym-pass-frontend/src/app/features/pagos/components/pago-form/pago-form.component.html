@@ -1,0 +1,146 @@
+<section class="pago-form-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Pagos</span>
+      <h1>Registrar pago</h1>
+      <p>
+        Carga un pago nuevo vinculando socio y membresia, con vista previa de duracion, plan y
+        vencimiento estimado.
+      </p>
+    </div>
+
+    <a mat-stroked-button routerLink="/pagos">
+      <mat-icon>arrow_back</mat-icon>
+      Volver al listado
+    </a>
+  </header>
+
+  <mat-card appearance="outlined" class="form-card">
+    @if (loading()) {
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando datos del formulario...</p>
+      </div>
+    } @else {
+      <form class="pago-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Socio</mat-label>
+            <mat-select formControlName="socioId">
+              @for (socio of socios(); track socio.id) {
+                <mat-option [value]="socio.id">{{ socio.nombre }} {{ socio.apellido }} - {{ socio.dni }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('socioId') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Membresia</mat-label>
+            <mat-select formControlName="membresiaId">
+              @for (membresia of membresias(); track membresia.id) {
+                <mat-option [value]="membresia.id">{{ membresia.nombre }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('membresiaId') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de pago</mat-label>
+            <input matInput [matDatepicker]="fechaPagoPicker" formControlName="fechaPago" />
+            <mat-datepicker-toggle matIconSuffix [for]="fechaPagoPicker" />
+            <mat-datepicker #fechaPagoPicker />
+            <mat-error>{{ getErrorMessage('fechaPago') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Monto</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="monto" />
+            <span matTextPrefix>$&nbsp;</span>
+            <mat-error>{{ getErrorMessage('monto') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Metodo de pago</mat-label>
+            <mat-select formControlName="metodoPago">
+              @for (metodo of metodosPago; track metodo) {
+                <mat-option [value]="metodo">{{ metodo }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('metodoPago') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-grid__full">
+            <mat-label>Observaciones</mat-label>
+            <textarea matInput rows="4" formControlName="observaciones"></textarea>
+            <mat-error>{{ getErrorMessage('observaciones') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-header">
+            <div>
+              <span class="eyebrow">Vista previa</span>
+              <h2>Impacto del pago</h2>
+            </div>
+
+            @if (previewLoading()) {
+              <mat-spinner diameter="22" />
+            }
+          </div>
+
+          @if (preview(); as currentPreview) {
+            <div class="preview-grid">
+              <div>
+                <span class="label">Socio</span>
+                <strong>{{ currentPreview.socioNombre }} {{ currentPreview.socioApellido }}</strong>
+              </div>
+              <div>
+                <span class="label">Plan</span>
+                <strong>{{ currentPreview.membresiaNombre }}</strong>
+              </div>
+              <div>
+                <span class="label">Duracion</span>
+                <strong>{{ currentPreview.duracionDias }} dias</strong>
+              </div>
+              <div>
+                <span class="label">Vencimiento estimado</span>
+                <strong>
+                  {{
+                    currentPreview.fechaVencimientoEstimada
+                      ? (currentPreview.fechaVencimientoEstimada | date: 'dd/MM/yyyy')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+              <div>
+                <span class="label">Monto sugerido</span>
+                <strong>
+                  {{
+                    currentPreview.montoSugerido !== null
+                      ? (currentPreview.montoSugerido | currency: 'ARS' : 'symbol' : '1.0-0')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+            </div>
+          } @else {
+            <p class="preview-empty">
+              Selecciona un socio, una membresia y la fecha de pago para obtener la vista previa.
+            </p>
+          }
+        </div>
+
+        <div class="form-actions">
+          <a mat-button routerLink="/pagos">Cancelar</a>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              Registrar pago
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</section>

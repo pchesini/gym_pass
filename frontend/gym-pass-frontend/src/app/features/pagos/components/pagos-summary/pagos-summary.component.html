@@ -1,0 +1,36 @@
+<mat-card appearance="outlined" class="summary-card">
+  <div class="summary-header">
+    <div>
+      <span class="eyebrow">Vencimientos</span>
+      <h2>Proximos pagos</h2>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="state-box">
+      <mat-spinner diameter="36" />
+      <p>Cargando resumen...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-box state-box--error">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+    </div>
+  } @else if (!vencimientos().length) {
+    <div class="state-box">
+      <mat-icon>event_available</mat-icon>
+      <p>No hay vencimientos proximos para mostrar.</p>
+    </div>
+  } @else {
+    <div class="summary-grid">
+      @for (vencimiento of vencimientos(); track vencimiento.socioId) {
+        <article class="summary-item">
+          <span class="member-name">{{ vencimiento.socioNombre }} {{ vencimiento.socioApellido }}</span>
+          <strong>{{ vencimiento.membresiaNombre }}</strong>
+          <span>Vence: {{ vencimiento.fechaVencimiento | date: 'dd/MM/yyyy' }}</span>
+          <span>{{ vencimiento.diasRestantes }} dias restantes</span>
+        </article>
+      }
+    </div>
+  }
+</mat-card>

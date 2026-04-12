@@ -1,0 +1,76 @@
+<section class="detail-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Pagos</span>
+      <h1>Detalle del pago</h1>
+    </div>
+
+    <a mat-stroked-button routerLink="/pagos">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </a>
+  </header>
+
+  @if (loading()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando detalle...</p>
+      </div>
+    </mat-card>
+  } @else if (errorMessage()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box state-box--error">
+        <mat-icon>error_outline</mat-icon>
+        <div>
+          <h2>No se pudo cargar el detalle</h2>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </mat-card>
+  } @else if (pago(); as currentPago) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="detail-header">
+        <div>
+          <span class="label">Socio</span>
+          <h2>{{ currentPago.socioNombre }} {{ currentPago.socioApellido }}</h2>
+          <p>{{ currentPago.membresiaNombre }}</p>
+        </div>
+        <mat-chip [class]="getEstadoClass(currentPago.estado)">{{ currentPago.estado }}</mat-chip>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <span class="label">ID pago</span>
+          <strong>{{ currentPago.id }}</strong>
+        </div>
+        <div>
+          <span class="label">Fecha pago</span>
+          <strong>{{ currentPago.fechaPago | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+        <div>
+          <span class="label">Vencimiento generado</span>
+          <strong>
+            {{
+              currentPago.fechaVencimientoGenerada
+                ? (currentPago.fechaVencimientoGenerada | date: 'dd/MM/yyyy')
+                : '-'
+            }}
+          </strong>
+        </div>
+        <div>
+          <span class="label">Monto</span>
+          <strong>{{ currentPago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </div>
+        <div>
+          <span class="label">Metodo</span>
+          <strong>{{ currentPago.metodoPago }}</strong>
+        </div>
+        <div class="detail-grid__full">
+          <span class="label">Observaciones</span>
+          <strong>{{ currentPago.observaciones ?? 'Sin observaciones registradas.' }}</strong>
+        </div>
+      </div>
+    </mat-card>
+  }
+</section>

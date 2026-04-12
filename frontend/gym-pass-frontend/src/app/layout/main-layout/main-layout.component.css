@@ -5,8 +5,8 @@
 .app-sidenav {
   width: 280px;
   padding: 1rem 0.75rem;
-  border-right: 1px solid #dbe3ef;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  border-right: 1px solid #f2c94c;
+  background: linear-gradient(180deg, #fff4bf 0%, #ffe082 100%);
 }
 
 .brand-block {
@@ -14,62 +14,89 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.75rem 1rem 1.5rem;
-  color: #f8fafc;
+  color: #422006;
 }
 
 .brand-title {
   font-size: 1.4rem;
   font-weight: 700;
+  font-family: 'Bebas Neue', Roboto, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .brand-subtitle {
-  color: #cbd5e1;
+  color: #7c4a03;
   font-size: 0.95rem;
 }
 
 .app-sidenav .mdc-list-item {
   margin-bottom: 0.35rem;
   border-radius: 14px;
-  color: #cbd5e1;
+  color: #5b3710;
 }
 
 .app-sidenav .mdc-list-item:hover,
 .active-link {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background-color: rgba(255, 213, 74, 0.55);
+  color: #2f1b05;
 }
 
 .topbar {
   position: sticky;
-  top: 0;
+  top: 0.75rem;
   z-index: 2;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   min-height: 72px;
   padding: 0 1rem;
-  border-bottom: 1px solid #dbe3ef;
-  background-color: rgba(255, 255, 255, 0.92);
+  margin: 0.75rem 1rem 0;
+  border: 1px solid #e3b505;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffd54a 0%, #f4c430 100%);
+  box-shadow: 0 14px 32px rgba(122, 74, 3, 0.14);
   backdrop-filter: blur(12px);
 }
 
-.menu-button {
-  min-width: auto;
+.menu-button,
+.toolbar-spacer {
+  min-width: 84px;
+  color: #422006;
+}
+
+.toolbar-spacer {
+  visibility: hidden;
 }
 
 .toolbar-copy {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .toolbar-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-family: 'Bebas Neue', Roboto, sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #422006;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .toolbar-subtitle {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7c4a03;
 }
 
 .content-wrapper {
@@ -77,6 +104,29 @@
 }
 
 @media (max-width: 768px) {
+  .topbar {
+    top: 0.5rem;
+    min-height: 84px;
+    margin: 0.5rem 0.75rem 0;
+    padding: 0.75rem 1rem;
+    align-items: flex-start;
+  }
+
+  .toolbar-copy {
+    position: static;
+    transform: none;
+    flex: 1;
+    align-items: center;
+  }
+
+  .toolbar-title {
+    font-size: 1.8rem;
+  }
+
+  .toolbar-spacer {
+    display: none;
+  }
+
   .content-wrapper {
     padding: 1rem;
   }

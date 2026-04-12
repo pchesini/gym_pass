@@ -1,0 +1,161 @@
+<mat-card appearance="outlined" class="list-card">
+  <div class="card-header">
+    <div>
+      <span class="eyebrow">Historial</span>
+      <h2>Pagos registrados</h2>
+      <p>Filtra por socio, metodo, fechas y estado para revisar cada cobro.</p>
+    </div>
+
+    <a mat-flat-button color="primary" routerLink="/pagos/nuevo">
+      <mat-icon>add</mat-icon>
+      Registrar pago
+    </a>
+  </div>
+
+  <form class="filters-grid" [formGroup]="filtersForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Socio</mat-label>
+      <input matInput formControlName="socio" placeholder="Nombre o DNI" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Metodo de pago</mat-label>
+      <mat-select formControlName="metodoPago">
+        <mat-option value="">Todos</mat-option>
+        @for (metodo of metodosPago; track metodo) {
+          <mat-option [value]="metodo">{{ metodo }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha desde</mat-label>
+      <input matInput [matDatepicker]="fechaDesdePicker" formControlName="fechaDesde" />
+      <mat-datepicker-toggle matIconSuffix [for]="fechaDesdePicker" />
+      <mat-datepicker #fechaDesdePicker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha hasta</mat-label>
+      <input matInput [matDatepicker]="fechaHastaPicker" formControlName="fechaHasta" />
+      <mat-datepicker-toggle matIconSuffix [for]="fechaHastaPicker" />
+      <mat-datepicker #fechaHastaPicker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option value="">Todos</mat-option>
+        @for (estado of estadosPago; track estado) {
+          <mat-option [value]="estado">{{ estado }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Buscador general</mat-label>
+      <input matInput formControlName="busqueda" placeholder="ID, socio, plan o observacion" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="filters-actions">
+      <button mat-stroked-button type="button" (click)="clearFilters()">Limpiar</button>
+      <button mat-flat-button color="primary" type="button" (click)="loadPagos()">
+        Actualizar
+      </button>
+    </div>
+  </form>
+
+  @if (loading()) {
+    <div class="state-box">
+      <mat-spinner diameter="40" />
+      <p>Cargando pagos...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-box state-box--error">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h3>No se pudo cargar el historial</h3>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    </div>
+  } @else if (!pagos().length) {
+    <div class="state-box">
+      <mat-icon>payments</mat-icon>
+      <div>
+        <h3>Sin resultados</h3>
+        <p>No hay pagos que coincidan con los filtros actuales.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="pagos()" [trackBy]="trackByPagoId" class="pagos-table">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let pago">{{ pago.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="socio">
+          <th mat-header-cell *matHeaderCellDef>Socio</th>
+          <td mat-cell *matCellDef="let pago">
+            <div class="stack-cell">
+              <strong>{{ pago.socioNombre }} {{ pago.socioApellido }}</strong>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="membresia">
+          <th mat-header-cell *matHeaderCellDef>Membresia</th>
+          <td mat-cell *matCellDef="let pago">{{ pago.membresiaNombre }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="fechaPago">
+          <th mat-header-cell *matHeaderCellDef>Fecha pago</th>
+          <td mat-cell *matCellDef="let pago">{{ pago.fechaPago | date: 'dd/MM/yyyy' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="fechaVencimientoGenerada">
+          <th mat-header-cell *matHeaderCellDef>Vencimiento generado</th>
+          <td mat-cell *matCellDef="let pago">
+            {{
+              pago.fechaVencimientoGenerada
+                ? (pago.fechaVencimientoGenerada | date: 'dd/MM/yyyy')
+                : '-'
+            }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="monto">
+          <th mat-header-cell *matHeaderCellDef>Monto</th>
+          <td mat-cell *matCellDef="let pago">
+            {{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="metodoPago">
+          <th mat-header-cell *matHeaderCellDef>Metodo</th>
+          <td mat-cell *matCellDef="let pago">{{ pago.metodoPago }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let pago">
+            <mat-chip [class]="getEstadoClass(pago.estado)">{{ pago.estado }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let pago">
+            <button mat-icon-button type="button" (click)="goToDetail(pago.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</mat-card>

@@ -1,0 +1,52 @@
+.summary-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+}
+
+.summary-header h2 {
+  margin: 0.35rem 0 0;
+  color: #0f172a;
+}
+
+.eyebrow {
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.summary-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  color: #475569;
+}
+
+.member-name {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.state-box {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.state-box--error {
+  color: #b91c1c;
+}
