@@ -1,0 +1,50 @@
+<section class="dashboard-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Dashboard</span>
+      <h1>Resumen general del gimnasio</h1>
+      <p>
+        Esta vista deja lista la estructura inicial para mostrar metricas clave y despues
+        conectarlas con tu API REST de Spring Boot.
+      </p>
+    </div>
+  </header>
+
+  <div class="metrics-grid">
+    @for (metric of metrics; track metric.label) {
+      <mat-card appearance="outlined" class="metric-card">
+        <span class="metric-label">{{ metric.label }}</span>
+        <strong class="metric-value">{{ metric.value }}</strong>
+        <p>{{ metric.helper }}</p>
+      </mat-card>
+    }
+  </div>
+
+  <mat-card appearance="outlined" class="panel-card">
+    <div class="panel-header">
+      <div>
+        <span class="eyebrow">Proximos pasos</span>
+        <h2>Base lista para crecer por features</h2>
+      </div>
+    </div>
+
+    <div class="panel-grid">
+      <div>
+        <h3>Socios y membresias</h3>
+        <p>Espacio preparado para tablas, formularios y filtros por modulo.</p>
+      </div>
+      <div>
+        <h3>Asistencias</h3>
+        <p>Ideal para registrar ingresos, historiales y vistas del dia.</p>
+      </div>
+      <div>
+        <h3>Pagos</h3>
+        <p>Listo para integrar resumenes, estado de cobros y reportes basicos.</p>
+      </div>
+      <div>
+        <h3>Escalabilidad</h3>
+        <p>El layout y el routing ya quedaron separados de la logica de negocio.</p>
+      </div>
+    </div>
+  </mat-card>
+</section>

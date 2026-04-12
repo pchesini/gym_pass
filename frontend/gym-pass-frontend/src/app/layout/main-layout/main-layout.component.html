@@ -1,0 +1,44 @@
+<mat-sidenav-container class="layout-shell">
+  <mat-sidenav
+    #sidenav
+    class="app-sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="!isHandset()"
+  >
+    <div class="brand-block">
+      <span class="brand-title">Gym Pass</span>
+      <span class="brand-subtitle">Panel de gestion</span>
+    </div>
+
+    <mat-nav-list>
+      @for (item of navigationItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeSidenavOnMobile()"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      <button mat-button type="button" class="menu-button" (click)="toggleSidenav()">
+        Menu
+      </button>
+
+      <div class="toolbar-copy">
+        <span class="toolbar-title">Gym Pass</span>
+        <span class="toolbar-subtitle">Base frontend Angular</span>
+      </div>
+    </mat-toolbar>
+
+    <main class="content-wrapper">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

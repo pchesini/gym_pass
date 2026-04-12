@@ -1,0 +1,83 @@
+.layout-shell {
+  height: 100vh;
+}
+
+.app-sidenav {
+  width: 280px;
+  padding: 1rem 0.75rem;
+  border-right: 1px solid #dbe3ef;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem 1.5rem;
+  color: #f8fafc;
+}
+
+.brand-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.app-sidenav .mdc-list-item {
+  margin-bottom: 0.35rem;
+  border-radius: 14px;
+  color: #cbd5e1;
+}
+
+.app-sidenav .mdc-list-item:hover,
+.active-link {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 1rem;
+  min-height: 72px;
+  padding: 0 1rem;
+  border-bottom: 1px solid #dbe3ef;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.menu-button {
+  min-width: auto;
+}
+
+.toolbar-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.toolbar-subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.content-wrapper {
+  padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 1rem;
+  }
+}
