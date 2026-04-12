@@ -29,10 +29,8 @@ export const routes: Routes = [
       },
       {
         path: 'membresias',
-        loadComponent: () =>
-          import('./features/membresias/pages/membresias-page/membresias-page.component').then(
-            (m) => m.MembresiasPageComponent
-          )
+        loadChildren: () =>
+          import('./features/membresias/membresias.routes').then((m) => m.membresiasRoutes)
       },
       {
         path: 'pagos',

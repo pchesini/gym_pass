@@ -1,0 +1,71 @@
+<section class="detail-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Membresias</span>
+      <h1>Detalle del plan</h1>
+    </div>
+
+    <div class="header-actions">
+      <a mat-stroked-button routerLink="/membresias">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </a>
+
+      @if (membresia(); as currentMembresia) {
+        <a mat-flat-button color="primary" [routerLink]="['/membresias', currentMembresia.id, 'editar']">
+          <mat-icon>edit</mat-icon>
+          Editar
+        </a>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando detalle...</p>
+      </div>
+    </mat-card>
+  } @else if (errorMessage()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box state-box--error">
+        <mat-icon>error_outline</mat-icon>
+        <div>
+          <h2>No se pudo cargar el detalle</h2>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </mat-card>
+  } @else if (membresia(); as currentMembresia) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="detail-header">
+        <div>
+          <span class="label">Plan</span>
+          <h2>{{ currentMembresia.nombre }}</h2>
+          <p>{{ currentMembresia.descripcion }}</p>
+        </div>
+        <mat-chip [class]="getEstadoClass(currentMembresia.estado)">{{ currentMembresia.estado }}</mat-chip>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <span class="label">ID</span>
+          <strong>{{ currentMembresia.id }}</strong>
+        </div>
+        <div>
+          <span class="label">Duracion</span>
+          <strong>{{ currentMembresia.duracionDias }} dias</strong>
+        </div>
+        <div>
+          <span class="label">Precio</span>
+          <strong>{{ currentMembresia.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </div>
+        <div>
+          <span class="label">Estado</span>
+          <strong>{{ currentMembresia.estado }}</strong>
+        </div>
+      </div>
+    </mat-card>
+  }
+</section>

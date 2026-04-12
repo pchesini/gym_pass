@@ -1,0 +1,73 @@
+<section class="membresia-form-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Membresias</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p>{{ pageDescription() }}</p>
+    </div>
+
+    <a mat-stroked-button routerLink="/membresias">
+      <mat-icon>arrow_back</mat-icon>
+      Volver al listado
+    </a>
+  </header>
+
+  <mat-card appearance="outlined" class="form-card">
+    @if (loading()) {
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando informacion del formulario...</p>
+      </div>
+    } @else {
+      <form class="membresia-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estado">
+              @for (estado of estados; track estado) {
+                <mat-option [value]="estado">{{ estado }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('estado') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-grid__full">
+            <mat-label>Descripcion</mat-label>
+            <textarea matInput rows="4" formControlName="descripcion"></textarea>
+            <mat-error>{{ getErrorMessage('descripcion') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Duracion en dias</mat-label>
+            <input matInput type="number" formControlName="duracionDias" />
+            <mat-error>{{ getErrorMessage('duracionDias') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Precio</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="precio" />
+            <span matTextPrefix>$&nbsp;</span>
+            <mat-error>{{ getErrorMessage('precio') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <a mat-button routerLink="/membresias">Cancelar</a>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              {{ isEditMode() ? 'Guardar cambios' : 'Crear membresia' }}
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</section>
