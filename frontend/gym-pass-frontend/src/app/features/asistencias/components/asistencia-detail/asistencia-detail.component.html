@@ -1,0 +1,66 @@
+<section class="detail-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Asistencias</span>
+      <h1>Detalle de asistencia</h1>
+    </div>
+
+    <a mat-stroked-button routerLink="/asistencias">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </a>
+  </header>
+
+  @if (loading()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando detalle...</p>
+      </div>
+    </mat-card>
+  } @else if (errorMessage()) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="state-box state-box--error">
+        <mat-icon>error_outline</mat-icon>
+        <div>
+          <h2>No se pudo cargar el detalle</h2>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </mat-card>
+  } @else if (asistencia(); as currentAsistencia) {
+    <mat-card appearance="outlined" class="detail-card">
+      <div class="detail-header">
+        <div>
+          <span class="label">Socio</span>
+          <h2>{{ currentAsistencia.socioNombre }} {{ currentAsistencia.socioApellido }}</h2>
+          <p>{{ currentAsistencia.socioDni }}</p>
+        </div>
+        <mat-chip [class]="getEstadoClass(currentAsistencia.estado)">{{ currentAsistencia.estado }}</mat-chip>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <span class="label">ID asistencia</span>
+          <strong>{{ currentAsistencia.id }}</strong>
+        </div>
+        <div>
+          <span class="label">Fecha</span>
+          <strong>{{ currentAsistencia.fecha | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+        <div>
+          <span class="label">Hora entrada</span>
+          <strong>{{ currentAsistencia.horaEntrada ?? '-' }}</strong>
+        </div>
+        <div>
+          <span class="label">Hora salida</span>
+          <strong>{{ currentAsistencia.horaSalida ?? '-' }}</strong>
+        </div>
+        <div class="detail-grid__full">
+          <span class="label">Observacion</span>
+          <strong>{{ currentAsistencia.observacion ?? 'Sin observaciones registradas.' }}</strong>
+        </div>
+      </div>
+    </mat-card>
+  }
+</section>

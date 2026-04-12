@@ -1,16 +1,13 @@
 import { Component } from '@angular/core';
 
-import { FeaturePlaceholderComponent } from '../../../../shared/components/feature-placeholder/feature-placeholder.component';
+import { AsistenciasCheckinComponent } from '../../components/asistencias-checkin/asistencias-checkin.component';
+import { AsistenciasListComponent } from '../../components/asistencias-list/asistencias-list.component';
 
 @Component({
   selector: 'app-asistencias-page',
   standalone: true,
-  imports: [FeaturePlaceholderComponent],
-  template: `
-    <app-feature-placeholder
-      title="Asistencias"
-      description="Vista base lista para registrar ingresos, consultar historial y sumar filtros cuando conectes el backend."
-    />
-  `
+  imports: [AsistenciasCheckinComponent, AsistenciasListComponent],
+  templateUrl: './asistencias-page.component.html',
+  styleUrl: './asistencias-page.component.css'
 })
 export class AsistenciasPageComponent {}

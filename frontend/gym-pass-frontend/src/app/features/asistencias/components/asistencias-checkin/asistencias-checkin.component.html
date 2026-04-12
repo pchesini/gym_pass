@@ -1,0 +1,122 @@
+<mat-card appearance="outlined" class="checkin-card">
+  <div class="card-header">
+    <div>
+      <span class="eyebrow">Recepcion</span>
+      <h2>Registro rapido de entradas y salidas</h2>
+      <p>Busca un socio y registra su movimiento en pocos segundos.</p>
+    </div>
+  </div>
+
+  <form class="search-form" [formGroup]="form" (ngSubmit)="buscarSocio()">
+    <mat-form-field appearance="outline">
+      <mat-label>Criterio</mat-label>
+      <mat-select formControlName="criterio">
+        @for (criterio of criterios; track criterio.value) {
+          <mat-option [value]="criterio.value">{{ criterio.label }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>{{ getErrorMessage('criterio') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar socio</mat-label>
+      <input
+        matInput
+        formControlName="valor"
+        placeholder="Ej. 30111222 o Juan"
+        autocomplete="off"
+      />
+      <mat-icon matSuffix>qr_code_scanner</mat-icon>
+      <mat-error>{{ getErrorMessage('valor') }}</mat-error>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+      @if (loading()) {
+        <mat-spinner diameter="18" />
+      } @else {
+        Buscar
+      }
+    </button>
+  </form>
+
+  @if (feedbackMessage()) {
+    <div class="feedback-banner" [class]="'feedback-banner feedback-banner--' + feedbackTone()">
+      <mat-icon>
+        @switch (feedbackTone()) {
+          @case ('success') { check_circle }
+          @case ('warn') { warning }
+          @case ('error') { error }
+          @default { info }
+        }
+      </mat-icon>
+      <span>{{ feedbackMessage() }}</span>
+    </div>
+  }
+
+  @if (socio(); as currentSocio) {
+    <div class="socio-grid">
+      <div class="identity-block">
+        <div>
+          <span class="label">Socio</span>
+          <strong>{{ currentSocio.nombreCompleto }}</strong>
+        </div>
+        <mat-chip [class]="statusChipClass()">{{ currentSocio.estado }}</mat-chip>
+      </div>
+
+      <div class="meta-grid">
+        <div>
+          <span class="label">DNI</span>
+          <strong>{{ currentSocio.dni }}</strong>
+        </div>
+        <div>
+          <span class="label">Plan actual</span>
+          <strong>{{ currentSocio.planNombre ?? 'Sin plan asignado' }}</strong>
+        </div>
+        <div>
+          <span class="label">Vencimiento</span>
+          <strong>
+            {{
+              currentSocio.fechaVencimiento
+                ? (currentSocio.fechaVencimiento | date: 'dd/MM/yyyy')
+                : 'Sin vencimiento'
+            }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="!currentSocio.puedeRegistrarEntrada || actionLoading() !== null"
+          (click)="registrarEntrada()"
+        >
+          @if (actionLoading() === 'entrada') {
+            <mat-spinner diameter="18" />
+          } @else {
+            Registrar entrada
+          }
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!currentSocio.puedeRegistrarSalida || actionLoading() !== null"
+          (click)="registrarSalida()"
+        >
+          @if (actionLoading() === 'salida') {
+            <mat-spinner diameter="18" />
+          } @else {
+            Registrar salida
+          }
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <mat-icon>badge</mat-icon>
+      <p>Busca un socio por DNI, nombre, apellido o codigo para empezar.</p>
+    </div>
+  }
+</mat-card>

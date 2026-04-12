@@ -24,10 +24,8 @@ export const routes: Routes = [
       },
       {
         path: 'asistencias',
-        loadComponent: () =>
-          import('./features/asistencias/pages/asistencias-page/asistencias-page.component').then(
-            (m) => m.AsistenciasPageComponent
-          )
+        loadChildren: () =>
+          import('./features/asistencias/asistencias.routes').then((m) => m.asistenciasRoutes)
       },
       {
         path: 'membresias',

@@ -1,0 +1,122 @@
+<mat-card appearance="outlined" class="list-card">
+  <div class="card-header">
+    <div>
+      <span class="eyebrow">Historial</span>
+      <h2>Asistencias registradas</h2>
+      <p>Filtra por fecha, socio y estado para revisar la actividad del gimnasio.</p>
+    </div>
+  </div>
+
+  <form class="filters-grid" [formGroup]="filtersForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha</mat-label>
+      <input matInput [matDatepicker]="fechaPicker" formControlName="fecha" />
+      <mat-datepicker-toggle matIconSuffix [for]="fechaPicker" />
+      <mat-datepicker #fechaPicker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Socio</mat-label>
+      <input matInput formControlName="socio" placeholder="Nombre o DNI" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option value="">Todos</mat-option>
+        @for (estado of estados; track estado) {
+          <mat-option [value]="estado">{{ estado }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Buscador general</mat-label>
+      <input matInput formControlName="busqueda" placeholder="Socio, DNI o id asistencia" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="filters-actions">
+      <button mat-stroked-button type="button" (click)="clearFilters()">Limpiar</button>
+      <button mat-flat-button color="primary" type="button" (click)="loadAsistencias()">
+        Actualizar
+      </button>
+    </div>
+  </form>
+
+  @if (loading()) {
+    <div class="state-box">
+      <mat-spinner diameter="40" />
+      <p>Cargando historial...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-box state-box--error">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h3>No se pudo cargar el historial</h3>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    </div>
+  } @else if (!asistencias().length) {
+    <div class="state-box">
+      <mat-icon>history_toggle_off</mat-icon>
+      <div>
+        <h3>Sin resultados</h3>
+        <p>No hay asistencias que coincidan con los filtros actuales.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="asistencias()" [trackBy]="trackByAsistenciaId" class="asistencias-table">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID asistencia</th>
+          <td mat-cell *matCellDef="let asistencia">{{ asistencia.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="socio">
+          <th mat-header-cell *matHeaderCellDef>Socio</th>
+          <td mat-cell *matCellDef="let asistencia">
+            <div class="socio-cell">
+              <strong>{{ asistencia.socioNombre }} {{ asistencia.socioApellido }}</strong>
+              <span>{{ asistencia.socioDni }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let asistencia">{{ asistencia.fecha | date: 'dd/MM/yyyy' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="horaEntrada">
+          <th mat-header-cell *matHeaderCellDef>Hora entrada</th>
+          <td mat-cell *matCellDef="let asistencia">{{ asistencia.horaEntrada ?? '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="horaSalida">
+          <th mat-header-cell *matHeaderCellDef>Hora salida</th>
+          <td mat-cell *matCellDef="let asistencia">{{ asistencia.horaSalida ?? '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let asistencia">
+            <mat-chip [class]="getEstadoClass(asistencia.estado)">{{ asistencia.estado }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let asistencia">
+            <button mat-icon-button type="button" (click)="goToDetail(asistencia.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</mat-card>
