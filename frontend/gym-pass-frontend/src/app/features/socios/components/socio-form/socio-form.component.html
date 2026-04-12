@@ -1,0 +1,110 @@
+<section class="socio-form-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Socios</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p>{{ pageDescription() }}</p>
+    </div>
+
+    <a mat-stroked-button routerLink="/socios">
+      <mat-icon>arrow_back</mat-icon>
+      Volver al listado
+    </a>
+  </header>
+
+  <mat-card appearance="outlined" class="form-card">
+    @if (loading()) {
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando informacion del formulario...</p>
+      </div>
+    } @else {
+      <form class="socio-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Apellido</mat-label>
+            <input matInput formControlName="apellido" />
+            <mat-error>{{ getErrorMessage('apellido') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>DNI</mat-label>
+            <input matInput formControlName="dni" />
+            <mat-error>{{ getErrorMessage('dni') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+            <mat-error>{{ getErrorMessage('email') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Telefono</mat-label>
+            <input matInput formControlName="telefono" />
+            <mat-error>{{ getErrorMessage('telefono') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Direccion</mat-label>
+            <input matInput formControlName="direccion" />
+            <mat-error>{{ getErrorMessage('direccion') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de nacimiento</mat-label>
+            <input matInput [matDatepicker]="fechaNacimientoPicker" formControlName="fechaNacimiento" />
+            <mat-datepicker-toggle matIconSuffix [for]="fechaNacimientoPicker" />
+            <mat-datepicker #fechaNacimientoPicker />
+            <mat-error>{{ getErrorMessage('fechaNacimiento') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de alta</mat-label>
+            <input matInput [matDatepicker]="fechaAltaPicker" formControlName="fechaAlta" />
+            <mat-datepicker-toggle matIconSuffix [for]="fechaAltaPicker" />
+            <mat-datepicker #fechaAltaPicker />
+            <mat-error>{{ getErrorMessage('fechaAlta') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estado">
+              @for (estado of estados; track estado) {
+                <mat-option [value]="estado">{{ estado }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('estado') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Plan</mat-label>
+            <mat-select formControlName="planId">
+              @for (plan of planes(); track plan.id) {
+                <mat-option [value]="plan.id">{{ plan.nombre }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ getErrorMessage('planId') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <a mat-button routerLink="/socios">Cancelar</a>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              {{ isEditMode() ? 'Guardar cambios' : 'Crear socio' }}
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</section>

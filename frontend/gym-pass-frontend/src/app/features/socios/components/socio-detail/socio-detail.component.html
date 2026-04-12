@@ -1,0 +1,119 @@
+<section class="socio-detail-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Socios</span>
+      <h1>Detalle del socio</h1>
+      <p>Consulta la informacion personal, el plan actual y el proximo vencimiento.</p>
+    </div>
+
+    <div class="header-actions">
+      <a mat-stroked-button routerLink="/socios">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </a>
+
+      @if (socio(); as currentSocio) {
+        <a mat-flat-button color="primary" [routerLink]="['/socios', currentSocio.id, 'editar']">
+          <mat-icon>edit</mat-icon>
+          Editar
+        </a>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <mat-card appearance="outlined" class="state-card">
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando detalle del socio...</p>
+      </div>
+    </mat-card>
+  } @else if (errorMessage()) {
+    <mat-card appearance="outlined" class="state-card">
+      <div class="state-box state-box--error">
+        <mat-icon>error_outline</mat-icon>
+        <div>
+          <h2>No se pudo obtener el detalle</h2>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </mat-card>
+  } @else if (socio(); as currentSocio) {
+    <div class="detail-grid">
+      <mat-card appearance="outlined" class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <span class="eyebrow">Ficha</span>
+            <h2>{{ currentSocio.nombre }} {{ currentSocio.apellido }}</h2>
+          </div>
+
+          <mat-chip [class]="estadoChipClass()">{{ currentSocio.estado }}</mat-chip>
+        </div>
+
+        <div class="detail-list">
+          <div>
+            <span class="label">ID</span>
+            <strong>{{ currentSocio.id }}</strong>
+          </div>
+          <div>
+            <span class="label">DNI</span>
+            <strong>{{ currentSocio.dni }}</strong>
+          </div>
+          <div>
+            <span class="label">Email</span>
+            <strong>{{ currentSocio.email }}</strong>
+          </div>
+          <div>
+            <span class="label">Telefono</span>
+            <strong>{{ currentSocio.telefono }}</strong>
+          </div>
+          <div>
+            <span class="label">Direccion</span>
+            <strong>{{ currentSocio.direccion }}</strong>
+          </div>
+          <div>
+            <span class="label">Fecha de nacimiento</span>
+            <strong>{{ currentSocio.fechaNacimiento | date: 'dd/MM/yyyy' }}</strong>
+          </div>
+        </div>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <span class="eyebrow">Membresia</span>
+            <h2>Plan actual</h2>
+          </div>
+        </div>
+
+        <div class="detail-list">
+          <div>
+            <span class="label">Plan</span>
+            <strong>{{ currentSocio.planNombre ?? 'Sin plan asignado' }}</strong>
+          </div>
+          <div>
+            <span class="label">Fecha de alta</span>
+            <strong>{{ currentSocio.fechaAlta | date: 'dd/MM/yyyy' }}</strong>
+          </div>
+          <div>
+            <span class="label">Vencimiento</span>
+            <strong>
+              {{
+                currentSocio.fechaVencimiento
+                  ? (currentSocio.fechaVencimiento | date: 'dd/MM/yyyy')
+                  : 'Sin vencimiento informado'
+              }}
+            </strong>
+          </div>
+        </div>
+
+        <mat-divider />
+
+        <p class="detail-note">
+          Esta vista queda preparada para sumar historial de asistencias, pagos y renovaciones en
+          los siguientes modulos.
+        </p>
+      </mat-card>
+    </div>
+  }
+</section>

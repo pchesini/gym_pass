@@ -1,0 +1,142 @@
+.socio-detail-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-header h1,
+.detail-card h2 {
+  margin: 0.35rem 0 0.75rem;
+  color: #0f172a;
+}
+
+.page-header p,
+.detail-note {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.eyebrow {
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.detail-card,
+.state-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+}
+
+.detail-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-list > div {
+  padding: 1rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estado-chip {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.estado-chip--activo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.estado-chip--inactivo {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.estado-chip--moroso {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.detail-note {
+  margin-top: 1rem;
+}
+
+.state-box {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.state-box h2 {
+  margin: 0 0 0.35rem;
+  color: #0f172a;
+}
+
+.state-box mat-icon {
+  width: 42px;
+  height: 42px;
+  font-size: 42px;
+  color: #dc2626;
+}
+
+@media (max-width: 900px) {
+  .page-header,
+  .detail-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions > * {
+    flex: 1;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -20,10 +20,7 @@ export const routes: Routes = [
       },
       {
         path: 'socios',
-        loadComponent: () =>
-          import('./features/socios/pages/socios-page/socios-page.component').then(
-            (m) => m.SociosPageComponent
-          )
+        loadChildren: () => import('./features/socios/socios.routes').then((m) => m.sociosRoutes)
       },
       {
         path: 'asistencias',
