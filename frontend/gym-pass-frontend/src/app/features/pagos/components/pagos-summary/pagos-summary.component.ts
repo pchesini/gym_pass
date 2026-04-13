@@ -1,6 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -29,6 +29,7 @@ export class PagosSummaryComponent {
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly summary = signal<PagosSummaryViewModel | null>(null);
+  readonly currentSummary = computed(() => this.summary());
 
   constructor() {
     this.loadResumen();
