@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">Historial</span>
       <h2>Asistencias registradas</h2>
-      <p>Filtra por fecha, socio y estado para revisar la actividad del gimnasio.</p>
+      <p>{{ dataScopeLabel() }}. Los filtros restantes se resuelven del lado frontend.</p>
     </div>
   </div>
 
@@ -77,25 +77,36 @@
           <th mat-header-cell *matHeaderCellDef>Socio</th>
           <td mat-cell *matCellDef="let asistencia">
             <div class="socio-cell">
-              <strong>{{ asistencia.socioNombre }} {{ asistencia.socioApellido }}</strong>
-              <span>{{ asistencia.socioDni }}</span>
+              <strong>{{ asistencia.socioNombre }}</strong>
+              <span>{{ asistencia.socioDni ?? 'DNI no disponible' }}</span>
             </div>
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="fecha">
-          <th mat-header-cell *matHeaderCellDef>Fecha</th>
-          <td mat-cell *matCellDef="let asistencia">{{ asistencia.fecha | date: 'dd/MM/yyyy' }}</td>
+        <ng-container matColumnDef="fechaHoraEntrada">
+          <th mat-header-cell *matHeaderCellDef>Entrada</th>
+          <td mat-cell *matCellDef="let asistencia">
+            {{ asistencia.fechaHoraEntrada ? (asistencia.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm') : '-' }}
+          </td>
         </ng-container>
 
-        <ng-container matColumnDef="horaEntrada">
-          <th mat-header-cell *matHeaderCellDef>Hora entrada</th>
-          <td mat-cell *matCellDef="let asistencia">{{ asistencia.horaEntrada ?? '-' }}</td>
+        <ng-container matColumnDef="fechaHoraSalida">
+          <th mat-header-cell *matHeaderCellDef>Salida</th>
+          <td mat-cell *matCellDef="let asistencia">
+            {{ asistencia.fechaHoraSalida ? (asistencia.fechaHoraSalida | date: 'dd/MM/yyyy HH:mm') : '-' }}
+          </td>
         </ng-container>
 
-        <ng-container matColumnDef="horaSalida">
-          <th mat-header-cell *matHeaderCellDef>Hora salida</th>
-          <td mat-cell *matCellDef="let asistencia">{{ asistencia.horaSalida ?? '-' }}</td>
+        <ng-container matColumnDef="duracionMinutos">
+          <th mat-header-cell *matHeaderCellDef>Duracion</th>
+          <td mat-cell *matCellDef="let asistencia">
+            {{ asistencia.duracionMinutos !== null ? asistencia.duracionMinutos + ' min' : '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="tipoRegistro">
+          <th mat-header-cell *matHeaderCellDef>Tipo registro</th>
+          <td mat-cell *matCellDef="let asistencia">{{ asistencia.tipoRegistro ?? '-' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="estado">

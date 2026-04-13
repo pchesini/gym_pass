@@ -3,8 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -18,7 +18,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
-import { Asistencia, EstadoAsistencia } from '../../models/asistencia.model';
+import { SocioViewModel } from '../../../socios/models/socio.model';
+import { SociosService } from '../../../socios/services/socios.service';
+import { buscarSociosEnFrontend } from '../../mappers/asistencia.mapper';
+import { AsistenciaViewModel, EstadoAsistencia } from '../../models/asistencia.model';
 import { AsistenciasService } from '../../services/asistencias.service';
 
 @Component({
@@ -45,23 +48,27 @@ import { AsistenciasService } from '../../services/asistencias.service';
 })
 export class AsistenciasListComponent {
   private readonly asistenciasService = inject(AsistenciasService);
+  private readonly sociosService = inject(SociosService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
-  protected readonly estados: EstadoAsistencia[] = ['EN_CURSO', 'FINALIZADA', 'OBSERVADA'];
+  protected readonly estados: EstadoAsistencia[] = ['ABIERTA', 'CERRADA'];
   protected readonly displayedColumns = [
     'id',
     'socio',
-    'fecha',
-    'horaEntrada',
-    'horaSalida',
+    'fechaHoraEntrada',
+    'fechaHoraSalida',
+    'duracionMinutos',
+    'tipoRegistro',
     'estado',
     'acciones'
   ];
-  protected readonly asistencias = signal<Asistencia[]>([]);
+  protected readonly socios = signal<SocioViewModel[]>([]);
+  protected readonly asistencias = signal<AsistenciaViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly dataScopeLabel = signal('Asistencias de hoy');
   protected readonly filtersForm = this.formBuilder.group({
     fecha: [null as Date | null],
     socio: [''],
@@ -77,18 +84,26 @@ export class AsistenciasListComponent {
 
   protected loadAsistencias(): void {
     const rawValue = this.filtersForm.getRawValue();
+    const socioSearch = (rawValue.socio ?? '').trim();
 
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.asistenciasService
-      .getAsistencias({
-        fecha: this.formatDate(rawValue.fecha),
-        socio: rawValue.socio ?? '',
-        estado: rawValue.estado ?? '',
-        busqueda: rawValue.busqueda ?? ''
-      })
+    this.sociosService
+      .getSocios()
       .pipe(
+        switchMap((socios) => {
+          this.socios.set(socios);
+          return this.resolveAsistenciasSource(socios, socioSearch);
+        }),
+        map((asistencias) =>
+          this.asistenciasService.filterAsistencias(asistencias, {
+            fecha: this.formatDate(rawValue.fecha),
+            socio: rawValue.socio ?? '',
+            estado: rawValue.estado ?? '',
+            busqueda: rawValue.busqueda ?? ''
+          })
+        ),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -115,7 +130,7 @@ export class AsistenciasListComponent {
     void this.router.navigate(['/asistencias', asistenciaId]);
   }
 
-  protected trackByAsistenciaId(_: number, asistencia: Asistencia): number {
+  protected trackByAsistenciaId(_: number, asistencia: AsistenciaViewModel): number {
     return asistencia.id;
   }
 
@@ -145,6 +160,30 @@ export class AsistenciasListComponent {
     this.asistenciasService.refresh$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadAsistencias());
+  }
+
+  private resolveAsistenciasSource(socios: SocioViewModel[], socioSearch: string) {
+    if (!socioSearch) {
+      this.dataScopeLabel.set('Asistencias de hoy');
+      return this.asistenciasService.getAsistenciasHoy(socios);
+    }
+
+    const matches = buscarSociosEnFrontend(socios, {
+      criterio: 'NOMBRE',
+      valor: socioSearch
+    }).filter(
+      (socio) =>
+        socio.nombreCompleto.toLowerCase().includes(socioSearch.toLowerCase()) ||
+        socio.dni.includes(socioSearch)
+    );
+
+    if (matches.length === 1) {
+      this.dataScopeLabel.set(`Historial de ${matches[0].nombreCompleto}`);
+      return this.asistenciasService.getAsistenciasBySocioId(matches[0].id, socios);
+    }
+
+    this.dataScopeLabel.set('Asistencias de hoy');
+    return this.asistenciasService.getAsistenciasHoy(socios);
   }
 
   private formatDate(date: Date | null): string | undefined {

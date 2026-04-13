@@ -59,19 +59,14 @@
   font-weight: 700;
 }
 
-.estado-chip--en_curso {
+.estado-chip--abierta {
   background: #dbeafe;
   color: #1d4ed8;
 }
 
-.estado-chip--finalizada {
+.estado-chip--cerrada {
   background: #dcfce7;
   color: #166534;
-}
-
-.estado-chip--observada {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 .state-box {

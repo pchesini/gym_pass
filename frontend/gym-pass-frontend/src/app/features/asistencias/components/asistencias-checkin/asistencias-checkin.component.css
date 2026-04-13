@@ -105,6 +105,21 @@
   gap: 1rem;
 }
 
+.results-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.result-item {
+  justify-content: space-between;
+  text-align: left;
+}
+
+.result-item small {
+  color: #64748b;
+}
+
 .empty-state {
   min-height: 180px;
   display: grid;

@@ -15,11 +15,18 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import {
-  BuscarSocioRequest,
   CriterioBusquedaSocio,
+  BuscarSocioRequest,
   SocioAsistenciaLookup
 } from '../../models/asistencia.model';
+import {
+  buildSocioAsistenciaLookup,
+  buscarSociosEnFrontend,
+  mapAsistenciaFormToCreateRequest
+} from '../../mappers/asistencia.mapper';
 import { AsistenciasService } from '../../services/asistencias.service';
+import { SociosService } from '../../../socios/services/socios.service';
+import { SocioViewModel } from '../../../socios/models/socio.model';
 
 @Component({
   selector: 'app-asistencias-checkin',
@@ -44,6 +51,7 @@ import { AsistenciasService } from '../../services/asistencias.service';
 export class AsistenciasCheckinComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly asistenciasService = inject(AsistenciasService);
+  private readonly sociosService = inject(SociosService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -51,21 +59,27 @@ export class AsistenciasCheckinComponent {
     { value: 'DNI', label: 'DNI' },
     { value: 'NOMBRE', label: 'Nombre' },
     { value: 'APELLIDO', label: 'Apellido' },
-    { value: 'CODIGO', label: 'Codigo / QR' }
+    { value: 'CODIGO', label: 'Codigo / referencia' }
   ];
   protected readonly loading = signal(false);
   protected readonly actionLoading = signal<'entrada' | 'salida' | null>(null);
+  protected readonly socios = signal<SocioViewModel[]>([]);
+  protected readonly resultados = signal<SocioViewModel[]>([]);
   protected readonly socio = signal<SocioAsistenciaLookup | null>(null);
   protected readonly feedbackMessage = signal<string | null>(null);
   protected readonly feedbackTone = signal<'info' | 'warn' | 'error' | 'success'>('info');
   protected readonly statusChipClass = computed(() => {
     const currentSocio = this.socio();
-    return currentSocio ? `estado-chip estado-chip--${currentSocio.estado.toLowerCase()}` : '';
+    return currentSocio ? `estado-chip estado-chip--${currentSocio.socio.estado.toLowerCase()}` : '';
   });
   protected readonly form = this.formBuilder.group({
     criterio: ['DNI' as CriterioBusquedaSocio, [Validators.required]],
     valor: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]]
   });
+
+  constructor() {
+    this.loadSocios();
+  }
 
   protected buscarSocio(): void {
     if (this.form.invalid) {
@@ -80,17 +94,41 @@ export class AsistenciasCheckinComponent {
 
     this.loading.set(true);
     this.feedbackMessage.set(null);
+    this.socio.set(null);
+
+    const resultados = buscarSociosEnFrontend(this.socios(), payload);
+    this.resultados.set(resultados);
+
+    if (!resultados.length) {
+      this.loading.set(false);
+      this.setFeedback('warn', 'No se encontro ningun socio con ese criterio.');
+      return;
+    }
+
+    if (resultados.length === 1) {
+      this.selectSocio(resultados[0]);
+      return;
+    }
+
+    this.loading.set(false);
+    this.setFeedback('info', 'Se encontraron varios socios. Selecciona uno para continuar.');
+  }
+
+  protected selectSocio(socio: SocioViewModel): void {
+    this.loading.set(true);
+    this.resultados.set([]);
 
     this.asistenciasService
-      .buscarSocio(payload)
+      .getAsistenciasBySocioId(socio.id, this.socios())
       .pipe(
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (socio) => {
-          this.socio.set(socio);
-          this.setFeedbackFromSocio(socio);
+        next: (asistencias) => {
+          const lookup = buildSocioAsistenciaLookup(socio, asistencias);
+          this.socio.set(lookup);
+          this.setFeedbackFromSocio(lookup);
         },
         error: (error) => {
           this.socio.set(null);
@@ -106,18 +144,21 @@ export class AsistenciasCheckinComponent {
     }
 
     this.actionLoading.set('entrada');
+    const payload = mapAsistenciaFormToCreateRequest(currentSocio.socio.id, currentSocio.socio.id);
+
     this.asistenciasService
-      .registrarEntrada(currentSocio.id)
+      .createAsistencia(payload)
       .pipe(
         finalize(() => this.actionLoading.set(null)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (response) => {
-          this.setFeedback('success', response.mensaje);
-          this.snackBar.open(response.mensaje, 'Cerrar', { duration: 3000 });
+        next: () => {
+          const message = 'Entrada registrada correctamente.';
+          this.setFeedback('success', message);
+          this.snackBar.open(message, 'Cerrar', { duration: 3000 });
           this.asistenciasService.notifyRefresh();
-          this.buscarSocio();
+          this.selectSocio(currentSocio.socio);
         },
         error: (error) => {
           const message = this.resolveErrorMessage(error);
@@ -129,23 +170,26 @@ export class AsistenciasCheckinComponent {
 
   protected registrarSalida(): void {
     const currentSocio = this.socio();
-    if (!currentSocio) {
+    const asistenciaAbierta = currentSocio?.asistenciaAbierta;
+
+    if (!currentSocio || !asistenciaAbierta) {
       return;
     }
 
     this.actionLoading.set('salida');
     this.asistenciasService
-      .registrarSalida(currentSocio.id)
+      .registrarSalida(asistenciaAbierta.id)
       .pipe(
         finalize(() => this.actionLoading.set(null)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (response) => {
-          this.setFeedback('success', response.mensaje);
-          this.snackBar.open(response.mensaje, 'Cerrar', { duration: 3000 });
+        next: () => {
+          const message = 'Salida registrada correctamente.';
+          this.setFeedback('success', message);
+          this.snackBar.open(message, 'Cerrar', { duration: 3000 });
           this.asistenciasService.notifyRefresh();
-          this.buscarSocio();
+          this.selectSocio(currentSocio.socio);
         },
         error: (error) => {
           const message = this.resolveErrorMessage(error);
@@ -177,25 +221,36 @@ export class AsistenciasCheckinComponent {
     return '';
   }
 
-  private setFeedbackFromSocio(socio: SocioAsistenciaLookup): void {
-    if (socio.mensajeRecepcion) {
-      const tone = this.resolveToneFromMessage(socio.mensajeRecepcion);
-      this.setFeedback(tone, socio.mensajeRecepcion);
+  protected trackBySocioId(_: number, socio: SocioViewModel): number {
+    return socio.id;
+  }
+
+  private loadSocios(): void {
+    this.loading.set(true);
+
+    this.sociosService
+      .getSocios()
+      .pipe(
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (socios) => this.socios.set(socios),
+        error: (error) => {
+          this.setFeedback('error', this.resolveErrorMessage(error));
+        }
+      });
+  }
+
+  private setFeedbackFromSocio(lookup: SocioAsistenciaLookup): void {
+    if (lookup.mensajeRecepcion) {
+      const tone = this.resolveToneFromMessage(lookup.mensajeRecepcion);
+      this.setFeedback(tone, lookup.mensajeRecepcion);
       return;
     }
 
-    if (socio.estado !== 'ACTIVO') {
+    if (lookup.socio.estado !== 'ACTIVO') {
       this.setFeedback('warn', 'El socio esta inactivo y requiere revision antes de ingresar.');
-      return;
-    }
-
-    if (!socio.tieneMembresia) {
-      this.setFeedback('warn', 'El socio no tiene membresia activa.');
-      return;
-    }
-
-    if (!socio.puedeRegistrarEntrada && !socio.puedeRegistrarSalida) {
-      this.setFeedback('warn', 'La asistencia de hoy ya fue cerrada.');
       return;
     }
 
@@ -206,9 +261,9 @@ export class AsistenciasCheckinComponent {
     const normalizedMessage = message.toLowerCase();
 
     if (
-      normalizedMessage.includes('vencida') ||
       normalizedMessage.includes('inactivo') ||
-      normalizedMessage.includes('no tiene')
+      normalizedMessage.includes('no tiene') ||
+      normalizedMessage.includes('abierta')
     ) {
       return 'warn';
     }

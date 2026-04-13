@@ -58,27 +58,33 @@
       <div class="identity-block">
         <div>
           <span class="label">Socio</span>
-          <strong>{{ currentSocio.nombreCompleto }}</strong>
+          <strong>{{ currentSocio.socio.nombreCompleto }}</strong>
         </div>
-        <mat-chip [class]="statusChipClass()">{{ currentSocio.estado }}</mat-chip>
+        <mat-chip [class]="statusChipClass()">{{ currentSocio.socio.estado }}</mat-chip>
       </div>
 
       <div class="meta-grid">
         <div>
           <span class="label">DNI</span>
-          <strong>{{ currentSocio.dni }}</strong>
+          <strong>{{ currentSocio.socio.dni }}</strong>
         </div>
         <div>
-          <span class="label">Plan actual</span>
-          <strong>{{ currentSocio.planNombre ?? 'Sin plan asignado' }}</strong>
-        </div>
-        <div>
-          <span class="label">Vencimiento</span>
+          <span class="label">Ultima entrada</span>
           <strong>
             {{
-              currentSocio.fechaVencimiento
-                ? (currentSocio.fechaVencimiento | date: 'dd/MM/yyyy')
-                : 'Sin vencimiento'
+              currentSocio.ultimaAsistencia?.fechaHoraEntrada
+                ? (currentSocio.ultimaAsistencia?.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm')
+                : 'Sin registros'
+            }}
+          </strong>
+        </div>
+        <div>
+          <span class="label">Asistencia abierta</span>
+          <strong>
+            {{
+              currentSocio.asistenciaAbierta?.fechaHoraEntrada
+                ? (currentSocio.asistenciaAbierta?.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm')
+                : 'No'
             }}
           </strong>
         </div>
@@ -113,10 +119,19 @@
         </button>
       </div>
     </div>
+  } @else if (resultados().length) {
+    <div class="results-list">
+      @for (resultado of resultados(); track trackBySocioId($index, resultado)) {
+        <button mat-stroked-button type="button" class="result-item" (click)="selectSocio(resultado)">
+          <span>{{ resultado.nombreCompleto }}</span>
+          <small>{{ resultado.dni }}</small>
+        </button>
+      }
+    </div>
   } @else {
     <div class="empty-state">
       <mat-icon>badge</mat-icon>
-      <p>Busca un socio por DNI, nombre, apellido o codigo para empezar.</p>
+      <p>Busca un socio por DNI, nombre o apellido para registrar asistencia.</p>
     </div>
   }
 </mat-card>

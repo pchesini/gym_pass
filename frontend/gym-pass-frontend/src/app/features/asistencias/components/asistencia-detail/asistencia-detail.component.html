@@ -33,8 +33,8 @@
       <div class="detail-header">
         <div>
           <span class="label">Socio</span>
-          <h2>{{ currentAsistencia.socioNombre }} {{ currentAsistencia.socioApellido }}</h2>
-          <p>{{ currentAsistencia.socioDni }}</p>
+          <h2>{{ currentAsistencia.socioNombre }}</h2>
+          <p>DNI: {{ currentAsistencia.socioDni ?? 'No disponible' }}</p>
         </div>
         <mat-chip [class]="getEstadoClass(currentAsistencia.estado)">{{ currentAsistencia.estado }}</mat-chip>
       </div>
@@ -45,20 +45,34 @@
           <strong>{{ currentAsistencia.id }}</strong>
         </div>
         <div>
-          <span class="label">Fecha</span>
-          <strong>{{ currentAsistencia.fecha | date: 'dd/MM/yyyy' }}</strong>
+          <span class="label">Entrada</span>
+          <strong>{{ currentAsistencia.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm' }}</strong>
         </div>
         <div>
-          <span class="label">Hora entrada</span>
-          <strong>{{ currentAsistencia.horaEntrada ?? '-' }}</strong>
+          <span class="label">Salida</span>
+          <strong>{{ currentAsistencia.fechaHoraSalida ? (currentAsistencia.fechaHoraSalida | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
         </div>
         <div>
-          <span class="label">Hora salida</span>
-          <strong>{{ currentAsistencia.horaSalida ?? '-' }}</strong>
+          <span class="label">Duracion</span>
+          <strong>{{ currentAsistencia.duracionMinutos !== null ? (currentAsistencia.duracionMinutos + ' min') : '-' }}</strong>
+        </div>
+        <div>
+          <span class="label">Tipo de registro</span>
+          <strong>{{ currentAsistencia.tipoRegistro ?? 'No informado' }}</strong>
+        </div>
+        <div>
+          <span class="label">Socio ID</span>
+          <strong>{{ currentAsistencia.socioId ?? '-' }}</strong>
         </div>
         <div class="detail-grid__full">
-          <span class="label">Observacion</span>
-          <strong>{{ currentAsistencia.observacion ?? 'Sin observaciones registradas.' }}</strong>
+          <span class="label">Resumen</span>
+          <strong>
+            @if (currentAsistencia.estado === 'ABIERTA') {
+              La asistencia sigue abierta y todavia no registra salida.
+            } @else {
+              La asistencia ya fue cerrada correctamente.
+            }
+          </strong>
         </div>
       </div>
     </mat-card>
