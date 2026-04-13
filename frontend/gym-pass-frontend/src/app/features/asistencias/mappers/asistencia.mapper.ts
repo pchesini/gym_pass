@@ -37,6 +37,9 @@ export function mapAsistenciaFormToCreateRequest(
   socioId: number,
   credencialId: number
 ): AsistenciaCreateApiRequest {
+  // El backend real exige credencialId en el alta de asistencia.
+  // Mientras no exista un flujo/frontend de credenciales separado,
+  // la recepcion reutiliza el socioId como resolucion minima para no romper la integracion actual.
   return {
     socioId,
     credencialId,

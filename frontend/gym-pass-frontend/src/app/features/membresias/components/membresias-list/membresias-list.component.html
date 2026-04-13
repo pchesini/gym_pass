@@ -9,9 +9,15 @@
       </p>
     </div>
 
-    <button mat-flat-button color="primary" type="button" (click)="createForSelectedSocio()">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="!selectedSocio()"
+      (click)="createForSelectedSocio()"
+    >
       <mat-icon>add_card</mat-icon>
-      Nueva membresia
+      Nueva membresia asignada
     </button>
   </header>
 
