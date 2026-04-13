@@ -16,38 +16,45 @@
       <mat-icon>error_outline</mat-icon>
       <p>{{ errorMessage() }}</p>
     </div>
-  } @else if (!summary() || !summary()!.totalPagos) {
-    <div class="state-box">
-      <mat-icon>payments</mat-icon>
-      <p>No hay pagos registrados para resumir.</p>
-    </div>
   } @else {
     @if (summary(); as currentSummary) {
-      <div class="summary-grid summary-grid--metrics">
-        <article class="summary-item">
-          <span class="summary-label">Total de pagos</span>
-          <strong>{{ currentSummary.totalPagos }}</strong>
-        </article>
-        <article class="summary-item">
-          <span class="summary-label">Monto total</span>
-          <strong>{{ currentSummary.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
-        </article>
-        <article class="summary-item">
-          <span class="summary-label">Ultimo pago</span>
-          <strong>{{ currentSummary.ultimoPagoFecha ? (currentSummary.ultimoPagoFecha | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
-          <span>{{ currentSummary.ultimoPagoSocio ?? 'Sin referencia' }}</span>
-        </article>
-      </div>
-
-      <div class="summary-grid">
-        @for (pago of currentSummary.pagosRecientes; track pago.id) {
+      @if (!currentSummary.totalPagos) {
+        <div class="state-box">
+          <mat-icon>payments</mat-icon>
+          <p>No hay pagos registrados para resumir.</p>
+        </div>
+      } @else {
+        <div class="summary-grid summary-grid--metrics">
           <article class="summary-item">
-            <span class="member-name">{{ pago.socioNombre }}</span>
-            <strong>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
-            <span>{{ pago.metodoPago }}</span>
-            <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+            <span class="summary-label">Total de pagos</span>
+            <strong>{{ currentSummary.totalPagos }}</strong>
           </article>
-        }
+          <article class="summary-item">
+            <span class="summary-label">Monto total</span>
+            <strong>{{ currentSummary.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+          </article>
+          <article class="summary-item">
+            <span class="summary-label">Ultimo pago</span>
+            <strong>{{ currentSummary.ultimoPagoFecha ? (currentSummary.ultimoPagoFecha | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
+            <span>{{ currentSummary.ultimoPagoSocio ?? 'Sin referencia' }}</span>
+          </article>
+        </div>
+
+        <div class="summary-grid">
+          @for (pago of currentSummary.pagosRecientes; track pago.id) {
+            <article class="summary-item">
+              <span class="member-name">{{ pago.socioNombre }}</span>
+              <strong>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+              <span>{{ pago.metodoPago }}</span>
+              <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+            </article>
+          }
+        </div>
+      }
+    } @else {
+      <div class="state-box">
+        <mat-icon>payments</mat-icon>
+        <p>No hay pagos registrados para resumir.</p>
       </div>
     }
   }
