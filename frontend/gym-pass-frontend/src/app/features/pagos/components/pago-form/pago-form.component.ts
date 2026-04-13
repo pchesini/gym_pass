@@ -4,7 +4,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { combineLatest, startWith } from 'rxjs';
+import { startWith } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -19,10 +19,18 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
-import { Membresia } from '../../../membresias/models/membresia.model';
-import { MembresiasService } from '../../../membresias/services/membresias.service';
-import { MetodoPago, PagoPreview, PagoRequest } from '../../models/pago.model';
+import { buildPagoPreview, mapPagoFormToCreateRequest } from '../../mappers/pago.mapper';
+import { MetodoPago, PagoFormValue, PagoPreviewViewModel } from '../../models/pago.model';
 import { PagosService } from '../../services/pagos.service';
+
+type PagoFormRawValue = {
+  socioId?: number | null;
+  membresiaId?: number | null;
+  fechaPago?: Date | null;
+  monto?: number | null;
+  metodoPago?: MetodoPago | null;
+  observaciones?: string | null;
+};
 
 @Component({
   selector: 'app-pago-form',
@@ -51,28 +59,26 @@ export class PagoFormComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly pagosService = inject(PagosService);
   private readonly sociosService = inject(SociosService);
-  private readonly membresiasService = inject(MembresiasService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly metodosPago: MetodoPago[] = [
+    'CREDITO',
+    'DEBITO',
     'EFECTIVO',
     'TRANSFERENCIA',
-    'TARJETA',
-    'MERCADO_PAGO'
+    'OTRO'
   ];
   protected readonly socios = signal<SocioViewModel[]>([]);
-  protected readonly membresias = signal<Membresia[]>([]);
-  protected readonly preview = signal<PagoPreview | null>(null);
+  protected readonly preview = signal<PagoPreviewViewModel | null>(null);
   protected readonly loading = signal(true);
-  protected readonly previewLoading = signal(false);
   protected readonly saving = signal(false);
   protected readonly form = this.formBuilder.group({
     socioId: [null as number | null, [Validators.required]],
-    membresiaId: [null as number | null, [Validators.required]],
+    membresiaId: [null as number | null],
     fechaPago: [new Date() as Date | null, [Validators.required]],
-    monto: [0, [Validators.required, Validators.min(0)]],
+    monto: [0, [Validators.required, Validators.min(0.01)]],
     metodoPago: ['EFECTIVO' as MetodoPago, [Validators.required]],
     observaciones: ['', [Validators.maxLength(300)]]
   });
@@ -88,11 +94,10 @@ export class PagoFormComponent {
       return;
     }
 
-    const payload = this.buildPayload();
     this.saving.set(true);
 
     this.pagosService
-      .createPago(payload)
+      .createPago(mapPagoFormToCreateRequest(this.buildPayload()))
       .pipe(
         finalize(() => this.saving.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -122,7 +127,7 @@ export class PagoFormComponent {
     }
 
     if (control.hasError('min')) {
-      return 'El valor ingresado es demasiado bajo.';
+      return 'Ingresa un monto mayor a cero.';
     }
 
     if (control.hasError('maxlength')) {
@@ -132,26 +137,22 @@ export class PagoFormComponent {
     return '';
   }
 
-  protected getSelectedSocioName(socioId: number | null): string {
-    const socio = this.socios().find((item) => item.id === socioId);
-    return socio ? `${socio.nombre} ${socio.apellido}` : '-';
-  }
-
-  protected getSelectedMembresiaName(membresiaId: number | null): string {
-    const membresia = this.membresias().find((item) => item.id === membresiaId);
-    return membresia?.nombre ?? '-';
-  }
-
   private loadInitialData(): void {
-    combineLatest([this.sociosService.getSocios(), this.membresiasService.getMembresias()])
+    this.sociosService
+      .getSocios()
       .pipe(
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: ([socios, membresias]) => {
+        next: (socios) => {
           this.socios.set(socios);
-          this.membresias.set(membresias.filter((membresia) => membresia.estado === 'ACTIVA'));
+          this.preview.set(
+            buildPagoPreview(
+              this.buildPayload(),
+              socios.find((socio) => socio.id === this.form.controls.socioId.value)
+            )
+          );
         },
         error: (error) => {
           this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4500 });
@@ -160,64 +161,28 @@ export class PagoFormComponent {
   }
 
   private observePreview(): void {
-    combineLatest([
-      this.form.controls.socioId.valueChanges.pipe(startWith(this.form.controls.socioId.value)),
-      this.form.controls.membresiaId.valueChanges.pipe(
-        startWith(this.form.controls.membresiaId.value)
-      ),
-      this.form.controls.fechaPago.valueChanges.pipe(startWith(this.form.controls.fechaPago.value))
-    ])
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(([socioId, membresiaId, fechaPago]) => {
-        if (!socioId || !membresiaId || !fechaPago) {
-          this.preview.set(null);
-          return;
-        }
-
-        this.previewLoading.set(true);
-
-        this.pagosService
-          .getPreview(socioId, membresiaId, this.formatDate(fechaPago))
-          .pipe(
-            finalize(() => this.previewLoading.set(false)),
-            takeUntilDestroyed(this.destroyRef)
-          )
-          .subscribe({
-            next: (preview) => {
-              this.preview.set(preview);
-              if ((this.form.controls.monto.value ?? 0) <= 0 && preview.montoSugerido !== null) {
-                this.form.controls.monto.setValue(preview.montoSugerido);
-              }
-            },
-            error: () => {
-              this.preview.set(null);
-            }
-          });
+    this.form.valueChanges
+      .pipe(startWith(this.form.getRawValue()), takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const formValue = this.normalizeFormValue(value);
+        const socio = this.socios().find((item) => item.id === formValue.socioId);
+        this.preview.set(buildPagoPreview(formValue, socio));
       });
   }
 
-  private buildPayload(): PagoRequest {
-    const rawValue = this.form.getRawValue();
-
-    return {
-      socioId: Number(rawValue.socioId),
-      membresiaId: Number(rawValue.membresiaId),
-      fechaPago: this.formatDate(rawValue.fechaPago),
-      monto: Number(rawValue.monto ?? 0),
-      metodoPago: rawValue.metodoPago ?? 'EFECTIVO',
-      observaciones: (rawValue.observaciones ?? '').trim()
-    };
+  private buildPayload(): PagoFormValue {
+    return this.normalizeFormValue(this.form.getRawValue());
   }
 
-  private formatDate(date: Date | null): string {
-    if (!date) {
-      return '';
-    }
-
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  private normalizeFormValue(value: PagoFormRawValue): PagoFormValue {
+    return {
+      socioId: value.socioId ?? null,
+      membresiaId: value.membresiaId ?? null,
+      fechaPago: value.fechaPago ?? null,
+      monto: value.monto ?? null,
+      metodoPago: value.metodoPago ?? 'EFECTIVO',
+      observaciones: value.observaciones ?? ''
+    };
   }
 
   private resolveErrorMessage(error: unknown): string {

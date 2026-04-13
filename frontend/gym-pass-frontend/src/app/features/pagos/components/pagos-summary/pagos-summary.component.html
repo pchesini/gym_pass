@@ -1,8 +1,8 @@
 <mat-card appearance="outlined" class="summary-card">
   <div class="summary-header">
     <div>
-      <span class="eyebrow">Vencimientos</span>
-      <h2>Proximos pagos</h2>
+      <span class="eyebrow">Resumen</span>
+      <h2>Estado actual de cobros</h2>
     </div>
   </div>
 
@@ -16,21 +16,39 @@
       <mat-icon>error_outline</mat-icon>
       <p>{{ errorMessage() }}</p>
     </div>
-  } @else if (!vencimientos().length) {
+  } @else if (!summary() || !summary()!.totalPagos) {
     <div class="state-box">
-      <mat-icon>event_available</mat-icon>
-      <p>No hay vencimientos proximos para mostrar.</p>
+      <mat-icon>payments</mat-icon>
+      <p>No hay pagos registrados para resumir.</p>
     </div>
   } @else {
-    <div class="summary-grid">
-      @for (vencimiento of vencimientos(); track vencimiento.socioId) {
+    @if (summary(); as currentSummary) {
+      <div class="summary-grid summary-grid--metrics">
         <article class="summary-item">
-          <span class="member-name">{{ vencimiento.socioNombre }} {{ vencimiento.socioApellido }}</span>
-          <strong>{{ vencimiento.membresiaNombre }}</strong>
-          <span>Vence: {{ vencimiento.fechaVencimiento | date: 'dd/MM/yyyy' }}</span>
-          <span>{{ vencimiento.diasRestantes }} dias restantes</span>
+          <span class="summary-label">Total de pagos</span>
+          <strong>{{ currentSummary.totalPagos }}</strong>
         </article>
-      }
-    </div>
+        <article class="summary-item">
+          <span class="summary-label">Monto total</span>
+          <strong>{{ currentSummary.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Ultimo pago</span>
+          <strong>{{ currentSummary.ultimoPagoFecha ? (currentSummary.ultimoPagoFecha | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
+          <span>{{ currentSummary.ultimoPagoSocio ?? 'Sin referencia' }}</span>
+        </article>
+      </div>
+
+      <div class="summary-grid">
+        @for (pago of currentSummary.pagosRecientes; track pago.id) {
+          <article class="summary-item">
+            <span class="member-name">{{ pago.socioNombre }}</span>
+            <strong>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+            <span>{{ pago.metodoPago }}</span>
+            <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+          </article>
+        }
+      </div>
+    }
   }
 </mat-card>

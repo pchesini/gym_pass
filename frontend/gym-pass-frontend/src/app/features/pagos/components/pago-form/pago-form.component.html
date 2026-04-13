@@ -4,8 +4,8 @@
       <span class="eyebrow">Pagos</span>
       <h1>Registrar pago</h1>
       <p>
-        Carga un pago nuevo vinculando socio y membresia, con vista previa de duracion, plan y
-        vencimiento estimado.
+        Registra un pago real contra el backend actual, con socio obligatorio, membresia opcional
+        y un resumen local antes de confirmar.
       </p>
     </div>
 
@@ -28,19 +28,15 @@
             <mat-label>Socio</mat-label>
             <mat-select formControlName="socioId">
               @for (socio of socios(); track socio.id) {
-                <mat-option [value]="socio.id">{{ socio.nombre }} {{ socio.apellido }} - {{ socio.dni }}</mat-option>
+                <mat-option [value]="socio.id">{{ socio.nombreCompleto }} - {{ socio.dni }}</mat-option>
               }
             </mat-select>
             <mat-error>{{ getErrorMessage('socioId') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Membresia</mat-label>
-            <mat-select formControlName="membresiaId">
-              @for (membresia of membresias(); track membresia.id) {
-                <mat-option [value]="membresia.id">{{ membresia.nombre }}</mat-option>
-              }
-            </mat-select>
+            <mat-label>Membresia ID opcional</mat-label>
+            <input matInput type="number" min="1" step="1" formControlName="membresiaId" />
             <mat-error>{{ getErrorMessage('membresiaId') }}</mat-error>
           </mat-form-field>
 
@@ -80,52 +76,50 @@
           <div class="preview-header">
             <div>
               <span class="eyebrow">Vista previa</span>
-              <h2>Impacto del pago</h2>
+              <h2>Resumen local del registro</h2>
             </div>
-
-            @if (previewLoading()) {
-              <mat-spinner diameter="22" />
-            }
           </div>
 
           @if (preview(); as currentPreview) {
             <div class="preview-grid">
               <div>
                 <span class="label">Socio</span>
-                <strong>{{ currentPreview.socioNombre }} {{ currentPreview.socioApellido }}</strong>
+                <strong>{{ currentPreview.socioNombre }}</strong>
               </div>
               <div>
-                <span class="label">Plan</span>
-                <strong>{{ currentPreview.membresiaNombre }}</strong>
+                <span class="label">DNI</span>
+                <strong>{{ currentPreview.socioDni ?? '-' }}</strong>
               </div>
               <div>
-                <span class="label">Duracion</span>
-                <strong>{{ currentPreview.duracionDias }} dias</strong>
+                <span class="label">Membresia</span>
+                <strong>{{ currentPreview.descripcionMembresia ?? 'Sin asociar' }}</strong>
               </div>
               <div>
-                <span class="label">Vencimiento estimado</span>
+                <span class="label">Fecha de pago</span>
+                <strong>{{ currentPreview.fechaPago ? (currentPreview.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
+              </div>
+              <div>
+                <span class="label">Metodo</span>
+                <strong>{{ currentPreview.metodoPago ?? '-' }}</strong>
+              </div>
+              <div>
+                <span class="label">Monto</span>
                 <strong>
                   {{
-                    currentPreview.fechaVencimientoEstimada
-                      ? (currentPreview.fechaVencimientoEstimada | date: 'dd/MM/yyyy')
+                    currentPreview.monto !== null
+                      ? (currentPreview.monto | currency: 'ARS' : 'symbol' : '1.0-0')
                       : '-'
                   }}
                 </strong>
               </div>
-              <div>
-                <span class="label">Monto sugerido</span>
-                <strong>
-                  {{
-                    currentPreview.montoSugerido !== null
-                      ? (currentPreview.montoSugerido | currency: 'ARS' : 'symbol' : '1.0-0')
-                      : '-'
-                  }}
-                </strong>
+              <div class="form-grid__full">
+                <span class="label">Observaciones</span>
+                <strong>{{ currentPreview.observaciones ?? 'Sin observaciones.' }}</strong>
               </div>
             </div>
           } @else {
             <p class="preview-empty">
-              Selecciona un socio, una membresia y la fecha de pago para obtener la vista previa.
+              Completa el formulario para ver el resumen del pago antes de registrarlo.
             </p>
           }
         </div>

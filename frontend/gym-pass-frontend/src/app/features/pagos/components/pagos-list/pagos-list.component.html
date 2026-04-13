@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">Historial</span>
       <h2>Pagos registrados</h2>
-      <p>Filtra por socio, metodo, fechas y estado para revisar cada cobro.</p>
+      <p>Los filtros se resuelven del lado frontend sobre el listado real devuelto por backend.</p>
     </div>
 
     <a mat-flat-button color="primary" routerLink="/pagos/nuevo">
@@ -43,18 +43,8 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Estado</mat-label>
-      <mat-select formControlName="estado">
-        <mat-option value="">Todos</mat-option>
-        @for (estado of estadosPago; track estado) {
-          <mat-option [value]="estado">{{ estado }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
       <mat-label>Buscador general</mat-label>
-      <input matInput formControlName="busqueda" placeholder="ID, socio, plan o observacion" />
+      <input matInput formControlName="busqueda" placeholder="ID, socio, membresia u observacion" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
@@ -99,30 +89,20 @@
           <th mat-header-cell *matHeaderCellDef>Socio</th>
           <td mat-cell *matCellDef="let pago">
             <div class="stack-cell">
-              <strong>{{ pago.socioNombre }} {{ pago.socioApellido }}</strong>
+              <strong>{{ pago.socioNombre }}</strong>
+              <span>{{ pago.socioDni ?? 'DNI no disponible' }}</span>
             </div>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="membresia">
           <th mat-header-cell *matHeaderCellDef>Membresia</th>
-          <td mat-cell *matCellDef="let pago">{{ pago.membresiaNombre }}</td>
+          <td mat-cell *matCellDef="let pago">{{ pago.descripcionMembresia ?? 'Sin asociar' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="fechaPago">
           <th mat-header-cell *matHeaderCellDef>Fecha pago</th>
           <td mat-cell *matCellDef="let pago">{{ pago.fechaPago | date: 'dd/MM/yyyy' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="fechaVencimientoGenerada">
-          <th mat-header-cell *matHeaderCellDef>Vencimiento generado</th>
-          <td mat-cell *matCellDef="let pago">
-            {{
-              pago.fechaVencimientoGenerada
-                ? (pago.fechaVencimientoGenerada | date: 'dd/MM/yyyy')
-                : '-'
-            }}
-          </td>
         </ng-container>
 
         <ng-container matColumnDef="monto">
@@ -137,10 +117,10 @@
           <td mat-cell *matCellDef="let pago">{{ pago.metodoPago }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="estado">
-          <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <ng-container matColumnDef="observaciones">
+          <th mat-header-cell *matHeaderCellDef>Observaciones</th>
           <td mat-cell *matCellDef="let pago">
-            <mat-chip [class]="getEstadoClass(pago.estado)">{{ pago.estado }}</mat-chip>
+            {{ pago.observaciones ?? '-' }}
           </td>
         </ng-container>
 

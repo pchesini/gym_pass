@@ -33,10 +33,9 @@
       <div class="detail-header">
         <div>
           <span class="label">Socio</span>
-          <h2>{{ currentPago.socioNombre }} {{ currentPago.socioApellido }}</h2>
-          <p>{{ currentPago.membresiaNombre }}</p>
+          <h2>{{ currentPago.socioNombre }}</h2>
+          <p>DNI: {{ currentPago.socioDni ?? 'No disponible' }}</p>
         </div>
-        <mat-chip [class]="getEstadoClass(currentPago.estado)">{{ currentPago.estado }}</mat-chip>
       </div>
 
       <div class="detail-grid">
@@ -49,14 +48,8 @@
           <strong>{{ currentPago.fechaPago | date: 'dd/MM/yyyy' }}</strong>
         </div>
         <div>
-          <span class="label">Vencimiento generado</span>
-          <strong>
-            {{
-              currentPago.fechaVencimientoGenerada
-                ? (currentPago.fechaVencimientoGenerada | date: 'dd/MM/yyyy')
-                : '-'
-            }}
-          </strong>
+          <span class="label">Membresia</span>
+          <strong>{{ currentPago.descripcionMembresia ?? 'Sin asociar' }}</strong>
         </div>
         <div>
           <span class="label">Monto</span>
@@ -66,6 +59,18 @@
           <span class="label">Metodo</span>
           <strong>{{ currentPago.metodoPago }}</strong>
         </div>
+        @if (currentPago.promocionId) {
+          <div>
+            <span class="label">Promocion ID</span>
+            <strong>{{ currentPago.promocionId }}</strong>
+          </div>
+        }
+        @if (currentPago.registradoPorUsuarioId) {
+          <div>
+            <span class="label">Registrado por usuario</span>
+            <strong>{{ currentPago.registradoPorUsuarioId }}</strong>
+          </div>
+        }
         <div class="detail-grid__full">
           <span class="label">Observaciones</span>
           <strong>{{ currentPago.observaciones ?? 'Sin observaciones registradas.' }}</strong>

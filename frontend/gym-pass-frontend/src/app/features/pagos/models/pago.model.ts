@@ -1,28 +1,42 @@
-export type MetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'MERCADO_PAGO';
-export type EstadoPago = 'CONFIRMADO' | 'PENDIENTE' | 'ANULADO';
+export type MetodoPago = 'CREDITO' | 'DEBITO' | 'TRANSFERENCIA' | 'EFECTIVO' | 'OTRO';
 
-export interface Pago {
+export interface PagoApiResponse {
   id: number;
-  socioId: number;
-  socioNombre: string;
-  socioApellido: string;
-  membresiaId: number;
-  membresiaNombre: string;
-  fechaPago: string;
-  fechaVencimientoGenerada: string | null;
+  socioId: number | null;
+  membresiaId: number | null;
+  fechaPago: string | null;
   monto: number;
   metodoPago: MetodoPago;
-  estado: EstadoPago;
   observaciones: string | null;
+  promocionId: number | null;
+  registradoPorUsuarioId: number | null;
 }
 
-export interface PagoRequest {
+export interface PagoCreateApiRequest {
   socioId: number;
-  membresiaId: number;
-  fechaPago: string;
+  membresiaId?: number | null;
+  fechaPago?: string | null;
   monto: number;
   metodoPago: MetodoPago;
-  observaciones: string;
+  observaciones?: string | null;
+  promocionId?: number | null;
+  registradoPorUsuarioId?: number | null;
+}
+
+export interface PagoViewModel {
+  id: number;
+  socioId: number | null;
+  socioNombre: string;
+  socioDni?: string | null;
+  membresiaId: number | null;
+  fechaPago: string | null;
+  monto: number;
+  metodoPago: MetodoPago;
+  observaciones: string | null;
+  estadoVisual?: string | null;
+  descripcionMembresia?: string | null;
+  promocionId?: number | null;
+  registradoPorUsuarioId?: number | null;
 }
 
 export interface PagoFilters {
@@ -30,26 +44,33 @@ export interface PagoFilters {
   metodoPago?: MetodoPago | '';
   fechaDesde?: string;
   fechaHasta?: string;
-  estado?: EstadoPago | '';
   busqueda?: string;
 }
 
-export interface PagoPreview {
-  socioId: number;
-  socioNombre: string;
-  socioApellido: string;
-  membresiaId: number;
-  membresiaNombre: string;
-  duracionDias: number;
-  fechaVencimientoEstimada: string | null;
-  montoSugerido: number | null;
+export interface PagoFormValue {
+  socioId: number | null;
+  membresiaId: number | null;
+  fechaPago: Date | null;
+  monto: number | null;
+  metodoPago: MetodoPago;
+  observaciones: string;
 }
 
-export interface VencimientoProximo {
-  socioId: number;
+export interface PagoPreviewViewModel {
   socioNombre: string;
-  socioApellido: string;
-  membresiaNombre: string;
-  fechaVencimiento: string;
-  diasRestantes: number;
+  socioDni: string | null;
+  membresiaId: number | null;
+  descripcionMembresia: string | null;
+  fechaPago: string | null;
+  monto: number | null;
+  metodoPago: MetodoPago | null;
+  observaciones: string | null;
+}
+
+export interface PagosSummaryViewModel {
+  totalPagos: number;
+  montoTotal: number;
+  ultimoPagoFecha: string | null;
+  ultimoPagoSocio: string | null;
+  pagosRecientes: PagoViewModel[];
 }

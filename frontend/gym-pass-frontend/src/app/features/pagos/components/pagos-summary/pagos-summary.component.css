@@ -23,6 +23,10 @@
   margin-top: 1.25rem;
 }
 
+.summary-grid--metrics {
+  margin-bottom: 1rem;
+}
+
 .summary-item {
   display: grid;
   gap: 0.35rem;
@@ -36,6 +40,13 @@
 .member-name {
   color: #0f172a;
   font-weight: 700;
+}
+
+.summary-label {
+  color: #64748b;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .state-box {

@@ -3,14 +3,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { Pago } from '../../models/pago.model';
+import { SociosService } from '../../../socios/services/socios.service';
+import { PagoViewModel } from '../../models/pago.model';
 import { PagosService } from '../../services/pagos.service';
 
 @Component({
@@ -23,7 +24,6 @@ import { PagosService } from '../../services/pagos.service';
     DatePipe,
     MatButtonModule,
     MatCardModule,
-    MatChipsModule,
     MatIconModule,
     MatProgressSpinnerModule
   ],
@@ -33,18 +33,15 @@ import { PagosService } from '../../services/pagos.service';
 export class PagoDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly pagosService = inject(PagosService);
+  private readonly sociosService = inject(SociosService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly pago = signal<Pago | null>(null);
+  protected readonly pago = signal<PagoViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
     this.loadPago();
-  }
-
-  protected getEstadoClass(estado: string): string {
-    return `estado-chip estado-chip--${estado.toLowerCase()}`;
   }
 
   private loadPago(): void {
@@ -57,9 +54,10 @@ export class PagoDetailComponent {
       return;
     }
 
-    this.pagosService
-      .getPagoById(pagoId)
+    this.sociosService
+      .getSocios()
       .pipe(
+        switchMap((socios) => this.pagosService.getPagoById(pagoId, socios)),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )

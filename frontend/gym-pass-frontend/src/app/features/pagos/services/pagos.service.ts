@@ -1,70 +1,79 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
-import {
-  Pago,
-  PagoFilters,
-  PagoPreview,
-  PagoRequest,
-  VencimientoProximo
-} from '../models/pago.model';
+import { apiBaseUrl } from '../../../core/config/api.config';
+import { SocioViewModel } from '../../socios/models/socio.model';
+import { mapPagoApiResponseToViewModel } from '../mappers/pago.mapper';
+import { PagoApiResponse, PagoCreateApiRequest, PagoFilters, PagoViewModel } from '../models/pago.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PagosService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/pagos';
+  private readonly pagosUrl = `${apiBaseUrl}/pagos`;
 
-  getPagos(filters?: PagoFilters): Observable<Pago[]> {
-    let params = new HttpParams();
-
-    if (filters?.socio?.trim()) {
-      params = params.set('socio', filters.socio.trim());
-    }
-
-    if (filters?.metodoPago) {
-      params = params.set('metodoPago', filters.metodoPago);
-    }
-
-    if (filters?.fechaDesde) {
-      params = params.set('fechaDesde', filters.fechaDesde);
-    }
-
-    if (filters?.fechaHasta) {
-      params = params.set('fechaHasta', filters.fechaHasta);
-    }
-
-    if (filters?.estado) {
-      params = params.set('estado', filters.estado);
-    }
-
-    if (filters?.busqueda?.trim()) {
-      params = params.set('busqueda', filters.busqueda.trim());
-    }
-
-    return this.http.get<Pago[]>(this.apiUrl, { params });
+  getPagos(socios?: SocioViewModel[]): Observable<PagoViewModel[]> {
+    return this.http
+      .get<PagoApiResponse[]>(this.pagosUrl)
+      .pipe(map((pagos) => pagos.map((pago) => this.mapWithSocio(pago, socios))));
   }
 
-  getPagoById(id: number): Observable<Pago> {
-    return this.http.get<Pago>(`${this.apiUrl}/${id}`);
+  getPagoById(id: number, socios?: SocioViewModel[]): Observable<PagoViewModel> {
+    return this.http
+      .get<PagoApiResponse>(`${this.pagosUrl}/${id}`)
+      .pipe(map((pago) => this.mapWithSocio(pago, socios)));
   }
 
-  createPago(payload: PagoRequest): Observable<Pago> {
-    return this.http.post<Pago>(this.apiUrl, payload);
+  getPagosBySocioId(socioId: number, socios?: SocioViewModel[]): Observable<PagoViewModel[]> {
+    return this.http
+      .get<PagoApiResponse[]>(`${this.pagosUrl}/socio/${socioId}`)
+      .pipe(map((pagos) => pagos.map((pago) => this.mapWithSocio(pago, socios))));
   }
 
-  getPreview(socioId: number, membresiaId: number, fechaPago: string): Observable<PagoPreview> {
-    const params = new HttpParams()
-      .set('socioId', socioId)
-      .set('membresiaId', membresiaId)
-      .set('fechaPago', fechaPago);
-
-    return this.http.get<PagoPreview>(`${this.apiUrl}/preview`, { params });
+  getPagosByMembresiaId(
+    membresiaId: number,
+    socios?: SocioViewModel[]
+  ): Observable<PagoViewModel[]> {
+    return this.http
+      .get<PagoApiResponse[]>(`${this.pagosUrl}/membresia/${membresiaId}`)
+      .pipe(map((pagos) => pagos.map((pago) => this.mapWithSocio(pago, socios))));
   }
 
-  getVencimientosProximos(): Observable<VencimientoProximo[]> {
-    return this.http.get<VencimientoProximo[]>(`${this.apiUrl}/vencimientos-proximos`);
+  createPago(payload: PagoCreateApiRequest): Observable<PagoApiResponse> {
+    return this.http.post<PagoApiResponse>(this.pagosUrl, payload);
+  }
+
+  filterPagos(pagos: PagoViewModel[], filters?: PagoFilters): PagoViewModel[] {
+    return pagos.filter((pago) => {
+      const socioSearch = filters?.socio?.trim().toLowerCase() ?? '';
+      const matchesSocio =
+        !socioSearch ||
+        pago.socioNombre.toLowerCase().includes(socioSearch) ||
+        (pago.socioDni ?? '').toLowerCase().includes(socioSearch);
+
+      const matchesMetodo = !filters?.metodoPago || pago.metodoPago === filters.metodoPago;
+
+      const paymentDate = pago.fechaPago?.slice(0, 10) ?? '';
+      const matchesFechaDesde = !filters?.fechaDesde || paymentDate >= filters.fechaDesde;
+      const matchesFechaHasta = !filters?.fechaHasta || paymentDate <= filters.fechaHasta;
+
+      const search = filters?.busqueda?.trim().toLowerCase() ?? '';
+      const matchesBusqueda =
+        !search ||
+        pago.id.toString().includes(search) ||
+        pago.socioNombre.toLowerCase().includes(search) ||
+        (pago.socioDni ?? '').toLowerCase().includes(search) ||
+        (pago.descripcionMembresia ?? '').toLowerCase().includes(search) ||
+        (pago.observaciones ?? '').toLowerCase().includes(search);
+
+      return matchesSocio && matchesMetodo && matchesFechaDesde && matchesFechaHasta && matchesBusqueda;
+    });
+  }
+
+  private mapWithSocio(pago: PagoApiResponse, socios?: SocioViewModel[]): PagoViewModel {
+    const socio = socios?.find((currentSocio) => currentSocio.id === pago.socioId);
+    return mapPagoApiResponseToViewModel(pago, socio);
   }
 }

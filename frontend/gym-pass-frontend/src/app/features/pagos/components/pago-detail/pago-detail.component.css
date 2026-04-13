@@ -64,25 +64,6 @@
   grid-column: 1 / -1;
 }
 
-.estado-chip {
-  font-weight: 700;
-}
-
-.estado-chip--confirmado {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.estado-chip--pendiente {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.estado-chip--anulado {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
 .state-box {
   min-height: 240px;
   display: grid;

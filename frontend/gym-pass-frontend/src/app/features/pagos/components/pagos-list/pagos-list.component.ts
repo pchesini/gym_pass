@@ -4,11 +4,10 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +17,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
-import { EstadoPago, MetodoPago, Pago } from '../../models/pago.model';
+import { SocioViewModel } from '../../../socios/models/socio.model';
+import { SociosService } from '../../../socios/services/socios.service';
+import { MetodoPago, PagoViewModel } from '../../models/pago.model';
 import { PagosService } from '../../services/pagos.service';
 
 @Component({
@@ -32,7 +33,6 @@ import { PagosService } from '../../services/pagos.service';
     DatePipe,
     MatButtonModule,
     MatCardModule,
-    MatChipsModule,
     MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
@@ -47,29 +47,30 @@ import { PagosService } from '../../services/pagos.service';
 })
 export class PagosListComponent {
   private readonly pagosService = inject(PagosService);
+  private readonly sociosService = inject(SociosService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
   protected readonly metodosPago: MetodoPago[] = [
+    'CREDITO',
+    'DEBITO',
     'EFECTIVO',
     'TRANSFERENCIA',
-    'TARJETA',
-    'MERCADO_PAGO'
+    'OTRO'
   ];
-  protected readonly estadosPago: EstadoPago[] = ['CONFIRMADO', 'PENDIENTE', 'ANULADO'];
   protected readonly displayedColumns = [
     'id',
     'socio',
     'membresia',
     'fechaPago',
-    'fechaVencimientoGenerada',
     'monto',
     'metodoPago',
-    'estado',
+    'observaciones',
     'acciones'
   ];
-  protected readonly pagos = signal<Pago[]>([]);
+  protected readonly socios = signal<SocioViewModel[]>([]);
+  protected readonly pagos = signal<PagoViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly filtersForm = this.formBuilder.group({
@@ -77,7 +78,6 @@ export class PagosListComponent {
     metodoPago: ['' as MetodoPago | ''],
     fechaDesde: [null as Date | null],
     fechaHasta: [null as Date | null],
-    estado: ['' as EstadoPago | ''],
     busqueda: ['']
   });
 
@@ -92,21 +92,27 @@ export class PagosListComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.pagosService
-      .getPagos({
-        socio: rawValue.socio ?? '',
-        metodoPago: rawValue.metodoPago ?? '',
-        fechaDesde: this.formatDate(rawValue.fechaDesde),
-        fechaHasta: this.formatDate(rawValue.fechaHasta),
-        estado: rawValue.estado ?? '',
-        busqueda: rawValue.busqueda ?? ''
-      })
+    this.sociosService
+      .getSocios()
       .pipe(
+        switchMap((socios) => {
+          this.socios.set(socios);
+          return this.pagosService.getPagos(socios);
+        }),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (pagos) => this.pagos.set(pagos),
+        next: (pagos) =>
+          this.pagos.set(
+            this.pagosService.filterPagos(pagos, {
+              socio: rawValue.socio ?? '',
+              metodoPago: rawValue.metodoPago ?? '',
+              fechaDesde: this.formatDate(rawValue.fechaDesde),
+              fechaHasta: this.formatDate(rawValue.fechaHasta),
+              busqueda: rawValue.busqueda ?? ''
+            })
+          ),
         error: (error) => {
           this.errorMessage.set(this.resolveErrorMessage(error));
           this.pagos.set([]);
@@ -120,7 +126,6 @@ export class PagosListComponent {
       metodoPago: '',
       fechaDesde: null,
       fechaHasta: null,
-      estado: '',
       busqueda: ''
     });
     this.loadPagos();
@@ -130,12 +135,8 @@ export class PagosListComponent {
     void this.router.navigate(['/pagos', pagoId]);
   }
 
-  protected trackByPagoId(_: number, pago: Pago): number {
+  protected trackByPagoId(_: number, pago: PagoViewModel): number {
     return pago.id;
-  }
-
-  protected getEstadoClass(estado: EstadoPago): string {
-    return `estado-chip estado-chip--${estado.toLowerCase()}`;
   }
 
   private observeFilters(): void {
@@ -156,10 +157,6 @@ export class PagosListComponent {
       .subscribe(() => this.loadPagos());
 
     this.filtersForm.controls.fechaHasta.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadPagos());
-
-    this.filtersForm.controls.estado.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadPagos());
   }
