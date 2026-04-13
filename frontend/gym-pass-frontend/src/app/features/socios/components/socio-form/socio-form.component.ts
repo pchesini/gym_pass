@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { switchMap } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -177,6 +178,7 @@ export class SocioFormComponent {
 
     this.route.paramMap
       .pipe(
+        take(1),
         switchMap((params) => {
           const socioIdParam = params.get('id');
           const socioId = socioIdParam ? Number(socioIdParam) : null;
