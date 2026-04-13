@@ -33,9 +33,10 @@
 }
 
 .table-card {
-  padding: 0;
+  padding: 1.5rem;
   border-radius: 24px;
-  overflow: hidden;
+  display: grid;
+  gap: 1rem;
 }
 
 .table-wrapper {
@@ -44,7 +45,7 @@
 
 .membresias-table {
   width: 100%;
-  min-width: 1040px;
+  min-width: 980px;
 }
 
 .mat-mdc-header-cell {
@@ -64,6 +65,70 @@
   min-width: 112px;
 }
 
+.search-form {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.results-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result-item {
+  justify-content: space-between;
+  text-align: left;
+}
+
+.result-item small {
+  color: #64748b;
+}
+
+.selected-socio-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: stretch;
+  padding: 1rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.selected-socio-banner h2 {
+  margin: 0.35rem 0 0.25rem;
+  color: #0f172a;
+}
+
+.selected-socio-banner p,
+.active-box span {
+  margin: 0;
+  color: #64748b;
+}
+
+.active-box {
+  min-width: 220px;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid #dbeafe;
+  background: #fff;
+}
+
+.active-box--empty {
+  border-color: #e2e8f0;
+}
+
+.label {
+  color: #64748b;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .estado-chip {
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -74,9 +139,19 @@
   color: #166534;
 }
 
-.estado-chip--inactiva {
+.estado-chip--vencida {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.estado-chip--cancelada {
   background: #e2e8f0;
   color: #334155;
+}
+
+.estado-chip--pendiente_pago {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .state-box {
@@ -113,5 +188,13 @@
   .page-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .selected-socio-banner {
+    flex-direction: column;
   }
 }

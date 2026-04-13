@@ -1,8 +1,9 @@
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +11,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { Membresia } from '../../models/membresia.model';
+import { SociosService } from '../../../socios/services/socios.service';
+import { MembresiaViewModel } from '../../models/membresia.model';
 import { MembresiasService } from '../../services/membresias.service';
 
 @Component({
@@ -20,6 +22,7 @@ import { MembresiasService } from '../../services/membresias.service';
     CommonModule,
     RouterLink,
     CurrencyPipe,
+    DatePipe,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
@@ -32,9 +35,10 @@ import { MembresiasService } from '../../services/membresias.service';
 export class MembresiaDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly membresiasService = inject(MembresiasService);
+  private readonly sociosService = inject(SociosService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly membresia = signal<Membresia | null>(null);
+  protected readonly membresia = signal<MembresiaViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
 
@@ -56,9 +60,10 @@ export class MembresiaDetailComponent {
       return;
     }
 
-    this.membresiasService
-      .getMembresiaById(membresiaId)
+    this.sociosService
+      .getSocios()
       .pipe(
+        switchMap((socios) => this.membresiasService.getMembresiaById(membresiaId, socios)),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )

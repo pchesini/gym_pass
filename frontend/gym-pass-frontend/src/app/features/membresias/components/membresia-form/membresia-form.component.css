@@ -52,6 +52,20 @@
   grid-column: 1 / -1;
 }
 
+.status-box {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.status-box p {
+  margin: 0;
+  color: #64748b;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;

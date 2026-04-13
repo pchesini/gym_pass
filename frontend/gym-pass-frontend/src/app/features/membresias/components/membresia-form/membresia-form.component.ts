@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,14 +8,26 @@ import { finalize } from 'rxjs/operators';
 import { of, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { EstadoMembresia, Membresia, MembresiaRequest } from '../../models/membresia.model';
+import { SocioViewModel } from '../../../socios/models/socio.model';
+import { SociosService } from '../../../socios/services/socios.service';
+import {
+  EstadoMembresia,
+  MembresiaFormValue,
+  MembresiaViewModel
+} from '../../models/membresia.model';
+import {
+  mapMembresiaFormToCreateRequest,
+  mapMembresiaFormToUpdateRequest
+} from '../../mappers/membresia.mapper';
 import { MembresiasService } from '../../services/membresias.service';
 
 @Component({
@@ -25,11 +37,14 @@ import { MembresiasService } from '../../services/membresias.service';
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
+    DatePipe,
     MatButtonModule,
     MatCardModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatNativeDateModule,
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSnackBarModule
@@ -40,30 +55,37 @@ import { MembresiasService } from '../../services/membresias.service';
 export class MembresiaFormComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly membresiasService = inject(MembresiasService);
+  private readonly sociosService = inject(SociosService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly estados: EstadoMembresia[] = ['ACTIVA', 'INACTIVA'];
+  protected readonly estados: EstadoMembresia[] = [
+    'ACTIVA',
+    'VENCIDA',
+    'CANCELADA',
+    'PENDIENTE_PAGO'
+  ];
+  protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly isEditMode = signal(false);
-  protected readonly currentMembresia = signal<Membresia | null>(null);
+  protected readonly currentMembresia = signal<MembresiaViewModel | null>(null);
   protected readonly pageTitle = computed(() =>
-    this.isEditMode() ? 'Editar membresia' : 'Alta de membresia'
+    this.isEditMode() ? 'Editar membresia asignada' : 'Nueva membresia asignada'
   );
   protected readonly pageDescription = computed(() =>
     this.isEditMode()
-      ? 'Actualiza la configuracion del plan sin perder consistencia para futuras asociaciones con socios.'
-      : 'Crea un nuevo plan reusable para asignar despues a socios, pagos y renovaciones.'
+      ? 'Actualiza fechas, precio y saldo de una membresia ya asignada a un socio.'
+      : 'Crea una nueva membresia vinculada a un socio real del sistema.'
   );
   protected readonly form = this.formBuilder.group({
-    nombre: ['', [Validators.required, Validators.maxLength(80)]],
-    descripcion: ['', [Validators.required, Validators.maxLength(240)]],
-    duracionDias: [30, [Validators.required, Validators.min(1), Validators.max(3650)]],
-    precio: [0, [Validators.required, Validators.min(0)]],
-    estado: ['ACTIVA' as EstadoMembresia, [Validators.required]]
+    socioId: [null as number | null, [Validators.required]],
+    fechaInicio: [new Date() as Date | null, [Validators.required]],
+    fechaVencimiento: [null as Date | null, [Validators.required]],
+    precioLista: [0, [Validators.required, Validators.min(0)]],
+    saldoPendiente: [0, [Validators.min(0)]]
   });
 
   constructor() {
@@ -76,12 +98,16 @@ export class MembresiaFormComponent {
       return;
     }
 
-    const payload = this.buildPayload();
     const membresiaId = this.currentMembresia()?.id;
     const request$ =
       this.isEditMode() && membresiaId
-        ? this.membresiasService.updateMembresia(membresiaId, payload)
-        : this.membresiasService.createMembresia(payload);
+        ? this.membresiasService.updateMembresia(
+            membresiaId,
+            mapMembresiaFormToUpdateRequest(this.buildPayload())
+          )
+        : this.membresiasService.createMembresia(
+            mapMembresiaFormToCreateRequest(this.buildPayload())
+          );
 
     this.saving.set(true);
 
@@ -108,7 +134,7 @@ export class MembresiaFormComponent {
   }
 
   protected getErrorMessage(
-    controlName: 'nombre' | 'descripcion' | 'duracionDias' | 'precio' | 'estado'
+    controlName: 'socioId' | 'fechaInicio' | 'fechaVencimiento' | 'precioLista' | 'saldoPendiente'
   ): string {
     const control = this.form.controls[controlName];
 
@@ -128,16 +154,17 @@ export class MembresiaFormComponent {
       return 'El valor ingresado es demasiado bajo.';
     }
 
-    if (control.hasError('max')) {
-      return 'El valor ingresado supera el maximo permitido.';
-    }
-
     return '';
   }
 
   private loadFormData(): void {
-    this.route.paramMap
+    this.sociosService
+      .getSocios()
       .pipe(
+        switchMap((socios) => {
+          this.socios.set(socios);
+          return this.route.paramMap;
+        }),
         switchMap((params) => {
           const membresiaIdParam = params.get('id');
           const membresiaId = membresiaIdParam ? Number(membresiaIdParam) : null;
@@ -146,10 +173,15 @@ export class MembresiaFormComponent {
           this.isEditMode.set(isEditMode);
 
           if (!isEditMode || !membresiaId) {
+            const socioIdQuery = this.route.snapshot.queryParamMap.get('socioId');
+            const socioId = socioIdQuery ? Number(socioIdQuery) : null;
+            if (Number.isFinite(socioId) && socioId !== null) {
+              this.form.controls.socioId.setValue(socioId);
+            }
             return of(null);
           }
 
-          return this.membresiasService.getMembresiaById(membresiaId);
+          return this.membresiasService.getMembresiaById(membresiaId, this.socios());
         }),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -167,25 +199,26 @@ export class MembresiaFormComponent {
       });
   }
 
-  private patchForm(membresia: Membresia): void {
+  private patchForm(membresia: MembresiaViewModel): void {
     this.form.patchValue({
-      nombre: membresia.nombre,
-      descripcion: membresia.descripcion,
-      duracionDias: membresia.duracionDias,
-      precio: membresia.precio,
-      estado: membresia.estado
+      socioId: membresia.socioId,
+      fechaInicio: membresia.fechaInicio ? new Date(membresia.fechaInicio) : null,
+      fechaVencimiento: membresia.fechaVencimiento ? new Date(membresia.fechaVencimiento) : null,
+      precioLista: membresia.precioLista ?? 0,
+      saldoPendiente: membresia.saldoPendiente ?? 0
     });
+    this.form.controls.socioId.disable();
   }
 
-  private buildPayload(): MembresiaRequest {
+  private buildPayload(): MembresiaFormValue {
     const rawValue = this.form.getRawValue();
 
     return {
-      nombre: (rawValue.nombre ?? '').trim(),
-      descripcion: (rawValue.descripcion ?? '').trim(),
-      duracionDias: Number(rawValue.duracionDias ?? 0),
-      precio: Number(rawValue.precio ?? 0),
-      estado: rawValue.estado ?? 'ACTIVA'
+      socioId: rawValue.socioId ?? this.currentMembresia()?.socioId ?? null,
+      fechaInicio: rawValue.fechaInicio ?? null,
+      fechaVencimiento: rawValue.fechaVencimiento ?? null,
+      precioLista: rawValue.precioLista ?? 0,
+      saldoPendiente: rawValue.saldoPendiente ?? 0
     };
   }
 

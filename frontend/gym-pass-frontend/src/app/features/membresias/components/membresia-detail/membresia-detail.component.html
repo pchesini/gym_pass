@@ -2,7 +2,7 @@
   <header class="page-header">
     <div>
       <span class="eyebrow">Membresias</span>
-      <h1>Detalle del plan</h1>
+      <h1>Detalle de membresia asignada</h1>
     </div>
 
     <div class="header-actions">
@@ -41,9 +41,9 @@
     <mat-card appearance="outlined" class="detail-card">
       <div class="detail-header">
         <div>
-          <span class="label">Plan</span>
-          <h2>{{ currentMembresia.nombre }}</h2>
-          <p>{{ currentMembresia.descripcion }}</p>
+          <span class="label">Socio</span>
+          <h2>{{ currentMembresia.socioNombre }}</h2>
+          <p>DNI: {{ currentMembresia.socioDni ?? 'No disponible' }}</p>
         </div>
         <mat-chip [class]="getEstadoClass(currentMembresia.estado)">{{ currentMembresia.estado }}</mat-chip>
       </div>
@@ -54,16 +54,24 @@
           <strong>{{ currentMembresia.id }}</strong>
         </div>
         <div>
-          <span class="label">Duracion</span>
-          <strong>{{ currentMembresia.duracionDias }} dias</strong>
+          <span class="label">Fecha inicio</span>
+          <strong>{{ currentMembresia.fechaInicio ? (currentMembresia.fechaInicio | date: 'dd/MM/yyyy') : '-' }}</strong>
         </div>
         <div>
-          <span class="label">Precio</span>
-          <strong>{{ currentMembresia.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+          <span class="label">Fecha vencimiento</span>
+          <strong>{{ currentMembresia.fechaVencimiento ? (currentMembresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}</strong>
         </div>
         <div>
           <span class="label">Estado</span>
           <strong>{{ currentMembresia.estado }}</strong>
+        </div>
+        <div>
+          <span class="label">Precio lista</span>
+          <strong>{{ (currentMembresia.precioLista ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </div>
+        <div>
+          <span class="label">Saldo pendiente</span>
+          <strong>{{ (currentMembresia.saldoPendiente ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
         </div>
       </div>
     </mat-card>

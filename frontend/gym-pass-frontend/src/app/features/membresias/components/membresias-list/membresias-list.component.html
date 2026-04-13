@@ -2,42 +2,111 @@
   <header class="page-header">
     <div>
       <span class="eyebrow">Membresias</span>
-      <h1>Planes disponibles del gimnasio</h1>
+      <h1>Membresias asignadas a socios</h1>
       <p>
-        Gestiona los tipos de membresia que despues podras asociar a cada socio y reutilizar en
-        renovaciones, pagos y vencimientos.
+        El backend real trabaja por socio, asi que esta vista te permite buscar un socio y
+        consultar o administrar sus membresias asignadas.
       </p>
     </div>
 
-    <a mat-flat-button color="primary" routerLink="/membresias/nueva">
+    <button mat-flat-button color="primary" type="button" (click)="createForSelectedSocio()">
       <mat-icon>add_card</mat-icon>
       Nueva membresia
-    </a>
+    </button>
   </header>
 
   <mat-card appearance="outlined" class="table-card">
-    @if (loading()) {
+    <form class="search-form" [formGroup]="form" (ngSubmit)="buscarSocio()">
+      <mat-form-field appearance="outline">
+        <mat-label>Criterio</mat-label>
+        <mat-select formControlName="criterio">
+          <mat-option value="DNI">DNI</mat-option>
+          <mat-option value="NOMBRE">Nombre</mat-option>
+          <mat-option value="APELLIDO">Apellido</mat-option>
+        </mat-select>
+        <mat-error>{{ getErrorMessage('criterio') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Buscar socio</mat-label>
+        <input matInput formControlName="valor" placeholder="Ej. 30111222 o Juan" />
+        <mat-icon matSuffix>search</mat-icon>
+        <mat-error>{{ getErrorMessage('valor') }}</mat-error>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit">
+        Buscar
+      </button>
+    </form>
+
+    @if (loading() && !socios().length) {
       <div class="state-box">
         <mat-spinner diameter="42" />
-        <p>Cargando membresias...</p>
+        <p>Cargando socios...</p>
       </div>
     } @else if (errorMessage()) {
       <div class="state-box state-box--error">
         <mat-icon>error_outline</mat-icon>
         <div>
-          <h2>No se pudo cargar el listado</h2>
+          <h2>No se pudo cargar la vista</h2>
           <p>{{ errorMessage() }}</p>
         </div>
+      </div>
+    } @else if (resultados().length) {
+      <div class="results-list">
+        @for (socio of resultados(); track trackBySocioId($index, socio)) {
+          <button mat-stroked-button type="button" class="result-item" (click)="selectSocio(socio)">
+            <span>{{ socio.nombreCompleto }}</span>
+            <small>{{ socio.dni }}</small>
+          </button>
+        }
+      </div>
+    } @else if (!selectedSocio()) {
+      <div class="state-box">
+        <mat-icon>manage_search</mat-icon>
+        <div>
+          <h2>Busca un socio para comenzar</h2>
+          <p>El listado de membresias se consulta por socio porque el backend no ofrece un listado global.</p>
+        </div>
+      </div>
+    } @else if (loading()) {
+      <div class="state-box">
+        <mat-spinner diameter="42" />
+        <p>Cargando membresias del socio...</p>
       </div>
     } @else if (!membresias().length) {
       <div class="state-box">
         <mat-icon>credit_card_off</mat-icon>
         <div>
-          <h2>No hay membresias registradas</h2>
-          <p>Crea el primer plan para empezar a asociarlo luego con socios y pagos.</p>
+          <h2>Sin membresias registradas</h2>
+          <p>{{ selectedSocio()?.nombreCompleto }} todavia no tiene membresias cargadas.</p>
         </div>
       </div>
     } @else {
+      <div class="selected-socio-banner">
+        <div>
+          <span class="eyebrow">Socio seleccionado</span>
+          <h2>{{ selectedSocio()?.nombreCompleto }}</h2>
+          <p>DNI: {{ selectedSocio()?.dni }}</p>
+        </div>
+
+        @if (activeMembresia(); as currentActiveMembresia) {
+          <div class="active-box">
+            <span class="label">Membresia activa</span>
+            <strong>{{ currentActiveMembresia.estado }}</strong>
+            <span>
+              Vence: {{ currentActiveMembresia.fechaVencimiento ? (currentActiveMembresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+            </span>
+          </div>
+        } @else {
+          <div class="active-box active-box--empty">
+            <span class="label">Membresia activa</span>
+            <strong>No disponible</strong>
+            <span>Este socio no tiene una membresia activa hoy.</span>
+          </div>
+        }
+      </div>
+
       <div class="table-wrapper">
         <table mat-table [dataSource]="membresias()" [trackBy]="trackByMembresiaId" class="membresias-table">
           <ng-container matColumnDef="id">
@@ -45,25 +114,31 @@
             <td mat-cell *matCellDef="let membresia">{{ membresia.id }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let membresia">{{ membresia.nombre }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="descripcion">
-            <th mat-header-cell *matHeaderCellDef>Descripcion</th>
-            <td mat-cell *matCellDef="let membresia">{{ membresia.descripcion }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="duracionDias">
-            <th mat-header-cell *matHeaderCellDef>Duracion en dias</th>
-            <td mat-cell *matCellDef="let membresia">{{ membresia.duracionDias }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="precio">
-            <th mat-header-cell *matHeaderCellDef>Precio</th>
+          <ng-container matColumnDef="fechaInicio">
+            <th mat-header-cell *matHeaderCellDef>Fecha inicio</th>
             <td mat-cell *matCellDef="let membresia">
-              {{ membresia.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
+              {{ membresia.fechaInicio ? (membresia.fechaInicio | date: 'dd/MM/yyyy') : '-' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="fechaVencimiento">
+            <th mat-header-cell *matHeaderCellDef>Fecha vencimiento</th>
+            <td mat-cell *matCellDef="let membresia">
+              {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="precioLista">
+            <th mat-header-cell *matHeaderCellDef>Precio lista</th>
+            <td mat-cell *matCellDef="let membresia">
+              {{ (membresia.precioLista ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="saldoPendiente">
+            <th mat-header-cell *matHeaderCellDef>Saldo pendiente</th>
+            <td mat-cell *matCellDef="let membresia">
+              {{ (membresia.saldoPendiente ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}
             </td>
           </ng-container>
 
@@ -96,7 +171,7 @@
                   @if (actionLoadingId() === membresia.id) {
                     <mat-spinner diameter="18" />
                   } @else {
-                    {{ membresia.estado === 'ACTIVA' ? 'Desactivar' : 'Activar' }}
+                    {{ membresia.estado === 'ACTIVA' ? 'Cancelar' : 'Activar' }}
                   }
                 </button>
               </div>
