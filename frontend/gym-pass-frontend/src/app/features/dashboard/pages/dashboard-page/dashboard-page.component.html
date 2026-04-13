@@ -4,47 +4,134 @@
       <span class="eyebrow">Dashboard</span>
       <h1>Resumen general del gimnasio</h1>
       <p>
-        Esta vista resume el estado actual del frontend administrativo, ya alineado con los
-        contratos reales disponibles en el backend.
+        Este panel consume datos reales del backend ya disponible y muestra una vista operativa
+        simple para administracion diaria.
       </p>
     </div>
   </header>
 
-  <div class="metrics-grid">
-    @for (metric of metrics; track metric.label) {
-      <mat-card appearance="outlined" class="metric-card">
-        <span class="metric-label">{{ metric.label }}</span>
-        <strong class="metric-value">{{ metric.value }}</strong>
-        <p>{{ metric.helper }}</p>
+  @if (loading()) {
+    <mat-card appearance="outlined" class="panel-card">
+      <div class="state-box">
+        <mat-spinner diameter="40" />
+        <p>Cargando datos reales del dashboard...</p>
+      </div>
+    </mat-card>
+  } @else if (errorMessage()) {
+    <mat-card appearance="outlined" class="panel-card">
+      <div class="state-box state-box--error">
+        <mat-icon>error_outline</mat-icon>
+        <div>
+          <h2>No se pudo cargar el dashboard</h2>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </mat-card>
+  } @else if (summary(); as currentSummary) {
+    <div class="metrics-grid">
+      @for (metric of currentSummary.metrics; track trackByMetricLabel($index, metric)) {
+        <mat-card appearance="outlined" class="metric-card">
+          <span class="metric-label">{{ metric.label }}</span>
+          <strong class="metric-value">{{ metric.value }}</strong>
+          <p>{{ metric.helper }}</p>
+        </mat-card>
+      }
+    </div>
+
+    @if (
+      !currentSummary.totalSocios &&
+      !currentSummary.asistenciasHoy &&
+      !currentSummary.totalPagos
+    ) {
+      <mat-card appearance="outlined" class="panel-card">
+        <div class="state-box">
+          <mat-icon>dashboard</mat-icon>
+          <div>
+            <h2>Sin datos para mostrar</h2>
+            <p>Cuando existan socios, asistencias o pagos, el dashboard mostrara el resumen real.</p>
+          </div>
+        </div>
       </mat-card>
+    } @else {
+      <div class="panel-grid">
+        <mat-card appearance="outlined" class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Pagos</span>
+              <h2>Ultimos 5 pagos</h2>
+            </div>
+          </div>
+
+          @if (!currentSummary.ultimosPagos.length) {
+            <p class="panel-empty">No hay pagos registrados.</p>
+          } @else {
+            <div class="list-grid">
+              @for (pago of currentSummary.ultimosPagos; track trackByPagoId($index, pago)) {
+                <article class="list-item">
+                  <strong>{{ pago.socioNombre }}</strong>
+                  <span>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
+                  <span>{{ pago.metodoPago }}</span>
+                  <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+                </article>
+              }
+            </div>
+          }
+        </mat-card>
+
+        <mat-card appearance="outlined" class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Asistencias</span>
+              <h2>Ultimas 5 asistencias de hoy</h2>
+            </div>
+          </div>
+
+          @if (!currentSummary.ultimasAsistencias.length) {
+            <p class="panel-empty">No hay asistencias cargadas para hoy.</p>
+          } @else {
+            <div class="list-grid">
+              @for (asistencia of currentSummary.ultimasAsistencias; track trackByAsistenciaId($index, asistencia)) {
+                <article class="list-item">
+                  <strong>{{ asistencia.socioNombre }}</strong>
+                  <span>Entrada: {{ asistencia.fechaHoraEntrada ? (asistencia.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+                  <span>Salida: {{ asistencia.fechaHoraSalida ? (asistencia.fechaHoraSalida | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+                  <span>{{ asistencia.estado }}</span>
+                </article>
+              }
+            </div>
+          }
+        </mat-card>
+
+        <mat-card appearance="outlined" class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Socios</span>
+              <h2>Ultimos 5 socios</h2>
+            </div>
+          </div>
+
+          @if (!currentSummary.sociosRecientes.length) {
+            <p class="panel-empty">No hay socios registrados.</p>
+          } @else {
+            <div class="list-grid">
+              @for (socio of currentSummary.sociosRecientes; track trackBySocioId($index, socio)) {
+                <article class="list-item">
+                  <strong>{{ socio.nombreCompleto }}</strong>
+                  <span>DNI: {{ socio.dni }}</span>
+                  <span>{{ socio.estado }}</span>
+                  <span>
+                    @if (socio.fechaAlta) {
+                      Alta: {{ socio.fechaAlta | date: 'dd/MM/yyyy' }}
+                    } @else {
+                      ID: {{ socio.id }}
+                    }
+                  </span>
+                </article>
+              }
+            </div>
+          }
+        </mat-card>
+      </div>
     }
-  </div>
-
-  <mat-card appearance="outlined" class="panel-card">
-    <div class="panel-header">
-      <div>
-        <span class="eyebrow">Proximos pasos</span>
-        <h2>Base lista para crecer por features</h2>
-      </div>
-    </div>
-
-    <div class="panel-grid">
-      <div>
-        <h3>Socios y membresias</h3>
-        <p>Los socios ya se integran con membresias asignadas por socio, sin catalogo ficticio.</p>
-      </div>
-      <div>
-        <h3>Asistencias</h3>
-        <p>La recepcion ya permite registrar entrada y salida usando el flujo real del backend.</p>
-      </div>
-      <div>
-        <h3>Pagos</h3>
-        <p>Los pagos consumen los endpoints reales y resuelven filtros y resumenes desde frontend.</p>
-      </div>
-      <div>
-        <h3>Proxima ronda</h3>
-        <p>La app quedo lista para pruebas manuales e integracion funcional cruzada entre modulos.</p>
-      </div>
-    </div>
-  </mat-card>
+  }
 </section>
