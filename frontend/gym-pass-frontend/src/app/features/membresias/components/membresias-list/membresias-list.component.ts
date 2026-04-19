@@ -135,19 +135,21 @@ export class MembresiasListComponent {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (membresias) => this.membresias.set(membresias),
+        next: (membresias) => {
+          this.membresias.set(membresias);
+
+          if (!membresias.length) {
+            this.activeMembresia.set(null);
+            return;
+          }
+
+          this.loadActiveMembresia(socio);
+        },
         error: (error) => {
           this.errorMessage.set(this.resolveErrorMessage(error));
           this.membresias.set([]);
+          this.activeMembresia.set(null);
         }
-      });
-
-    this.membresiasService
-      .getMembresiaActivaBySocioId(socio.id, this.socios())
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (membresia) => this.activeMembresia.set(membresia),
-        error: () => this.activeMembresia.set(null)
       });
   }
 
@@ -274,6 +276,24 @@ export class MembresiasListComponent {
         error: (error) => {
           this.errorMessage.set(this.resolveErrorMessage(error));
           this.socios.set([]);
+        }
+      });
+  }
+
+  private loadActiveMembresia(socio: SocioViewModel): void {
+    this.membresiasService
+      .getMembresiaActivaBySocioId(socio.id, this.socios())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (membresia) => this.activeMembresia.set(membresia),
+        error: (error) => {
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            this.activeMembresia.set(null);
+            return;
+          }
+
+          this.errorMessage.set(this.resolveErrorMessage(error));
+          this.activeMembresia.set(null);
         }
       });
   }

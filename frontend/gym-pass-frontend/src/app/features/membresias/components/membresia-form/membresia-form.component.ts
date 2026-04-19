@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { of, switchMap } from 'rxjs';
+import { of, switchMap, take } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -163,7 +163,7 @@ export class MembresiaFormComponent {
       .pipe(
         switchMap((socios) => {
           this.socios.set(socios);
-          return this.route.paramMap;
+          return this.route.paramMap.pipe(take(1));
         }),
         switchMap((params) => {
           const membresiaIdParam = params.get('id');
