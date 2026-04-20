@@ -46,11 +46,11 @@
         </div>
         <div>
           <span class="label">Entrada</span>
-          <strong>{{ currentAsistencia.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          <strong>{{ formatFechaHora(currentAsistencia.fechaHoraEntrada) }}</strong>
         </div>
         <div>
           <span class="label">Salida</span>
-          <strong>{{ currentAsistencia.fechaHoraSalida ? (currentAsistencia.fechaHoraSalida | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
+          <strong>{{ formatFechaHora(currentAsistencia.fechaHoraSalida) }}</strong>
         </div>
         <div>
           <span class="label">Duracion</span>

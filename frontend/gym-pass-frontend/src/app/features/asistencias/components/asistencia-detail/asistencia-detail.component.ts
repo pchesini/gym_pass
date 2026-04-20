@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { SociosService } from '../../../socios/services/socios.service';
+import { formatAsistenciaDateTime } from '../../mappers/asistencia.mapper';
 import { AsistenciaViewModel, EstadoAsistencia } from '../../models/asistencia.model';
 import { AsistenciasService } from '../../services/asistencias.service';
 
@@ -40,6 +41,7 @@ export class AsistenciaDetailComponent {
   protected readonly asistencia = signal<AsistenciaViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly formatFechaHora = formatAsistenciaDateTime;
 
   constructor() {
     this.loadAsistencia();

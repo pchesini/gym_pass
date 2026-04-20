@@ -73,7 +73,7 @@
           <strong>
             {{
               currentSocio.ultimaAsistencia?.fechaHoraEntrada
-                ? (currentSocio.ultimaAsistencia?.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm')
+                ? formatFechaHora(currentSocio.ultimaAsistencia?.fechaHoraEntrada)
                 : 'Sin registros'
             }}
           </strong>
@@ -83,7 +83,7 @@
           <strong>
             {{
               currentSocio.asistenciaAbierta?.fechaHoraEntrada
-                ? (currentSocio.asistenciaAbierta?.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm')
+                ? formatFechaHora(currentSocio.asistenciaAbierta?.fechaHoraEntrada)
                 : 'No'
             }}
           </strong>

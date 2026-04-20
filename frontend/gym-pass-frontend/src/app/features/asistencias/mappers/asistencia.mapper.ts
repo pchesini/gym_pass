@@ -12,8 +12,66 @@ function normalizeText(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function padDatePart(value: number): string {
+  return value.toString().padStart(2, '0');
+}
+
 function formatDateToIso(date: Date): string {
-  return date.toISOString();
+  const year = date.getFullYear();
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  const hours = padDatePart(date.getHours());
+  const minutes = padDatePart(date.getMinutes());
+  const seconds = padDatePart(date.getSeconds());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
+function hasExplicitTimezone(value: string): boolean {
+  return /(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+}
+
+function formatDateParts(date: Date): string {
+  return `${padDatePart(date.getDate())}/${padDatePart(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+function formatDateTimeParts(date: Date): string {
+  return `${formatDateParts(date)} ${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`;
+}
+
+export function formatAsistenciaDate(value: string | null | undefined): string {
+  if (!value) {
+    return '-';
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? value : formatDateParts(parsedDate);
+  }
+
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+}
+
+export function formatAsistenciaDateTime(value: string | null | undefined): string {
+  if (!value) {
+    return '-';
+  }
+
+  if (hasExplicitTimezone(value)) {
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? value : formatDateTimeParts(parsedDate);
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+  if (!match) {
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? value : formatDateTimeParts(parsedDate);
+  }
+
+  const [, year, month, day, hours = '00', minutes = '00'] = match;
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
 export function mapAsistenciaApiResponseToViewModel(

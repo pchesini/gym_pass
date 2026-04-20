@@ -22,6 +22,7 @@ import {
 import {
   buildSocioAsistenciaLookup,
   buscarSociosEnFrontend,
+  formatAsistenciaDateTime,
   mapAsistenciaFormToCreateRequest
 } from '../../mappers/asistencia.mapper';
 import { AsistenciasService } from '../../services/asistencias.service';
@@ -72,6 +73,7 @@ export class AsistenciasCheckinComponent {
     const currentSocio = this.socio();
     return currentSocio ? `estado-chip estado-chip--${currentSocio.socio.estado.toLowerCase()}` : '';
   });
+  protected readonly formatFechaHora = formatAsistenciaDateTime;
   protected readonly form = this.formBuilder.group({
     criterio: ['NOMBRE' as CriterioBusquedaSocio, [Validators.required]],
     valor: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]]

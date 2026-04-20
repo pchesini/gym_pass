@@ -21,7 +21,7 @@ import { MatTableModule } from '@angular/material/table';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
-import { buscarSociosEnFrontend } from '../../mappers/asistencia.mapper';
+import { buscarSociosEnFrontend, formatAsistenciaDateTime } from '../../mappers/asistencia.mapper';
 import { AsistenciaViewModel, EstadoAsistencia } from '../../models/asistencia.model';
 import { AsistenciasService } from '../../services/asistencias.service';
 
@@ -73,6 +73,7 @@ export class AsistenciasListComponent {
   protected readonly actionLoadingId = signal<number | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly dataScopeLabel = signal('Asistencias de hoy');
+  protected readonly formatFechaHora = formatAsistenciaDateTime;
   protected readonly filtersForm = this.formBuilder.group({
     fecha: [null as Date | null],
     socio: [''],
