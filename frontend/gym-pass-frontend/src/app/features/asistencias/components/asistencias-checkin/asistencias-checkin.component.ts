@@ -73,7 +73,7 @@ export class AsistenciasCheckinComponent {
     return currentSocio ? `estado-chip estado-chip--${currentSocio.socio.estado.toLowerCase()}` : '';
   });
   protected readonly form = this.formBuilder.group({
-    criterio: ['DNI' as CriterioBusquedaSocio, [Validators.required]],
+    criterio: ['NOMBRE' as CriterioBusquedaSocio, [Validators.required]],
     valor: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]]
   });
 
@@ -88,7 +88,7 @@ export class AsistenciasCheckinComponent {
     }
 
     const payload: BuscarSocioRequest = {
-      criterio: this.form.controls.criterio.value ?? 'DNI',
+      criterio: this.form.controls.criterio.value ?? 'NOMBRE',
       valor: (this.form.controls.valor.value ?? '').trim()
     };
 

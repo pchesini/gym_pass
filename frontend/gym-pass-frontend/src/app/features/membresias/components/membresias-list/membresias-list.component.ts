@@ -75,7 +75,7 @@ export class MembresiasListComponent {
   protected readonly actionLoadingId = signal<number | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly form = this.formBuilder.group({
-    criterio: ['DNI' as 'DNI' | 'NOMBRE' | 'APELLIDO', [Validators.required]],
+    criterio: ['NOMBRE' as 'DNI' | 'NOMBRE' | 'APELLIDO', [Validators.required]],
     valor: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]]
   });
 
@@ -89,7 +89,7 @@ export class MembresiasListComponent {
       return;
     }
 
-    const criterio = this.form.controls.criterio.value ?? 'DNI';
+    const criterio = this.form.controls.criterio.value ?? 'NOMBRE';
     const valor = (this.form.controls.valor.value ?? '').trim().toLowerCase();
     const resultados = this.socios().filter((socio) => {
       switch (criterio) {
