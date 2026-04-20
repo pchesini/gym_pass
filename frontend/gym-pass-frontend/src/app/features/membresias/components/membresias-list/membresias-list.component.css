@@ -184,6 +184,32 @@
   color: #dc2626;
 }
 
+.state-box--empty-memberships {
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+}
+
+.state-box--empty-memberships h2 {
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
+.state-box--empty-memberships p {
+  max-width: 540px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.state-box--empty-memberships mat-icon {
+  width: 58px;
+  height: 58px;
+  font-size: 58px;
+  color: #2563eb;
+}
+
 @media (max-width: 960px) {
   .page-header {
     flex-direction: column;
