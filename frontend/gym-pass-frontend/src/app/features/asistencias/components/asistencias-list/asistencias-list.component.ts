@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
@@ -41,6 +42,7 @@ import { AsistenciasService } from '../../services/asistencias.service';
     MatNativeDateModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MatSnackBarModule,
     MatTableModule
   ],
   templateUrl: './asistencias-list.component.html',
@@ -52,6 +54,7 @@ export class AsistenciasListComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly estados: EstadoAsistencia[] = ['ABIERTA', 'CERRADA'];
   protected readonly displayedColumns = [
@@ -67,6 +70,7 @@ export class AsistenciasListComponent {
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly asistencias = signal<AsistenciaViewModel[]>([]);
   protected readonly loading = signal(true);
+  protected readonly actionLoadingId = signal<number | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly dataScopeLabel = signal('Asistencias de hoy');
   protected readonly filtersForm = this.formBuilder.group({
@@ -128,6 +132,36 @@ export class AsistenciasListComponent {
 
   protected goToDetail(asistenciaId: number): void {
     void this.router.navigate(['/asistencias', asistenciaId]);
+  }
+
+  protected registrarSalida(asistencia: AsistenciaViewModel): void {
+    if (asistencia.estado !== 'ABIERTA') {
+      return;
+    }
+
+    const confirmationText = `Queres registrar la salida de ${asistencia.socioNombre}?`;
+    if (!window.confirm(confirmationText)) {
+      return;
+    }
+
+    this.actionLoadingId.set(asistencia.id);
+
+    this.asistenciasService
+      .registrarSalida(asistencia.id)
+      .pipe(
+        finalize(() => this.actionLoadingId.set(null)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Salida registrada correctamente.', 'Cerrar', { duration: 3000 });
+          this.asistenciasService.notifyRefresh();
+          this.loadAsistencias();
+        },
+        error: (error) => {
+          this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4000 });
+        }
+      });
   }
 
   protected trackByAsistenciaId(_: number, asistencia: AsistenciaViewModel): number {
