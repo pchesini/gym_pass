@@ -93,16 +93,25 @@
 .estado-chip {
   font-weight: 700;
   letter-spacing: 0.02em;
+  border: 1px solid transparent;
 }
 
-.estado-chip--activo {
-  background: #dcfce7;
-  color: #166534;
+.estado-chip--activo.mat-mdc-chip {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #86efac;
+  --mdc-chip-elevated-container-color: #dcfce7;
+  --mdc-chip-label-text-color: #166534;
+  --mdc-chip-outline-color: #86efac;
 }
 
-.estado-chip--inactivo {
-  background: #f5e1d6;
-  color: #8a3b12;
+.estado-chip--inactivo.mat-mdc-chip {
+  background: #f5e1d6 !important;
+  color: #8a3b12 !important;
+  border-color: #d6a58a;
+  --mdc-chip-elevated-container-color: #f5e1d6;
+  --mdc-chip-label-text-color: #8a3b12;
+  --mdc-chip-outline-color: #d6a58a;
 }
 
 .state-box {
