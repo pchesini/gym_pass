@@ -45,7 +45,7 @@
 
 .membresias-table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1180px;
 }
 
 .mat-mdc-header-cell {
@@ -67,7 +67,7 @@
 
 .search-form {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) auto;
+  grid-template-columns: 220px minmax(0, 1fr) auto auto;
   gap: 1rem;
   align-items: start;
 }

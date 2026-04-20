@@ -55,6 +55,13 @@ public class MembresiaService {
     }
 
     @Transactional(readOnly = true)
+    public List<MembresiaResponse> listarTodas() {
+        return membresiaRepository.findAllByOrderByFechaVencimientoDescIdDesc().stream()
+                .map(MembresiaMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<MembresiaResponse> listarPorSocio(Long socioId) {
         validarSocioExiste(socioId);
 

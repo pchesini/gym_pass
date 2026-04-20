@@ -21,6 +21,14 @@ export class MembresiasService {
   private readonly http = inject(HttpClient);
   private readonly membresiasUrl = `${apiBaseUrl}/membresias`;
 
+  getMembresias(socios?: SocioViewModel[]): Observable<MembresiaViewModel[]> {
+    return this.http
+      .get<MembresiaApiResponse[]>(this.membresiasUrl)
+      .pipe(
+        map((membresias) => membresias.map((membresia) => this.mapWithSocio(membresia, socios)))
+      );
+  }
+
   getMembresiaById(id: number, socios?: SocioViewModel[]): Observable<MembresiaViewModel> {
     return this.http
       .get<MembresiaApiResponse>(`${this.membresiasUrl}/${id}`)

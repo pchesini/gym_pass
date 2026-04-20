@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface MembresiaRepository extends JpaRepository<MembresiaEntity, Long> {
 
+    List<MembresiaEntity> findAllByOrderByFechaVencimientoDescIdDesc();
+
     List<MembresiaEntity> findBySocioId(Long socioId);
 
     List<MembresiaEntity> findByEstado(EstadoMembresia estado);

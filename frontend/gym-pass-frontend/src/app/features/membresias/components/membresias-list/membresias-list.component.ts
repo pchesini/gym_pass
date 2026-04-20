@@ -53,6 +53,8 @@ export class MembresiasListComponent {
 
   protected readonly displayedColumns = [
     'id',
+    'socio',
+    'dni',
     'fechaInicio',
     'fechaVencimiento',
     'precioLista',
@@ -70,6 +72,7 @@ export class MembresiasListComponent {
   protected readonly resultados = signal<SocioViewModel[]>([]);
   protected readonly selectedSocio = signal<SocioViewModel | null>(null);
   protected readonly activeMembresia = signal<MembresiaViewModel | null>(null);
+  protected readonly allMembresias = signal<MembresiaViewModel[]>([]);
   protected readonly membresias = signal<MembresiaViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly actionLoadingId = signal<number | null>(null);
@@ -80,7 +83,7 @@ export class MembresiasListComponent {
   });
 
   constructor() {
-    this.loadSocios();
+    this.loadInitialData();
   }
 
   protected buscarSocio(): void {
@@ -108,49 +111,39 @@ export class MembresiasListComponent {
     this.resultados.set(resultados);
     this.selectedSocio.set(null);
     this.activeMembresia.set(null);
-    this.membresias.set([]);
+    this.membresias.set(this.allMembresias());
 
     if (!resultados.length) {
-      this.errorMessage.set('No se encontro ningun socio con ese criterio.');
+      this.snackBar.open('No se encontro ningun socio con ese criterio.', 'Cerrar', {
+        duration: 3000
+      });
       return;
     }
-
-    this.errorMessage.set(null);
 
     if (resultados.length === 1) {
       this.selectSocio(resultados[0]);
     }
   }
 
-  protected selectSocio(socio: SocioViewModel): void {
-    this.loading.set(true);
+  protected resetToGlobalList(): void {
+    this.resultados.set([]);
+    this.selectedSocio.set(null);
+    this.activeMembresia.set(null);
     this.errorMessage.set(null);
+    this.membresias.set(this.allMembresias());
+  }
+
+  protected selectSocio(socio: SocioViewModel): void {
     this.selectedSocio.set(socio);
     this.resultados.set([]);
+    this.errorMessage.set(null);
 
-    this.membresiasService
-      .getMembresiasBySocioId(socio.id, this.socios())
-      .pipe(
-        finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: (membresias) => {
-          this.membresias.set(membresias);
+    const membresias = this.allMembresias().filter(
+      (currentMembresia) => currentMembresia.socioId === socio.id
+    );
 
-          if (!membresias.length) {
-            this.activeMembresia.set(null);
-            return;
-          }
-
-          this.loadActiveMembresia(socio);
-        },
-        error: (error) => {
-          this.errorMessage.set(this.resolveErrorMessage(error));
-          this.membresias.set([]);
-          this.activeMembresia.set(null);
-        }
-      });
+    this.membresias.set(membresias);
+    this.activeMembresia.set(this.resolveActiveMembresia(membresias));
   }
 
   protected navigateToEdit(id: number): void {
@@ -190,11 +183,14 @@ export class MembresiasListComponent {
       )
       .subscribe({
         next: (updatedMembresia) => {
-          const socio = this.socios().find((currentSocio) => currentSocio.id === updatedMembresia.socioId);
+          const socio = this.socios().find(
+            (currentSocio) => currentSocio.id === updatedMembresia.socioId
+          );
           const updatedViewModel: MembresiaViewModel = {
             id: updatedMembresia.id,
             socioId: updatedMembresia.socioId,
-            socioNombre: socio?.nombreCompleto ?? `Socio #${updatedMembresia.socioId ?? 'N/D'}`,
+            socioNombre:
+              socio?.nombreCompleto ?? `Socio #${updatedMembresia.socioId ?? 'N/D'}`,
             socioDni: socio?.dni ?? null,
             fechaInicio: updatedMembresia.fechaInicio,
             fechaVencimiento: updatedMembresia.fechaVencimiento,
@@ -204,16 +200,12 @@ export class MembresiasListComponent {
             activa: updatedMembresia.estado === 'ACTIVA'
           };
 
-          this.membresias.update((currentMembresias) =>
+          this.allMembresias.update((currentMembresias) =>
             currentMembresias.map((currentMembresia) =>
               currentMembresia.id === updatedViewModel.id ? updatedViewModel : currentMembresia
             )
           );
-          if (updatedViewModel.activa) {
-            this.activeMembresia.set(updatedViewModel);
-          } else if (this.activeMembresia()?.id === updatedViewModel.id) {
-            this.activeMembresia.set(null);
-          }
+          this.syncVisibleMembresias();
 
           this.snackBar.open(
             `Estado actualizado a ${updatedViewModel.estado.toLowerCase()}.`,
@@ -261,41 +253,74 @@ export class MembresiasListComponent {
     return socio.id;
   }
 
-  private loadSocios(): void {
+  private loadInitialData(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
 
     this.sociosService
       .getSocios()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (socios) => {
+          this.socios.set(socios);
+          this.loadMembresias();
+        },
+        error: (error) => {
+          this.errorMessage.set(this.resolveErrorMessage(error));
+          this.socios.set([]);
+          this.allMembresias.set([]);
+          this.membresias.set([]);
+          this.loading.set(false);
+        }
+      });
+  }
+
+  private loadMembresias(): void {
+    this.membresiasService
+      .getMembresias(this.socios())
       .pipe(
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (socios) => this.socios.set(socios),
+        next: (membresias) => {
+          this.allMembresias.set(membresias);
+          this.membresias.set(membresias);
+        },
         error: (error) => {
           this.errorMessage.set(this.resolveErrorMessage(error));
-          this.socios.set([]);
+          this.allMembresias.set([]);
+          this.membresias.set([]);
         }
       });
   }
 
-  private loadActiveMembresia(socio: SocioViewModel): void {
-    this.membresiasService
-      .getMembresiaActivaBySocioId(socio.id, this.socios())
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (membresia) => this.activeMembresia.set(membresia),
-        error: (error) => {
-          if (error instanceof HttpErrorResponse && error.status === 404) {
-            this.activeMembresia.set(null);
-            return;
-          }
+  private syncVisibleMembresias(): void {
+    const socio = this.selectedSocio();
 
-          this.errorMessage.set(this.resolveErrorMessage(error));
-          this.activeMembresia.set(null);
-        }
-      });
+    if (!socio) {
+      this.membresias.set(this.allMembresias());
+      this.activeMembresia.set(null);
+      return;
+    }
+
+    const membresias = this.allMembresias().filter(
+      (currentMembresia) => currentMembresia.socioId === socio.id
+    );
+    this.membresias.set(membresias);
+    this.activeMembresia.set(this.resolveActiveMembresia(membresias));
+  }
+
+  private resolveActiveMembresia(
+    membresias: MembresiaViewModel[]
+  ): MembresiaViewModel | null {
+    return (
+      [...membresias]
+        .filter((membresia) => membresia.estado === 'ACTIVA')
+        .sort((left, right) =>
+          (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? '')
+        )[0] ?? null
+    );
   }
 
   private resolveErrorMessage(error: unknown): string {

@@ -30,6 +30,11 @@ public class MembresiaController {
         return membresiaService.obtenerPorId(id);
     }
 
+    @GetMapping
+    public List<MembresiaResponse> listarTodas() {
+        return membresiaService.listarTodas();
+    }
+
     @GetMapping("/socio/{socioId}")
     public List<MembresiaResponse> listarPorSocio(@PathVariable Long socioId) {
         return membresiaService.listarPorSocio(socioId);
