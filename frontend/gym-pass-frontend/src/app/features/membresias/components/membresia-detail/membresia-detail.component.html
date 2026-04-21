@@ -45,7 +45,7 @@
           <h2>{{ currentMembresia.socioNombre }}</h2>
           <p>DNI: {{ currentMembresia.socioDni ?? 'No disponible' }}</p>
         </div>
-        <mat-chip [class]="getEstadoClass(currentMembresia.estado)">{{ currentMembresia.estado }}</mat-chip>
+        <mat-chip [class]="getEstadoClass(currentMembresia.estadoVisual)">{{ currentMembresia.estadoVisual }}</mat-chip>
       </div>
 
       <div class="detail-grid">
@@ -63,7 +63,7 @@
         </div>
         <div>
           <span class="label">Estado</span>
-          <strong>{{ currentMembresia.estado }}</strong>
+          <strong>{{ currentMembresia.estadoVisual }}</strong>
         </div>
         <div>
           <span class="label">Precio lista</span>

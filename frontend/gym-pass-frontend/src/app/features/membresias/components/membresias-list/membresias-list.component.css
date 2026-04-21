@@ -132,26 +132,43 @@
 .estado-chip {
   font-weight: 700;
   letter-spacing: 0.02em;
+  border: 1px solid transparent;
 }
 
-.estado-chip--activa {
-  background: #dcfce7;
-  color: #166534;
+.estado-chip--activa.mat-mdc-chip {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #86efac;
+  --mdc-chip-elevated-container-color: #dcfce7;
+  --mdc-chip-label-text-color: #166534;
+  --mdc-chip-outline-color: #86efac;
 }
 
-.estado-chip--vencida {
-  background: #fee2e2;
-  color: #b91c1c;
+.estado-chip--vencida.mat-mdc-chip {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  border-color: #fca5a5;
+  --mdc-chip-elevated-container-color: #fee2e2;
+  --mdc-chip-label-text-color: #b91c1c;
+  --mdc-chip-outline-color: #fca5a5;
 }
 
-.estado-chip--cancelada {
-  background: #e2e8f0;
-  color: #334155;
+.estado-chip--cancelada.mat-mdc-chip {
+  background: #f5e1d6 !important;
+  color: #8a3b12 !important;
+  border-color: #d6a58a;
+  --mdc-chip-elevated-container-color: #f5e1d6;
+  --mdc-chip-label-text-color: #8a3b12;
+  --mdc-chip-outline-color: #d6a58a;
 }
 
-.estado-chip--pendiente_pago {
-  background: #fef3c7;
-  color: #92400e;
+.estado-chip--pendiente_pago.mat-mdc-chip {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fcd34d;
+  --mdc-chip-elevated-container-color: #fef3c7;
+  --mdc-chip-label-text-color: #92400e;
+  --mdc-chip-outline-color: #fcd34d;
 }
 
 .state-box {

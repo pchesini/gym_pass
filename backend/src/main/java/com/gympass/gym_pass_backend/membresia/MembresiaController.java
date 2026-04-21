@@ -1,6 +1,7 @@
 package com.gympass.gym_pass_backend.membresia;
 
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaActualizarRequest;
+import com.gympass.gym_pass_backend.membresia.dto.MembresiaAltaConPagoRequest;
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaCrearRequest;
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaEstadoRequest;
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaResponse;
@@ -23,6 +24,12 @@ public class MembresiaController {
     @ResponseStatus(HttpStatus.CREATED)
     public MembresiaResponse crearMembresia(@RequestBody MembresiaCrearRequest request) {
         return membresiaService.crearMembresia(request);
+    }
+
+    @PostMapping("/alta-con-pago")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MembresiaResponse crearMembresiaConPago(@RequestBody MembresiaAltaConPagoRequest request) {
+        return membresiaService.crearMembresiaConPagoInicial(request);
     }
 
     @GetMapping("/{id}")

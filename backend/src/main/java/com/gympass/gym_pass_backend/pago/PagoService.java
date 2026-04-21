@@ -1,5 +1,6 @@
 package com.gympass.gym_pass_backend.pago;
 
+import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
 import com.gympass.gym_pass_backend.pago.dto.PagoCrearRequest;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,6 +57,8 @@ public class PagoService {
             if (!membresia.getSocio().getId().equals(socio.getId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia no pertenece al socio informado");
             }
+
+            validarMontoContraSaldoPendiente(membresia, request.getMonto());
         }
 
         PagoEntity entity = PagoMapper.fromCrearRequest(request);
@@ -62,6 +66,10 @@ public class PagoService {
         entity.setMembresia(membresia);
         if (entity.getFechaPago() == null) {
             entity.setFechaPago(LocalDateTime.now());
+        }
+
+        if (membresia != null) {
+            actualizarSaldoYEstadoMembresia(membresia, request.getMonto());
         }
 
         PagoEntity guardado = pagoRepository.save(entity);
@@ -110,5 +118,41 @@ public class PagoService {
         if (!membresiaRepository.existsById(membresiaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada");
         }
+    }
+
+    private void validarMontoContraSaldoPendiente(MembresiaEntity membresia, BigDecimal montoPago) {
+        if (membresia.getSaldoPendiente() == null) {
+            return;
+        }
+
+        if (montoPago.compareTo(membresia.getSaldoPendiente()) > 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El monto del pago no puede superar el saldo pendiente de la membresia"
+            );
+        }
+    }
+
+    private void actualizarSaldoYEstadoMembresia(MembresiaEntity membresia, BigDecimal montoPago) {
+        BigDecimal saldoActual = membresia.getSaldoPendiente() == null
+                ? BigDecimal.ZERO
+                : membresia.getSaldoPendiente();
+        BigDecimal nuevoSaldo = saldoActual.subtract(montoPago);
+
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            nuevoSaldo = BigDecimal.ZERO;
+        }
+
+        membresia.setSaldoPendiente(nuevoSaldo);
+
+        if (membresia.getEstado() == EstadoMembresia.CANCELADA || membresia.getEstado() == EstadoMembresia.VENCIDA) {
+            return;
+        }
+
+        membresia.setEstado(
+                nuevoSaldo.compareTo(BigDecimal.ZERO) == 0
+                        ? EstadoMembresia.ACTIVA
+                        : EstadoMembresia.PENDIENTE_PAGO
+        );
     }
 }

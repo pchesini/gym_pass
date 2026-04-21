@@ -18,6 +18,7 @@ import { MatTableModule } from '@angular/material/table';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
+import { mapMembresiaApiResponseToViewModel } from '../../mappers/membresia.mapper';
 import { EstadoMembresia, MembresiaViewModel } from '../../models/membresia.model';
 import { MembresiasService } from '../../services/membresias.service';
 
@@ -154,6 +155,16 @@ export class MembresiasListComponent {
     void this.router.navigate(['/membresias', id]);
   }
 
+  protected navigateToRegistrarPago(membresia: MembresiaViewModel): void {
+    void this.router.navigate(['/pagos/nuevo'], {
+      queryParams: {
+        socioId: membresia.socioId ?? undefined,
+        membresiaId: membresia.id,
+        monto: membresia.saldoPendiente ?? undefined
+      }
+    });
+  }
+
   protected createForSelectedSocio(): void {
     const socio = this.selectedSocio();
     void this.router.navigate(['/membresias/nueva'], {
@@ -162,8 +173,11 @@ export class MembresiasListComponent {
   }
 
   protected toggleEstado(membresia: MembresiaViewModel): void {
-    const nextEstado: EstadoMembresia =
-      membresia.estado === 'ACTIVA' ? 'CANCELADA' : 'ACTIVA';
+    const nextEstado = this.getNextEstado(membresia);
+    if (!nextEstado) {
+      return;
+    }
+
     const confirmationText =
       nextEstado === 'ACTIVA'
         ? `Queres activar la membresia #${membresia.id} de ${membresia.socioNombre}?`
@@ -186,19 +200,7 @@ export class MembresiasListComponent {
           const socio = this.socios().find(
             (currentSocio) => currentSocio.id === updatedMembresia.socioId
           );
-          const updatedViewModel: MembresiaViewModel = {
-            id: updatedMembresia.id,
-            socioId: updatedMembresia.socioId,
-            socioNombre:
-              socio?.nombreCompleto ?? `Socio #${updatedMembresia.socioId ?? 'N/D'}`,
-            socioDni: socio?.dni ?? null,
-            fechaInicio: updatedMembresia.fechaInicio,
-            fechaVencimiento: updatedMembresia.fechaVencimiento,
-            estado: updatedMembresia.estado,
-            precioLista: updatedMembresia.precioLista,
-            saldoPendiente: updatedMembresia.saldoPendiente,
-            activa: updatedMembresia.estado === 'ACTIVA'
-          };
+          const updatedViewModel = mapMembresiaApiResponseToViewModel(updatedMembresia, socio);
 
           this.allMembresias.update((currentMembresias) =>
             currentMembresias.map((currentMembresia) =>
@@ -221,6 +223,22 @@ export class MembresiasListComponent {
 
   protected trackByMembresiaId(_: number, membresia: MembresiaViewModel): number {
     return membresia.id;
+  }
+
+  protected shouldShowEstadoAction(membresia: MembresiaViewModel): boolean {
+    return membresia.estadoVisual === 'VENCIDA' || membresia.estado === 'CANCELADA';
+  }
+
+  protected shouldShowRegistrarPago(membresia: MembresiaViewModel): boolean {
+    return membresia.estado === 'PENDIENTE_PAGO';
+  }
+
+  protected getEstadoActionLabel(membresia: MembresiaViewModel): string {
+    if (membresia.estadoVisual === 'VENCIDA') {
+      return 'Cancelar';
+    }
+
+    return 'Activar';
   }
 
   protected getEstadoChipClass(estado: EstadoMembresia): string {
@@ -316,11 +334,23 @@ export class MembresiasListComponent {
   ): MembresiaViewModel | null {
     return (
       [...membresias]
-        .filter((membresia) => membresia.estado === 'ACTIVA')
+        .filter((membresia) => membresia.estadoVisual === 'ACTIVA')
         .sort((left, right) =>
           (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? '')
         )[0] ?? null
     );
+  }
+
+  private getNextEstado(membresia: MembresiaViewModel): EstadoMembresia | null {
+    if (membresia.estadoVisual === 'VENCIDA') {
+      return 'CANCELADA';
+    }
+
+    if (membresia.estado === 'CANCELADA') {
+      return 'ACTIVA';
+    }
+
+    return null;
   }
 
   private resolveErrorMessage(error: unknown): string {

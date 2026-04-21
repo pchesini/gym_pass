@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 
 import {
   EstadoMembresia,
+  MembresiaAltaConPagoApiRequest,
   MembresiaApiResponse,
   MembresiaCreateApiRequest,
   MembresiaEstadoUpdateRequest,
@@ -57,6 +58,12 @@ export class MembresiasService {
 
   createMembresia(payload: MembresiaCreateApiRequest): Observable<MembresiaApiResponse> {
     return this.http.post<MembresiaApiResponse>(this.membresiasUrl, payload);
+  }
+
+  createMembresiaConPagoInicial(
+    payload: MembresiaAltaConPagoApiRequest
+  ): Observable<MembresiaApiResponse> {
+    return this.http.post<MembresiaApiResponse>(`${this.membresiasUrl}/alta-con-pago`, payload);
   }
 
   updateMembresia(

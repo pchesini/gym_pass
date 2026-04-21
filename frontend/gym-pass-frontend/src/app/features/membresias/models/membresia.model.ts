@@ -1,4 +1,5 @@
 export type EstadoMembresia = 'ACTIVA' | 'VENCIDA' | 'CANCELADA' | 'PENDIENTE_PAGO';
+export type MetodoPagoMembresia = 'CREDITO' | 'DEBITO' | 'TRANSFERENCIA' | 'EFECTIVO' | 'OTRO';
 
 export interface MembresiaApiResponse {
   id: number;
@@ -25,6 +26,16 @@ export interface MembresiaUpdateApiRequest {
   saldoPendiente?: number | null;
 }
 
+export interface MembresiaAltaConPagoApiRequest {
+  socioId: number;
+  fechaInicio: string;
+  fechaVencimiento: string;
+  precioLista: number;
+  montoPagado: number;
+  metodoPago: MetodoPagoMembresia;
+  observacionesPago?: string | null;
+}
+
 export interface MembresiaEstadoUpdateRequest {
   estado: EstadoMembresia;
 }
@@ -37,6 +48,7 @@ export interface MembresiaViewModel {
   fechaInicio: string | null;
   fechaVencimiento: string | null;
   estado: EstadoMembresia;
+  estadoVisual: EstadoMembresia;
   precioLista: number | null;
   saldoPendiente: number | null;
   activa: boolean;
@@ -48,4 +60,8 @@ export interface MembresiaFormValue {
   fechaVencimiento: Date | null;
   precioLista: number | null;
   saldoPendiente: number | null;
+  registrarPagoInicial: boolean;
+  montoPagado: number | null;
+  metodoPago: MetodoPagoMembresia;
+  observacionesPago: string;
 }

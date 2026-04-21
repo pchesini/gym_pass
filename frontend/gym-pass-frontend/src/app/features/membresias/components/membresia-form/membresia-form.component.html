@@ -61,6 +61,46 @@
             <mat-error>{{ getErrorMessage('saldoPendiente') }}</mat-error>
           </mat-form-field>
 
+          @if (!isEditMode()) {
+            <div class="status-box form-grid__full payment-box">
+              <mat-checkbox formControlName="registrarPagoInicial">
+                Registrar pago inicial al crear la membresia
+              </mat-checkbox>
+              <p>Si registras un pago ahora, la membresia se crea y el pago queda asociado automaticamente.</p>
+            </div>
+
+            @if (form.controls.registrarPagoInicial.value) {
+              <mat-form-field appearance="outline">
+                <mat-label>Monto pagado</mat-label>
+                <input matInput type="number" min="0" step="0.01" formControlName="montoPagado" />
+                <span matTextPrefix>$&nbsp;</span>
+                <mat-error>{{ getErrorMessage('montoPagado') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Metodo de pago</mat-label>
+                <mat-select formControlName="metodoPago">
+                  @for (metodo of metodosPago; track metodo) {
+                    <mat-option [value]="metodo">{{ metodo }}</mat-option>
+                  }
+                </mat-select>
+                <mat-error>{{ getErrorMessage('metodoPago') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-grid__full">
+                <mat-label>Observaciones del pago</mat-label>
+                <textarea matInput rows="3" formControlName="observacionesPago"></textarea>
+                <mat-error>{{ getErrorMessage('observacionesPago') }}</mat-error>
+              </mat-form-field>
+
+              <div class="status-box form-grid__full">
+                <span class="eyebrow">Resumen del pago inicial</span>
+                <strong>Saldo pendiente resultante: {{ saldoRestante() | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+                <p>Si el saldo queda en cero, la membresia se registrara como activa. Si no, quedara pendiente de pago.</p>
+              </div>
+            }
+          }
+
           @if (isEditMode() && currentMembresia(); as currentMembresia) {
             <div class="status-box form-grid__full">
               <span class="eyebrow">Estado actual</span>

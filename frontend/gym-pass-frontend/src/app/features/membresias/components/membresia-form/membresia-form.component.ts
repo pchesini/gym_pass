@@ -4,10 +4,12 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { startWith } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { of, switchMap, take } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +27,7 @@ import {
   MembresiaViewModel
 } from '../../models/membresia.model';
 import {
+  mapMembresiaFormToCreateWithPagoRequest,
   mapMembresiaFormToCreateRequest,
   mapMembresiaFormToUpdateRequest
 } from '../../mappers/membresia.mapper';
@@ -40,6 +43,7 @@ import { MembresiasService } from '../../services/membresias.service';
     DatePipe,
     MatButtonModule,
     MatCardModule,
+    MatCheckboxModule,
     MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
@@ -67,6 +71,18 @@ export class MembresiaFormComponent {
     'CANCELADA',
     'PENDIENTE_PAGO'
   ];
+  protected readonly metodosPago = [
+    'EFECTIVO',
+    'TRANSFERENCIA',
+    'DEBITO',
+    'CREDITO',
+    'OTRO'
+  ] as const;
+  protected readonly saldoRestante = computed(() => {
+    const precioLista = Number(this.form.controls.precioLista.value ?? 0);
+    const montoPagado = Number(this.form.controls.montoPagado.value ?? 0);
+    return Math.max(precioLista - montoPagado, 0);
+  });
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
@@ -85,11 +101,16 @@ export class MembresiaFormComponent {
     fechaInicio: [new Date() as Date | null, [Validators.required]],
     fechaVencimiento: [null as Date | null, [Validators.required]],
     precioLista: [0, [Validators.required, Validators.min(0)]],
-    saldoPendiente: [0, [Validators.min(0)]]
+    saldoPendiente: [0, [Validators.min(0)]],
+    registrarPagoInicial: [false],
+    montoPagado: [0],
+    metodoPago: ['EFECTIVO' as MembresiaFormValue['metodoPago']],
+    observacionesPago: ['', [Validators.maxLength(300)]]
   });
 
   constructor() {
     this.loadFormData();
+    this.observePagoInicial();
   }
 
   protected submit(): void {
@@ -105,9 +126,13 @@ export class MembresiaFormComponent {
             membresiaId,
             mapMembresiaFormToUpdateRequest(this.buildPayload())
           )
-        : this.membresiasService.createMembresia(
-            mapMembresiaFormToCreateRequest(this.buildPayload())
-          );
+        : this.form.controls.registrarPagoInicial.value
+          ? this.membresiasService.createMembresiaConPagoInicial(
+              mapMembresiaFormToCreateWithPagoRequest(this.buildPayload())
+            )
+          : this.membresiasService.createMembresia(
+              mapMembresiaFormToCreateRequest(this.buildPayload())
+            );
 
     this.saving.set(true);
 
@@ -134,7 +159,15 @@ export class MembresiaFormComponent {
   }
 
   protected getErrorMessage(
-    controlName: 'socioId' | 'fechaInicio' | 'fechaVencimiento' | 'precioLista' | 'saldoPendiente'
+    controlName:
+      | 'socioId'
+      | 'fechaInicio'
+      | 'fechaVencimiento'
+      | 'precioLista'
+      | 'saldoPendiente'
+      | 'montoPagado'
+      | 'metodoPago'
+      | 'observacionesPago'
   ): string {
     const control = this.form.controls[controlName];
 
@@ -199,6 +232,36 @@ export class MembresiaFormComponent {
       });
   }
 
+  private observePagoInicial(): void {
+    this.form.controls.registrarPagoInicial.valueChanges
+      .pipe(startWith(this.form.controls.registrarPagoInicial.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe((registrarPagoInicial) => {
+        const shouldRegister = !!registrarPagoInicial && !this.isEditMode();
+
+        if (shouldRegister) {
+          this.form.controls.montoPagado.setValidators([Validators.required, Validators.min(0.01)]);
+          this.form.controls.metodoPago.setValidators([Validators.required]);
+          this.form.controls.saldoPendiente.disable({ emitEvent: false });
+          this.form.controls.saldoPendiente.setValue(this.saldoRestante(), { emitEvent: false });
+        } else {
+          this.form.controls.montoPagado.clearValidators();
+          this.form.controls.metodoPago.clearValidators();
+          this.form.controls.saldoPendiente.enable({ emitEvent: false });
+        }
+
+        this.form.controls.montoPagado.updateValueAndValidity({ emitEvent: false });
+        this.form.controls.metodoPago.updateValueAndValidity({ emitEvent: false });
+      });
+
+    this.form.controls.precioLista.valueChanges
+      .pipe(startWith(this.form.controls.precioLista.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncSaldoPendienteFromPago());
+
+    this.form.controls.montoPagado.valueChanges
+      .pipe(startWith(this.form.controls.montoPagado.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncSaldoPendienteFromPago());
+  }
+
   private patchForm(membresia: MembresiaViewModel): void {
     this.form.patchValue({
       socioId: membresia.socioId,
@@ -218,8 +281,20 @@ export class MembresiaFormComponent {
       fechaInicio: rawValue.fechaInicio ?? null,
       fechaVencimiento: rawValue.fechaVencimiento ?? null,
       precioLista: rawValue.precioLista ?? 0,
-      saldoPendiente: rawValue.saldoPendiente ?? 0
+      saldoPendiente: rawValue.registrarPagoInicial ? this.saldoRestante() : (rawValue.saldoPendiente ?? 0),
+      registrarPagoInicial: rawValue.registrarPagoInicial ?? false,
+      montoPagado: rawValue.montoPagado ?? 0,
+      metodoPago: rawValue.metodoPago ?? 'EFECTIVO',
+      observacionesPago: rawValue.observacionesPago ?? ''
     };
+  }
+
+  private syncSaldoPendienteFromPago(): void {
+    if (!this.form.controls.registrarPagoInicial.value || this.isEditMode()) {
+      return;
+    }
+
+    this.form.controls.saldoPendiente.setValue(this.saldoRestante(), { emitEvent: false });
   }
 
   private resolveErrorMessage(error: unknown): string {

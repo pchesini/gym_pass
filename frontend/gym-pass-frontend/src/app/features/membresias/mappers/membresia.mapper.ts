@@ -1,5 +1,7 @@
 import { SocioViewModel } from '../../socios/models/socio.model';
 import {
+  EstadoMembresia,
+  MembresiaAltaConPagoApiRequest,
   MembresiaApiResponse,
   MembresiaCreateApiRequest,
   MembresiaFormValue,
@@ -18,10 +20,44 @@ function toIsoDate(date: Date | null): string | null {
   return `${year}-${month}-${day}`;
 }
 
+function parseLocalDate(value: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function startOfToday(): Date {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
+function resolveEstadoVisual(membresia: MembresiaApiResponse): EstadoMembresia {
+  if (membresia.estado !== 'ACTIVA') {
+    return membresia.estado;
+  }
+
+  const fechaVencimiento = parseLocalDate(membresia.fechaVencimiento);
+  if (!fechaVencimiento) {
+    return membresia.estado;
+  }
+
+  return fechaVencimiento < startOfToday() ? 'VENCIDA' : membresia.estado;
+}
+
 export function mapMembresiaApiResponseToViewModel(
   membresia: MembresiaApiResponse,
   socio?: SocioViewModel
 ): MembresiaViewModel {
+  const estadoVisual = resolveEstadoVisual(membresia);
+
   return {
     id: membresia.id,
     socioId: membresia.socioId,
@@ -30,9 +66,10 @@ export function mapMembresiaApiResponseToViewModel(
     fechaInicio: membresia.fechaInicio,
     fechaVencimiento: membresia.fechaVencimiento,
     estado: membresia.estado,
+    estadoVisual,
     precioLista: membresia.precioLista,
     saldoPendiente: membresia.saldoPendiente,
-    activa: membresia.estado === 'ACTIVA'
+    activa: estadoVisual === 'ACTIVA'
   };
 }
 
@@ -45,6 +82,20 @@ export function mapMembresiaFormToCreateRequest(
     fechaVencimiento: toIsoDate(formValue.fechaVencimiento) ?? '',
     precioLista: Number(formValue.precioLista ?? 0),
     saldoPendiente: formValue.saldoPendiente ?? 0
+  };
+}
+
+export function mapMembresiaFormToCreateWithPagoRequest(
+  formValue: MembresiaFormValue
+): MembresiaAltaConPagoApiRequest {
+  return {
+    socioId: Number(formValue.socioId),
+    fechaInicio: toIsoDate(formValue.fechaInicio) ?? '',
+    fechaVencimiento: toIsoDate(formValue.fechaVencimiento) ?? '',
+    precioLista: Number(formValue.precioLista ?? 0),
+    montoPagado: Number(formValue.montoPagado ?? 0),
+    metodoPago: formValue.metodoPago,
+    observacionesPago: formValue.observacionesPago.trim() || null
   };
 }
 

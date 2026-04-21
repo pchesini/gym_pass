@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { startWith } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -61,6 +61,7 @@ export class PagoFormComponent {
   private readonly sociosService = inject(SociosService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly metodosPago: MetodoPago[] = [
@@ -84,6 +85,7 @@ export class PagoFormComponent {
   });
 
   constructor() {
+    this.prefillFromQueryParams();
     this.loadInitialData();
     this.observePreview();
   }
@@ -158,6 +160,18 @@ export class PagoFormComponent {
           this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4500 });
         }
       });
+  }
+
+  private prefillFromQueryParams(): void {
+    const socioIdParam = this.route.snapshot.queryParamMap.get('socioId');
+    const membresiaIdParam = this.route.snapshot.queryParamMap.get('membresiaId');
+    const montoParam = this.route.snapshot.queryParamMap.get('monto');
+
+    this.form.patchValue({
+      socioId: socioIdParam ? Number(socioIdParam) : null,
+      membresiaId: membresiaIdParam ? Number(membresiaIdParam) : null,
+      monto: montoParam ? Number(montoParam) : this.form.controls.monto.value
+    });
   }
 
   private observePreview(): void {
