@@ -30,16 +30,34 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Fecha desde</mat-label>
-      <input matInput [matDatepicker]="fechaDesdePicker" formControlName="fechaDesde" />
+      <input
+        matInput
+        [matDatepicker]="fechaDesdePicker"
+        [max]="getFechaHastaMax()"
+        formControlName="fechaDesde"
+        placeholder="dd-MM-yyyy"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="fechaDesdePicker" />
       <mat-datepicker #fechaDesdePicker />
+      @if (hasInvalidDateRange()) {
+        <mat-error>La fecha desde no puede ser mayor que la fecha hasta.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Fecha hasta</mat-label>
-      <input matInput [matDatepicker]="fechaHastaPicker" formControlName="fechaHasta" />
+      <input
+        matInput
+        [matDatepicker]="fechaHastaPicker"
+        [min]="getFechaDesdeMin()"
+        formControlName="fechaHasta"
+        placeholder="dd-MM-yyyy"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="fechaHastaPicker" />
       <mat-datepicker #fechaHastaPicker />
+      @if (hasInvalidDateRange()) {
+        <mat-error>La fecha hasta no puede ser menor que la fecha desde.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
@@ -50,7 +68,13 @@
 
     <div class="filters-actions">
       <button mat-stroked-button type="button" (click)="clearFilters()">Limpiar</button>
-      <button mat-flat-button color="primary" type="button" (click)="loadPagos()">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="loadPagos()"
+        [disabled]="filtersForm.invalid"
+      >
         Actualizar
       </button>
     </div>

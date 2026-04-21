@@ -2,7 +2,13 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -12,7 +18,14 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatNativeDateModule } from '@angular/material/core';
+import {
+  DateAdapter,
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+  MatDateFormats,
+  MatNativeDateModule,
+  NativeDateAdapter
+} from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
@@ -21,6 +34,67 @@ import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
 import { MetodoPago, PagoViewModel } from '../../models/pago.model';
 import { PagosService } from '../../services/pagos.service';
+
+const PAGOS_DATE_FORMATS: MatDateFormats = {
+  parse: {
+    dateInput: 'dd-MM-yyyy'
+  },
+  display: {
+    dateInput: 'dd-MM-yyyy',
+    monthYearLabel: 'MMM yyyy',
+    dateA11yLabel: 'dd-MM-yyyy',
+    monthYearA11yLabel: 'MMMM yyyy'
+  }
+};
+
+const dateRangeValidator: ValidatorFn = (
+  control: AbstractControl
+): ValidationErrors | null => {
+  const fechaDesde = control.get('fechaDesde')?.value as Date | null;
+  const fechaHasta = control.get('fechaHasta')?.value as Date | null;
+
+  if (!fechaDesde || !fechaHasta) {
+    return null;
+  }
+
+  return fechaHasta < fechaDesde ? { invalidDateRange: true } : null;
+};
+
+class PagosDateAdapter extends NativeDateAdapter {
+  override parse(value: unknown): Date | null {
+    if (typeof value === 'string' && value.trim()) {
+      const normalizedValue = value.trim();
+      const match = /^(\d{2})[-/](\d{2})[-/](\d{4})$/.exec(normalizedValue);
+
+      if (match) {
+        const day = Number(match[1]);
+        const month = Number(match[2]) - 1;
+        const year = Number(match[3]);
+        const parsedDate = new Date(year, month, day);
+
+        if (
+          parsedDate.getFullYear() === year &&
+          parsedDate.getMonth() === month &&
+          parsedDate.getDate() === day
+        ) {
+          return parsedDate;
+        }
+
+        return null;
+      }
+    }
+
+    const parsedDate = super.parse(value);
+    return parsedDate instanceof Date && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null;
+  }
+
+  override format(date: Date, _displayFormat: object): string {
+    const day = `${date.getDate()}`.padStart(2, '0');
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+}
 
 @Component({
   selector: 'app-pagos-list',
@@ -41,6 +115,11 @@ import { PagosService } from '../../services/pagos.service';
     MatProgressSpinnerModule,
     MatSelectModule,
     MatTableModule
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
+    { provide: DateAdapter, useClass: PagosDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: PAGOS_DATE_FORMATS }
   ],
   templateUrl: './pagos-list.component.html',
   styleUrl: './pagos-list.component.css'
@@ -79,6 +158,8 @@ export class PagosListComponent {
     fechaDesde: [null as Date | null],
     fechaHasta: [null as Date | null],
     busqueda: ['']
+  }, {
+    validators: [dateRangeValidator]
   });
 
   constructor() {
@@ -87,6 +168,10 @@ export class PagosListComponent {
   }
 
   protected loadPagos(): void {
+    if (this.filtersForm.invalid) {
+      return;
+    }
+
     const rawValue = this.filtersForm.getRawValue();
 
     this.loading.set(true);
@@ -131,6 +216,20 @@ export class PagosListComponent {
     this.loadPagos();
   }
 
+  protected getFechaDesdeMin(): Date | null {
+    return this.filtersForm.controls.fechaDesde.value;
+  }
+
+  protected getFechaHastaMax(): Date | null {
+    return this.filtersForm.controls.fechaHasta.value;
+  }
+
+  protected hasInvalidDateRange(): boolean {
+    const fechaDesdeTouched = this.filtersForm.controls.fechaDesde.touched;
+    const fechaHastaTouched = this.filtersForm.controls.fechaHasta.touched;
+    return this.filtersForm.hasError('invalidDateRange') && (fechaDesdeTouched || fechaHastaTouched);
+  }
+
   protected goToDetail(pagoId: number): void {
     void this.router.navigate(['/pagos', pagoId]);
   }
@@ -154,11 +253,26 @@ export class PagosListComponent {
 
     this.filtersForm.controls.fechaDesde.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadPagos());
+      .subscribe((fechaDesde) => {
+        const fechaHasta = this.filtersForm.controls.fechaHasta.value;
+
+        if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+          this.filtersForm.controls.fechaHasta.setValue(null);
+          return;
+        }
+
+        if (this.filtersForm.valid) {
+          this.loadPagos();
+        }
+      });
 
     this.filtersForm.controls.fechaHasta.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadPagos());
+      .subscribe(() => {
+        if (this.filtersForm.valid) {
+          this.loadPagos();
+        }
+      });
   }
 
   private formatDate(date: Date | null): string | undefined {
