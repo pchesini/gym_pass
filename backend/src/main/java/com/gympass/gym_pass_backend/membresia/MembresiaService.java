@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ public class MembresiaService {
         MembresiaEntity entity = MembresiaMapper.fromCrearRequest(request);
         entity.setSocio(socio);
         entity.setEstado(definirEstadoInicial(request.getSaldoPendiente()));
+        syncEstado(entity);
 
         MembresiaEntity guardada = membresiaRepository.save(entity);
         return MembresiaMapper.toResponse(guardada);
@@ -66,6 +68,7 @@ public class MembresiaService {
                 .saldoPendiente(saldoPendiente)
                 .estado(definirEstadoInicial(saldoPendiente))
                 .build();
+        syncEstado(membresia);
 
         MembresiaEntity guardada = membresiaRepository.save(membresia);
 
@@ -89,12 +92,14 @@ public class MembresiaService {
     public MembresiaResponse obtenerPorId(Long id) {
         MembresiaEntity entity = membresiaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
+        syncEstado(entity);
         return MembresiaMapper.toResponse(entity);
     }
 
     @Transactional(readOnly = true)
     public List<MembresiaResponse> listarTodas() {
         return membresiaRepository.findAllByOrderByFechaVencimientoDescIdDesc().stream()
+                .map(this::syncEstado)
                 .map(MembresiaMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -104,6 +109,7 @@ public class MembresiaService {
         validarSocioExiste(socioId);
 
         return membresiaRepository.findBySocioId(socioId).stream()
+                .map(this::syncEstado)
                 .map(MembresiaMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -112,8 +118,26 @@ public class MembresiaService {
     public MembresiaResponse obtenerActivaPorSocio(Long socioId) {
         validarSocioExiste(socioId);
 
-        MembresiaEntity entity = membresiaRepository
-                .findFirstBySocioIdAndEstadoOrderByFechaVencimientoDesc(socioId, EstadoMembresia.ACTIVA)
+        MembresiaEntity entity = membresiaRepository.findBySocioId(socioId).stream()
+                .map(this::syncEstado)
+                .filter(membresia -> membresia.getEstado() == EstadoMembresia.ACTIVA)
+                .sorted((left, right) -> {
+                    LocalDate leftDate = left.getFechaVencimiento();
+                    LocalDate rightDate = right.getFechaVencimiento();
+
+                    if (leftDate == null && rightDate == null) {
+                        return 0;
+                    }
+                    if (leftDate == null) {
+                        return 1;
+                    }
+                    if (rightDate == null) {
+                        return -1;
+                    }
+
+                    return rightDate.compareTo(leftDate);
+                })
+                .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia activa no encontrada"));
 
         return MembresiaMapper.toResponse(entity);
@@ -144,6 +168,7 @@ public class MembresiaService {
         } else if (request.getEstado() != null) {
             entity.setEstado(request.getEstado());
         }
+        syncEstado(entity);
 
         MembresiaEntity actualizada = membresiaRepository.save(entity);
         return MembresiaMapper.toResponse(actualizada);
@@ -154,6 +179,7 @@ public class MembresiaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
 
         entity.setEstado(resolveEstadoCambioManual(entity, request.getEstado()));
+        syncEstado(entity);
         MembresiaEntity actualizada = membresiaRepository.save(entity);
         return MembresiaMapper.toResponse(actualizada);
     }
@@ -209,12 +235,47 @@ public class MembresiaService {
             MembresiaEntity entity,
             EstadoMembresia estadoSolicitado
     ) {
-        if (estadoSolicitado == EstadoMembresia.ACTIVA
-                && entity.getSaldoPendiente() != null
-                && entity.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0) {
+        if (estadoSolicitado == EstadoMembresia.CANCELADA) {
+            return EstadoMembresia.CANCELADA;
+        }
+
+        if (entity.getFechaVencimiento() != null && entity.getFechaVencimiento().isBefore(LocalDate.now())) {
+            return EstadoMembresia.VENCIDA;
+        }
+
+        if (entity.getSaldoPendiente() != null && entity.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0) {
             return EstadoMembresia.PENDIENTE_PAGO;
         }
 
-        return estadoSolicitado;
+        return EstadoMembresia.ACTIVA;
+    }
+
+    private MembresiaEntity syncEstado(MembresiaEntity entity) {
+        EstadoMembresia estadoCalculado = resolveEstadoAutomatico(entity);
+
+        if (entity.getEstado() != estadoCalculado) {
+            entity.setEstado(estadoCalculado);
+            if (entity.getId() != null) {
+                membresiaRepository.save(entity);
+            }
+        }
+
+        return entity;
+    }
+
+    private EstadoMembresia resolveEstadoAutomatico(MembresiaEntity entity) {
+        if (entity.getEstado() == EstadoMembresia.CANCELADA) {
+            return EstadoMembresia.CANCELADA;
+        }
+
+        if (entity.getFechaVencimiento() != null && entity.getFechaVencimiento().isBefore(LocalDate.now())) {
+            return EstadoMembresia.VENCIDA;
+        }
+
+        if (entity.getSaldoPendiente() != null && entity.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0) {
+            return EstadoMembresia.PENDIENTE_PAGO;
+        }
+
+        return EstadoMembresia.ACTIVA;
     }
 }
