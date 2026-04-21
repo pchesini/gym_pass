@@ -81,7 +81,7 @@ export class MembresiaFormComponent {
   protected readonly saldoRestante = computed(() => {
     const precioLista = Number(this.form.controls.precioLista.value ?? 0);
     const montoPagado = Number(this.form.controls.montoPagado.value ?? 0);
-    return Math.max(precioLista - montoPagado, 0);
+    return Math.max(Math.round(precioLista - montoPagado), 0);
   });
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
@@ -267,8 +267,8 @@ export class MembresiaFormComponent {
       socioId: membresia.socioId,
       fechaInicio: membresia.fechaInicio ? new Date(membresia.fechaInicio) : null,
       fechaVencimiento: membresia.fechaVencimiento ? new Date(membresia.fechaVencimiento) : null,
-      precioLista: membresia.precioLista ?? 0,
-      saldoPendiente: membresia.saldoPendiente ?? 0
+      precioLista: Math.round(membresia.precioLista ?? 0),
+      saldoPendiente: Math.round(membresia.saldoPendiente ?? 0)
     });
     this.form.controls.socioId.disable();
   }

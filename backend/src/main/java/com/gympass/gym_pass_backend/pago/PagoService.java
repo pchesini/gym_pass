@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,6 +47,8 @@ public class PagoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El metodo de pago es obligatorio");
         }
 
+        BigDecimal montoPago = normalizeMoney(request.getMonto());
+
         SocioEntity socio = socioRepository.findById(request.getSocioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado"));
 
@@ -58,18 +61,19 @@ public class PagoService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia no pertenece al socio informado");
             }
 
-            validarMontoContraSaldoPendiente(membresia, request.getMonto());
+            validarMontoContraSaldoPendiente(membresia, montoPago);
         }
 
         PagoEntity entity = PagoMapper.fromCrearRequest(request);
         entity.setSocio(socio);
         entity.setMembresia(membresia);
+        entity.setMonto(montoPago);
         if (entity.getFechaPago() == null) {
             entity.setFechaPago(LocalDateTime.now());
         }
 
         if (membresia != null) {
-            actualizarSaldoYEstadoMembresia(membresia, request.getMonto());
+            actualizarSaldoYEstadoMembresia(membresia, montoPago);
         }
 
         PagoEntity guardado = pagoRepository.save(entity);
@@ -137,7 +141,7 @@ public class PagoService {
         BigDecimal saldoActual = membresia.getSaldoPendiente() == null
                 ? BigDecimal.ZERO
                 : membresia.getSaldoPendiente();
-        BigDecimal nuevoSaldo = saldoActual.subtract(montoPago);
+        BigDecimal nuevoSaldo = normalizeMoney(saldoActual.subtract(montoPago));
 
         if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
             nuevoSaldo = BigDecimal.ZERO;
@@ -154,5 +158,13 @@ public class PagoService {
                         ? EstadoMembresia.ACTIVA
                         : EstadoMembresia.PENDIENTE_PAGO
         );
+    }
+
+    private BigDecimal normalizeMoney(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return value.setScale(0, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 }

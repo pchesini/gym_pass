@@ -12,6 +12,10 @@ function formatDateTimeToIso(date: Date | null): string | null {
   return date ? date.toISOString() : null;
 }
 
+function roundMoney(value: number | null | undefined): number {
+  return Math.round(Number(value ?? 0));
+}
+
 function buildMembresiaDescription(membresiaId: number | null): string | null {
   return membresiaId ? `Membresia #${membresiaId}` : null;
 }
@@ -27,7 +31,7 @@ export function mapPagoApiResponseToViewModel(
     socioDni: socio?.dni ?? null,
     membresiaId: pago.membresiaId,
     fechaPago: pago.fechaPago,
-    monto: Number(pago.monto),
+    monto: roundMoney(pago.monto),
     metodoPago: pago.metodoPago,
     observaciones: pago.observaciones,
     estadoVisual: null,
@@ -42,7 +46,7 @@ export function mapPagoFormToCreateRequest(formValue: PagoFormValue): PagoCreate
     socioId: Number(formValue.socioId),
     membresiaId: formValue.membresiaId ? Number(formValue.membresiaId) : null,
     fechaPago: formatDateTimeToIso(formValue.fechaPago),
-    monto: Number(formValue.monto ?? 0),
+    monto: roundMoney(formValue.monto),
     metodoPago: formValue.metodoPago,
     observaciones: formValue.observaciones.trim() || null,
     promocionId: null,
@@ -60,7 +64,7 @@ export function buildPagoPreview(
     membresiaId: formValue.membresiaId,
     descripcionMembresia: buildMembresiaDescription(formValue.membresiaId),
     fechaPago: formatDateTimeToIso(formValue.fechaPago),
-    monto: formValue.monto ?? null,
+    monto: formValue.monto === null ? null : roundMoney(formValue.monto),
     metodoPago: formValue.metodoPago ?? null,
     observaciones: formValue.observaciones.trim() || null
   };

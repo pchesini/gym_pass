@@ -20,6 +20,10 @@ function toIsoDate(date: Date | null): string | null {
   return `${year}-${month}-${day}`;
 }
 
+function roundMoney(value: number | null | undefined): number {
+  return Math.round(Number(value ?? 0));
+}
+
 function parseLocalDate(value: string | null): Date | null {
   if (!value) {
     return null;
@@ -67,8 +71,8 @@ export function mapMembresiaApiResponseToViewModel(
     fechaVencimiento: membresia.fechaVencimiento,
     estado: membresia.estado,
     estadoVisual,
-    precioLista: membresia.precioLista,
-    saldoPendiente: membresia.saldoPendiente,
+    precioLista: roundMoney(membresia.precioLista),
+    saldoPendiente: roundMoney(membresia.saldoPendiente),
     activa: estadoVisual === 'ACTIVA'
   };
 }
@@ -80,8 +84,8 @@ export function mapMembresiaFormToCreateRequest(
     socioId: Number(formValue.socioId),
     fechaInicio: toIsoDate(formValue.fechaInicio) ?? '',
     fechaVencimiento: toIsoDate(formValue.fechaVencimiento) ?? '',
-    precioLista: Number(formValue.precioLista ?? 0),
-    saldoPendiente: formValue.saldoPendiente ?? 0
+    precioLista: roundMoney(formValue.precioLista),
+    saldoPendiente: roundMoney(formValue.saldoPendiente)
   };
 }
 
@@ -92,8 +96,8 @@ export function mapMembresiaFormToCreateWithPagoRequest(
     socioId: Number(formValue.socioId),
     fechaInicio: toIsoDate(formValue.fechaInicio) ?? '',
     fechaVencimiento: toIsoDate(formValue.fechaVencimiento) ?? '',
-    precioLista: Number(formValue.precioLista ?? 0),
-    montoPagado: Number(formValue.montoPagado ?? 0),
+    precioLista: roundMoney(formValue.precioLista),
+    montoPagado: roundMoney(formValue.montoPagado),
     metodoPago: formValue.metodoPago,
     observacionesPago: formValue.observacionesPago.trim() || null
   };
@@ -105,7 +109,7 @@ export function mapMembresiaFormToUpdateRequest(
   return {
     fechaInicio: toIsoDate(formValue.fechaInicio),
     fechaVencimiento: toIsoDate(formValue.fechaVencimiento),
-    precioLista: formValue.precioLista ?? null,
-    saldoPendiente: formValue.saldoPendiente ?? null
+    precioLista: formValue.precioLista === null ? null : roundMoney(formValue.precioLista),
+    saldoPendiente: formValue.saldoPendiente === null ? null : roundMoney(formValue.saldoPendiente)
   };
 }

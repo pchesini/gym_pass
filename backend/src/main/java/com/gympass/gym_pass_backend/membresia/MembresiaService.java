@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,10 +44,13 @@ public class MembresiaService {
     public MembresiaResponse crearMembresia(MembresiaCrearRequest request) {
         validarRangoFechas(request.getFechaInicio(), request.getFechaVencimiento());
         SocioEntity socio = obtenerSocioObligatorio(request.getSocioId());
+        BigDecimal saldoPendiente = normalizeMoney(request.getSaldoPendiente());
 
         MembresiaEntity entity = MembresiaMapper.fromCrearRequest(request);
         entity.setSocio(socio);
-        entity.setEstado(definirEstadoInicial(request.getSaldoPendiente()));
+        entity.setPrecioLista(normalizeMoney(entity.getPrecioLista()));
+        entity.setSaldoPendiente(saldoPendiente);
+        entity.setEstado(definirEstadoInicial(saldoPendiente));
         syncEstado(entity);
 
         MembresiaEntity guardada = membresiaRepository.save(entity);
@@ -58,13 +62,15 @@ public class MembresiaService {
         validarPagoInicial(request);
 
         SocioEntity socio = obtenerSocioObligatorio(request.getSocioId());
-        BigDecimal saldoPendiente = request.getPrecioLista().subtract(request.getMontoPagado());
+        BigDecimal precioLista = normalizeMoney(request.getPrecioLista());
+        BigDecimal montoPagado = normalizeMoney(request.getMontoPagado());
+        BigDecimal saldoPendiente = normalizeMoney(precioLista.subtract(montoPagado));
 
         MembresiaEntity membresia = MembresiaEntity.builder()
                 .socio(socio)
                 .fechaInicio(request.getFechaInicio())
                 .fechaVencimiento(request.getFechaVencimiento())
-                .precioLista(request.getPrecioLista())
+                .precioLista(precioLista)
                 .saldoPendiente(saldoPendiente)
                 .estado(definirEstadoInicial(saldoPendiente))
                 .build();
@@ -76,7 +82,7 @@ public class MembresiaService {
         pagoRequest.setSocioId(socio.getId());
         pagoRequest.setMembresiaId(guardada.getId());
         pagoRequest.setFechaPago(LocalDateTime.now());
-        pagoRequest.setMonto(request.getMontoPagado());
+        pagoRequest.setMonto(montoPagado);
         pagoRequest.setMetodoPago(request.getMetodoPago());
         pagoRequest.setObservaciones(request.getObservacionesPago());
 
@@ -156,13 +162,14 @@ public class MembresiaService {
             entity.setFechaVencimiento(request.getFechaVencimiento());
         }
         if (request.getPrecioLista() != null) {
-            entity.setPrecioLista(request.getPrecioLista());
+            entity.setPrecioLista(normalizeMoney(request.getPrecioLista()));
         }
         if (request.getSaldoPendiente() != null) {
-            entity.setSaldoPendiente(request.getSaldoPendiente());
-            if (request.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal saldoPendiente = normalizeMoney(request.getSaldoPendiente());
+            entity.setSaldoPendiente(saldoPendiente);
+            if (saldoPendiente.compareTo(BigDecimal.ZERO) > 0) {
                 entity.setEstado(EstadoMembresia.PENDIENTE_PAGO);
-            } else if (request.getSaldoPendiente().compareTo(BigDecimal.ZERO) == 0) {
+            } else if (saldoPendiente.compareTo(BigDecimal.ZERO) == 0) {
                 entity.setEstado(EstadoMembresia.ACTIVA);
             }
         } else if (request.getEstado() != null) {
@@ -277,5 +284,13 @@ public class MembresiaService {
         }
 
         return EstadoMembresia.ACTIVA;
+    }
+
+    private BigDecimal normalizeMoney(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return value.setScale(0, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 }
