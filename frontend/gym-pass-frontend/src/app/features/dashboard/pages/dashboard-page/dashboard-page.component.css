@@ -78,6 +78,10 @@
   gap: 1rem;
 }
 
+.panel-grid--alerts {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
 .list-grid {
   display: grid;
   gap: 0.75rem;
@@ -100,6 +104,25 @@
 .list-item span {
   color: #475569;
   line-height: 1.5;
+}
+
+.highlight-date {
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.panel-card--alert {
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
+}
+
+.list-item--warning {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.list-item--debt {
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 
 .panel-grid h3 {

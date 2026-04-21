@@ -44,6 +44,15 @@ export class DashboardPageComponent {
     return asistencia.id;
   }
 
+  protected trackByMembresiaId(
+    _: number,
+    membresia:
+      | NonNullable<DashboardSummaryViewModel['membresiasPorVencer']>[number]
+      | NonNullable<DashboardSummaryViewModel['membresiasConDeuda']>[number]
+  ): number {
+    return membresia.id;
+  }
+
   protected trackBySocioId(
     _: number,
     socio: NonNullable<DashboardSummaryViewModel['sociosRecientes']>[number]

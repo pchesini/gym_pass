@@ -40,6 +40,9 @@
 
     @if (
       !currentSummary.totalSocios &&
+      !currentSummary.membresiasActivas &&
+      !currentSummary.membresiasPendientesPago &&
+      !currentSummary.membresiasVencidas &&
       !currentSummary.asistenciasHoy &&
       !currentSummary.totalPagos
     ) {
@@ -53,6 +56,62 @@
         </div>
       </mat-card>
     } @else {
+      <div class="panel-grid panel-grid--alerts">
+        <mat-card appearance="outlined" class="panel-card panel-card--alert">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Vencimientos</span>
+              <h2>Membresias que vencen pronto</h2>
+            </div>
+          </div>
+
+          @if (!currentSummary.membresiasPorVencer.length) {
+            <p class="panel-empty">No hay membresias con vencimiento en los proximos 7 dias.</p>
+          } @else {
+            <div class="list-grid">
+              @for (membresia of currentSummary.membresiasPorVencer; track trackByMembresiaId($index, membresia)) {
+                <article class="list-item list-item--warning">
+                  <strong>{{ membresia.socioNombre }}</strong>
+                  <span>DNI: {{ membresia.socioDni ?? 'No disponible' }}</span>
+                  <span class="highlight-date">
+                    Vence:
+                    {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+                  </span>
+                  <span>Estado: {{ membresia.estadoVisual }}</span>
+                </article>
+              }
+            </div>
+          }
+        </mat-card>
+
+        <mat-card appearance="outlined" class="panel-card panel-card--alert">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Deuda</span>
+              <h2>Membresias con saldo pendiente</h2>
+            </div>
+          </div>
+
+          @if (!currentSummary.membresiasConDeuda.length) {
+            <p class="panel-empty">No hay membresias con deuda pendiente.</p>
+          } @else {
+            <div class="list-grid">
+              @for (membresia of currentSummary.membresiasConDeuda; track trackByMembresiaId($index, membresia)) {
+                <article class="list-item list-item--debt">
+                  <strong>{{ membresia.socioNombre }}</strong>
+                  <span>DNI: {{ membresia.socioDni ?? 'No disponible' }}</span>
+                  <span>
+                    Saldo pendiente:
+                    {{ membresia.saldoPendiente ?? 0 | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                  </span>
+                  <span>Estado: {{ membresia.estadoVisual }}</span>
+                </article>
+              }
+            </div>
+          }
+        </mat-card>
+      </div>
+
       <div class="panel-grid">
         <mat-card appearance="outlined" class="panel-card">
           <div class="panel-header">
