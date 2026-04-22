@@ -30,15 +30,18 @@ public class MembresiaService {
     private final MembresiaRepository membresiaRepository;
     private final SocioRepository socioRepository;
     private final PagoRepository pagoRepository;
+    private final MembresiaEstadoResolver membresiaEstadoResolver;
 
     public MembresiaService(
             MembresiaRepository membresiaRepository,
             SocioRepository socioRepository,
-            PagoRepository pagoRepository
+            PagoRepository pagoRepository,
+            MembresiaEstadoResolver membresiaEstadoResolver
     ) {
         this.membresiaRepository = membresiaRepository;
         this.socioRepository = socioRepository;
         this.pagoRepository = pagoRepository;
+        this.membresiaEstadoResolver = membresiaEstadoResolver;
     }
 
     public MembresiaResponse crearMembresia(MembresiaCrearRequest request) {
@@ -258,7 +261,7 @@ public class MembresiaService {
     }
 
     private MembresiaEntity syncEstado(MembresiaEntity entity) {
-        EstadoMembresia estadoCalculado = resolveEstadoAutomatico(entity);
+        EstadoMembresia estadoCalculado = membresiaEstadoResolver.resolveEstadoAutomatico(entity);
 
         if (entity.getEstado() != estadoCalculado) {
             entity.setEstado(estadoCalculado);
@@ -271,19 +274,7 @@ public class MembresiaService {
     }
 
     private EstadoMembresia resolveEstadoAutomatico(MembresiaEntity entity) {
-        if (entity.getEstado() == EstadoMembresia.CANCELADA) {
-            return EstadoMembresia.CANCELADA;
-        }
-
-        if (entity.getFechaVencimiento() != null && entity.getFechaVencimiento().isBefore(LocalDate.now())) {
-            return EstadoMembresia.VENCIDA;
-        }
-
-        if (entity.getSaldoPendiente() != null && entity.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0) {
-            return EstadoMembresia.PENDIENTE_PAGO;
-        }
-
-        return EstadoMembresia.ACTIVA;
+        return membresiaEstadoResolver.resolveEstadoAutomatico(entity);
     }
 
     private BigDecimal normalizeMoney(BigDecimal value) {

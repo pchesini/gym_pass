@@ -2,8 +2,8 @@ package com.gympass.gym_pass_backend.asistencia;
 
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
-import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
+import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
 import com.gympass.gym_pass_backend.socio.EstadoSocio;
 import com.gympass.gym_pass_backend.socio.SocioEntity;
@@ -26,15 +26,18 @@ public class AsistenciaService {
     private final AsistenciaRepository asistenciaRepository;
     private final SocioRepository socioRepository;
     private final MembresiaRepository membresiaRepository;
+    private final MembresiaEstadoResolver membresiaEstadoResolver;
 
     public AsistenciaService(
             AsistenciaRepository asistenciaRepository,
             SocioRepository socioRepository,
-            MembresiaRepository membresiaRepository
+            MembresiaRepository membresiaRepository,
+            MembresiaEstadoResolver membresiaEstadoResolver
     ) {
         this.asistenciaRepository = asistenciaRepository;
         this.socioRepository = socioRepository;
         this.membresiaRepository = membresiaRepository;
+        this.membresiaEstadoResolver = membresiaEstadoResolver;
     }
 
     public AsistenciaResponse registrarEntrada(AsistenciaCrearRequest request) {
@@ -52,18 +55,14 @@ public class AsistenciaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no esta activo");
         }
 
-        List<MembresiaEntity> membresiasActivas = membresiaRepository.findBySocioIdAndEstado(
-                request.getSocioId(),
-                EstadoMembresia.ACTIVA
-        );
+        List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(request.getSocioId());
 
-        if (membresiasActivas.isEmpty()) {
+        if (membresias.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia activa");
         }
 
-        LocalDate hoy = LocalDate.now();
-        boolean tieneMembresiaVigente = membresiasActivas.stream()
-                .anyMatch(membresia -> !membresia.getFechaVencimiento().isBefore(hoy));
+        boolean tieneMembresiaVigente = membresias.stream()
+                .anyMatch(membresiaEstadoResolver::estaActiva);
 
         if (!tieneMembresiaVigente) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia activa esta vencida");

@@ -1,7 +1,7 @@
 package com.gympass.gym_pass_backend.socio;
 
-import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
+import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
 import com.gympass.gym_pass_backend.socio.dto.*;
 import org.springframework.http.HttpStatus;
@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,10 +19,16 @@ public class SocioService {
 
     private final SocioRepository socioRepository;
     private final MembresiaRepository membresiaRepository;
+    private final MembresiaEstadoResolver membresiaEstadoResolver;
 
-    public SocioService(SocioRepository socioRepository, MembresiaRepository membresiaRepository) {
+    public SocioService(
+            SocioRepository socioRepository,
+            MembresiaRepository membresiaRepository,
+            MembresiaEstadoResolver membresiaEstadoResolver
+    ) {
         this.socioRepository = socioRepository;
         this.membresiaRepository = membresiaRepository;
+        this.membresiaEstadoResolver = membresiaEstadoResolver;
     }
 
     public SocioResponse crearSocio(SocioCrearRequest request) {
@@ -34,7 +39,7 @@ public class SocioService {
 
         SocioEntity entity = SocioMapper.fromCrearRequest(request);
         entity.setEstado(EstadoSocio.ACTIVO);
-        entity.setFechaAlta(LocalDate.now());
+        entity.setFechaAlta(java.time.LocalDate.now());
         // más adelante esto vendrá de la membresía activa
         //entity.setFechaVencimiento(null);
         entity.setQrCode(generarCodigoQr());
@@ -127,18 +132,13 @@ public class SocioService {
     }
 
     private boolean esSocioVencido(SocioEntity socio) {
-        List<MembresiaEntity> membresiasActivas = membresiaRepository.findBySocioIdAndEstado(
-                socio.getId(),
-                EstadoMembresia.ACTIVA
-        );
+        List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(socio.getId());
 
-        if (membresiasActivas.isEmpty()) {
+        if (membresias.isEmpty()) {
             return true;
         }
 
-        LocalDate hoy = LocalDate.now();
-
-        return membresiasActivas.stream()
-                .noneMatch(membresia -> !membresia.getFechaVencimiento().isBefore(hoy));
+        return membresias.stream()
+                .noneMatch(membresiaEstadoResolver::estaActiva);
     }
 }
