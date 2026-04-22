@@ -6,10 +6,22 @@
       <p>Los filtros se resuelven del lado frontend sobre el listado real devuelto por backend.</p>
     </div>
 
-    <a mat-flat-button color="primary" routerLink="/pagos/nuevo">
-      <mat-icon>add</mat-icon>
-      Registrar pago
-    </a>
+    <div class="header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="exportPagosCsv()"
+        [disabled]="loading() || !pagos().length"
+      >
+        <mat-icon>download</mat-icon>
+        Exportar CSV
+      </button>
+
+      <a mat-flat-button color="primary" routerLink="/pagos/nuevo">
+        <mat-icon>add</mat-icon>
+        Registrar pago
+      </a>
+    </div>
   </div>
 
   <form class="filters-grid" [formGroup]="filtersForm">

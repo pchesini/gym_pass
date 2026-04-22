@@ -233,6 +233,54 @@ export class PagosListComponent {
     this.loadPagos();
   }
 
+  protected exportPagosCsv(): void {
+    const pagos = this.pagos();
+
+    if (!pagos.length) {
+      return;
+    }
+
+    const headers = [
+      'id_pago',
+      'fecha_pago',
+      'socio',
+      'dni',
+      'socio_id',
+      'membresia',
+      'membresia_id',
+      'monto',
+      'metodo_pago',
+      'observaciones'
+    ];
+
+    const rows = pagos.map((pago) => [
+      pago.id.toString(),
+      this.formatCsvDate(pago.fechaPago),
+      pago.socioNombre,
+      pago.socioDni ?? '',
+      pago.socioId?.toString() ?? '',
+      pago.descripcionMembresia ?? '',
+      pago.membresiaId?.toString() ?? '',
+      pago.monto.toString(),
+      pago.metodoPago,
+      pago.observaciones ?? ''
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((value) => this.escapeCsvValue(value)).join(','))
+      .join('\n');
+
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = this.buildExportFileName();
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   protected applyQuickRange(range: 'HOY' | 'MES_ACTUAL' | 'MES_ANTERIOR'): void {
     const today = new Date();
     let fechaDesde: Date;
@@ -353,6 +401,48 @@ export class PagosListComponent {
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+  }
+
+  private formatCsvDate(value: string | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) {
+      return value;
+    }
+
+    const [, year, month, day] = match;
+    return `${day}-${month}-${year}`;
+  }
+
+  private buildExportFileName(): string {
+    const fechaDesde = this.filtersForm.controls.fechaDesde.value;
+    const fechaHasta = this.filtersForm.controls.fechaHasta.value;
+
+    if (fechaDesde && fechaHasta) {
+      if (this.isSameDate(fechaDesde, fechaHasta)) {
+        return `pagos_${this.formatDisplayDate(fechaDesde)}.csv`;
+      }
+
+      return `pagos_${this.formatDisplayDate(fechaDesde)}_a_${this.formatDisplayDate(fechaHasta)}.csv`;
+    }
+
+    if (fechaDesde) {
+      return `pagos_desde_${this.formatDisplayDate(fechaDesde)}.csv`;
+    }
+
+    if (fechaHasta) {
+      return `pagos_hasta_${this.formatDisplayDate(fechaHasta)}.csv`;
+    }
+
+    return 'pagos_filtrados.csv';
+  }
+
+  private escapeCsvValue(value: string): string {
+    const normalizedValue = value.replace(/"/g, '""');
+    return `"${normalizedValue}"`;
   }
 
   private startOfDay(date: Date): Date {
