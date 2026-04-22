@@ -1,4 +1,5 @@
 import { SocioViewModel } from '../../socios/models/socio.model';
+import { MembresiaViewModel } from '../../membresias/models/membresia.model';
 import {
   AsistenciaApiResponse,
   AsistenciaCreateApiRequest,
@@ -134,13 +135,18 @@ export function buscarSociosEnFrontend(
 
 export function buildSocioAsistenciaLookup(
   socio: SocioViewModel,
-  asistencias: AsistenciaViewModel[]
+  asistencias: AsistenciaViewModel[],
+  membresias: MembresiaViewModel[] = []
 ): SocioAsistenciaLookup {
   const sortedAsistencias = [...asistencias].sort((left, right) =>
     (right.fechaHoraEntrada ?? '').localeCompare(left.fechaHoraEntrada ?? '')
   );
   const asistenciaAbierta = sortedAsistencias.find((asistencia) => asistencia.estado === 'ABIERTA') ?? null;
   const ultimaAsistencia = sortedAsistencias[0] ?? null;
+  const membresiaVigente = [...membresias]
+    .filter((membresia) => membresia.estadoVisual === 'ACTIVA' || membresia.estadoVisual === 'PENDIENTE_PAGO')
+    .sort((left, right) => (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? ''))[0] ?? null;
+  const tieneSaldoPendiente = (membresiaVigente?.saldoPendiente ?? 0) > 0;
 
   let mensajeRecepcion: string | null = null;
 
@@ -148,6 +154,8 @@ export function buildSocioAsistenciaLookup(
     mensajeRecepcion = 'El socio esta inactivo y no puede registrar asistencia.';
   } else if (asistenciaAbierta) {
     mensajeRecepcion = 'El socio tiene una asistencia abierta. Podes registrar la salida.';
+  } else if (tieneSaldoPendiente) {
+    mensajeRecepcion = 'Puede ingresar, pero tiene un saldo pendiente en su membresia.';
   } else {
     mensajeRecepcion = 'Socio listo para registrar una nueva entrada.';
   }
@@ -157,6 +165,9 @@ export function buildSocioAsistenciaLookup(
     asistenciaAbierta,
     ultimaAsistencia,
     mensajeRecepcion,
+    estadoMembresia: membresiaVigente?.estadoVisual ?? null,
+    saldoPendienteMembresia: membresiaVigente?.saldoPendiente ?? null,
+    tieneSaldoPendiente,
     puedeRegistrarEntrada: socio.estado === 'ACTIVO' && !asistenciaAbierta,
     puedeRegistrarSalida: !!asistenciaAbierta
   };

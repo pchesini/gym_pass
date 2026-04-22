@@ -27,4 +27,9 @@ public class MembresiaEstadoResolver {
     public boolean estaActiva(MembresiaEntity entity) {
         return resolveEstadoAutomatico(entity) == EstadoMembresia.ACTIVA;
     }
+
+    public boolean permiteIngreso(MembresiaEntity entity) {
+        EstadoMembresia estado = resolveEstadoAutomatico(entity);
+        return estado == EstadoMembresia.ACTIVA || estado == EstadoMembresia.PENDIENTE_PAGO;
+    }
 }

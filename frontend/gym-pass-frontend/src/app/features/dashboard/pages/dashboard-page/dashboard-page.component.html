@@ -75,7 +75,7 @@
                   <span>DNI: {{ membresia.socioDni ?? 'No disponible' }}</span>
                   <span class="highlight-date">
                     Vence:
-                    {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+                    {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
                   </span>
                   <span>Estado: {{ membresia.estadoVisual }}</span>
                 </article>
@@ -130,7 +130,7 @@
                   <strong>{{ pago.socioNombre }}</strong>
                   <span>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
                   <span>{{ pago.metodoPago }}</span>
-                  <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+                  <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
                 </article>
               }
             </div>
@@ -152,8 +152,8 @@
               @for (asistencia of currentSummary.ultimasAsistencias; track trackByAsistenciaId($index, asistencia)) {
                 <article class="list-item">
                   <strong>{{ asistencia.socioNombre }}</strong>
-                  <span>Entrada: {{ asistencia.fechaHoraEntrada ? (asistencia.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
-                  <span>Salida: {{ asistencia.fechaHoraSalida ? (asistencia.fechaHoraSalida | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+                  <span>Entrada: {{ asistencia.fechaHoraEntrada ? (asistencia.fechaHoraEntrada | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
+                  <span>Salida: {{ asistencia.fechaHoraSalida ? (asistencia.fechaHoraSalida | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
                   <span>{{ asistencia.estado }}</span>
                 </article>
               }
@@ -180,7 +180,7 @@
                   <span>{{ socio.estado }}</span>
                   <span>
                     @if (socio.fechaAlta) {
-                      Alta: {{ socio.fechaAlta | date: 'dd/MM/yyyy' }}
+                      Alta: {{ socio.fechaAlta | date: 'dd-MM-yyyy' }}
                     } @else {
                       ID: {{ socio.id }}
                     }

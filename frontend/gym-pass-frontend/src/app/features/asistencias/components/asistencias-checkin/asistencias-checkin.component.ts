@@ -1,8 +1,9 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -26,6 +27,7 @@ import {
   mapAsistenciaFormToCreateRequest
 } from '../../mappers/asistencia.mapper';
 import { AsistenciasService } from '../../services/asistencias.service';
+import { MembresiasService } from '../../../membresias/services/membresias.service';
 import { SociosService } from '../../../socios/services/socios.service';
 import { SocioViewModel } from '../../../socios/models/socio.model';
 
@@ -35,6 +37,7 @@ import { SocioViewModel } from '../../../socios/models/socio.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    CurrencyPipe,
     DatePipe,
     MatButtonModule,
     MatCardModule,
@@ -52,6 +55,7 @@ import { SocioViewModel } from '../../../socios/models/socio.model';
 export class AsistenciasCheckinComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly asistenciasService = inject(AsistenciasService);
+  private readonly membresiasService = inject(MembresiasService);
   private readonly sociosService = inject(SociosService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
@@ -122,17 +126,29 @@ export class AsistenciasCheckinComponent {
 
     this.asistenciasService
       .getAsistenciasBySocioId(socio.id, this.socios())
-      .pipe(
-        finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
       .subscribe({
         next: (asistencias) => {
-          const lookup = buildSocioAsistenciaLookup(socio, asistencias);
-          this.socio.set(lookup);
-          this.setFeedbackFromSocio(lookup);
+          forkJoin({
+            membresias: this.membresiasService.getMembresiasBySocioId(socio.id, this.socios())
+          })
+            .pipe(
+              finalize(() => this.loading.set(false)),
+              takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe({
+              next: ({ membresias }) => {
+                const lookup = buildSocioAsistenciaLookup(socio, asistencias, membresias);
+                this.socio.set(lookup);
+                this.setFeedbackFromSocio(lookup);
+              },
+              error: (error) => {
+                this.socio.set(null);
+                this.setFeedback('error', this.resolveErrorMessage(error));
+              }
+            });
         },
         error: (error) => {
+          this.loading.set(false);
           this.socio.set(null);
           this.setFeedback('error', this.resolveErrorMessage(error));
         }
@@ -268,6 +284,10 @@ export class AsistenciasCheckinComponent {
       normalizedMessage.includes('abierta')
     ) {
       return 'warn';
+    }
+
+    if (normalizedMessage.includes('saldo pendiente')) {
+      return 'info';
     }
 
     if (normalizedMessage.includes('error')) {

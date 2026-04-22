@@ -90,7 +90,7 @@
               <span class="label">Membresia activa</span>
               <strong>{{ currentActiveMembresia.estadoVisual }}</strong>
               <span>
-                Vence: {{ currentActiveMembresia.fechaVencimiento ? (currentActiveMembresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+              Vence: {{ currentActiveMembresia.fechaVencimiento ? (currentActiveMembresia.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
               </span>
             </div>
           } @else {
@@ -138,14 +138,14 @@
             <ng-container matColumnDef="fechaInicio">
               <th mat-header-cell *matHeaderCellDef>Fecha inicio</th>
               <td mat-cell *matCellDef="let membresia">
-                {{ membresia.fechaInicio ? (membresia.fechaInicio | date: 'dd/MM/yyyy') : '-' }}
+              {{ membresia.fechaInicio ? (membresia.fechaInicio | date: 'dd-MM-yyyy') : '-' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="fechaVencimiento">
               <th mat-header-cell *matHeaderCellDef>Fecha vencimiento</th>
               <td mat-cell *matCellDef="let membresia">
-                {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd/MM/yyyy') : '-' }}
+              {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
               </td>
             </ng-container>
 

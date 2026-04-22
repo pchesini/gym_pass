@@ -35,7 +35,7 @@
           </article>
           <article class="summary-item">
             <span class="summary-label">Ultimo pago</span>
-            <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
+            <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy HH:mm') : '-' }}</strong>
             <span>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</span>
           </article>
         </div>
@@ -46,7 +46,7 @@
               <span class="member-name">{{ pago.socioNombre }}</span>
               <strong>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
               <span>{{ pago.metodoPago }}</span>
-              <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</span>
+              <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
             </article>
           }
         </div>

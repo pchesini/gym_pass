@@ -58,14 +58,17 @@ public class AsistenciaService {
         List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(request.getSocioId());
 
         if (membresias.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia activa");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia vigente");
         }
 
-        boolean tieneMembresiaVigente = membresias.stream()
-                .anyMatch(membresiaEstadoResolver::estaActiva);
+        boolean permiteIngreso = membresias.stream()
+                .anyMatch(membresiaEstadoResolver::permiteIngreso);
 
-        if (!tieneMembresiaVigente) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia activa esta vencida");
+        if (!permiteIngreso) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El socio no tiene una membresia vigente habilitada para registrar asistencia"
+            );
         }
 
         asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(request.getSocioId())

@@ -69,6 +69,20 @@
           <strong>{{ currentSocio.socio.dni }}</strong>
         </div>
         <div>
+          <span class="label">Membresia</span>
+          <strong>{{ currentSocio.estadoMembresia ?? 'Sin referencia' }}</strong>
+        </div>
+        <div>
+          <span class="label">Saldo pendiente</span>
+          <strong>
+            @if (currentSocio.saldoPendienteMembresia !== null) {
+              {{ currentSocio.saldoPendienteMembresia | currency: 'ARS' : 'symbol' : '1.0-0' }}
+            } @else {
+              -
+            }
+          </strong>
+        </div>
+        <div>
           <span class="label">Ultima entrada</span>
           <strong>
             {{

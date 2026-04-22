@@ -116,7 +116,7 @@
         </article>
         <article class="summary-item">
           <span class="summary-label">Ultimo pago del filtro</span>
-          <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd/MM/yyyy') : '-' }}</strong>
+          <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy') : '-' }}</strong>
           <span>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</span>
         </article>
       </div>
@@ -169,7 +169,7 @@
 
         <ng-container matColumnDef="fechaPago">
           <th mat-header-cell *matHeaderCellDef>Fecha pago</th>
-          <td mat-cell *matCellDef="let pago">{{ pago.fechaPago | date: 'dd/MM/yyyy' }}</td>
+          <td mat-cell *matCellDef="let pago">{{ pago.fechaPago | date: 'dd-MM-yyyy' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="monto">
