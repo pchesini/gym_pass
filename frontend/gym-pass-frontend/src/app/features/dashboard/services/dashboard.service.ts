@@ -40,6 +40,19 @@ function isSameDay(dateValue: string | null | undefined, todayIso: string): bool
   return !!dateValue && dateValue.slice(0, 10) === todayIso;
 }
 
+function isSameMonth(dateValue: string | null | undefined, referenceDate: Date): boolean {
+  const targetDate = toLocalDate(dateValue);
+
+  if (!targetDate) {
+    return false;
+  }
+
+  return (
+    targetDate.getFullYear() === referenceDate.getFullYear() &&
+    targetDate.getMonth() === referenceDate.getMonth()
+  );
+}
+
 function isBetweenTodayAndNextDays(
   dateValue: string | null | undefined,
   today: Date,
@@ -74,6 +87,13 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+function formatMonthLabel(date: Date): string {
+  return new Intl.DateTimeFormat('es-AR', {
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -105,8 +125,11 @@ export class DashboardService {
         }).pipe(
           map(({ membresias, asistencias, pagos }) => {
             const pagosHoy = pagos.filter((pago) => isSameDay(pago.fechaPago, todayIso));
+            const pagosMes = pagos.filter((pago) => isSameMonth(pago.fechaPago, today));
             const montoTotalCobrado = pagos.reduce((total, pago) => total + pago.monto, 0);
             const montoCobradoHoy = pagosHoy.reduce((total, pago) => total + pago.monto, 0);
+            const montoCobradoMes = pagosMes.reduce((total, pago) => total + pago.monto, 0);
+            const mesReferencia = formatMonthLabel(today);
             const membresiasActivas = membresias.filter(
               (membresia) => membresia.estadoVisual === 'ACTIVA'
             ).length;
@@ -190,6 +213,16 @@ export class DashboardService {
                 helper: 'Suma de todos los pagos registrados.'
               },
               {
+                label: 'Pagos del mes',
+                value: pagosMes.length.toString(),
+                helper: `Pagos registrados en ${mesReferencia}.`
+              },
+              {
+                label: 'Monto cobrado del mes',
+                value: formatCurrency(montoCobradoMes),
+                helper: `Suma de pagos registrados en ${mesReferencia}.`
+              },
+              {
                 label: 'Pagos de hoy',
                 value: pagosHoy.length.toString(),
                 helper: 'Pagos cuya fecha corresponde al dia actual.'
@@ -202,6 +235,7 @@ export class DashboardService {
             ];
 
             return {
+              mesReferencia,
               totalSocios: socios.length,
               sociosActivos,
               sociosInactivos,
@@ -214,6 +248,8 @@ export class DashboardService {
               montoTotalCobrado,
               pagosHoy: pagosHoy.length,
               montoCobradoHoy,
+              pagosMes: pagosMes.length,
+              montoCobradoMes,
               membresiasPorVencer,
               membresiasConDeuda,
               ultimosPagos,

@@ -80,6 +80,37 @@
     </div>
   </form>
 
+  <div class="quick-ranges">
+    <button mat-stroked-button type="button" (click)="applyQuickRange('HOY')">Hoy</button>
+    <button mat-stroked-button type="button" (click)="applyQuickRange('MES_ACTUAL')">Este mes</button>
+    <button mat-stroked-button type="button" (click)="applyQuickRange('MES_ANTERIOR')">Mes pasado</button>
+    <span class="quick-ranges__label">{{ getQuickRangeLabel() }}</span>
+  </div>
+
+  @if (!loading() && !errorMessage()) {
+    @if (filteredSummary(); as summaryData) {
+      <div class="summary-grid">
+        <article class="summary-item">
+          <span class="summary-label">Pagos filtrados</span>
+          <strong>{{ summaryData.totalPagos }}</strong>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Monto total filtrado</span>
+          <strong>{{ summaryData.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Promedio por pago</span>
+          <strong>{{ summaryData.promedioPorPago | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Ultimo pago del filtro</span>
+          <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd/MM/yyyy') : '-' }}</strong>
+          <span>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</span>
+        </article>
+      </div>
+    }
+  }
+
   @if (loading()) {
     <div class="state-box">
       <mat-spinner diameter="40" />

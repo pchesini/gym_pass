@@ -10,6 +10,7 @@ export interface DashboardMetricCardViewModel {
 }
 
 export interface DashboardSummaryViewModel {
+  mesReferencia: string;
   totalSocios: number;
   sociosActivos: number;
   sociosInactivos: number;
@@ -22,6 +23,8 @@ export interface DashboardSummaryViewModel {
   montoTotalCobrado: number;
   pagosHoy: number;
   montoCobradoHoy: number;
+  pagosMes: number;
+  montoCobradoMes: number;
   membresiasPorVencer: MembresiaViewModel[];
   membresiasConDeuda: MembresiaViewModel[];
   ultimosPagos: PagoViewModel[];
