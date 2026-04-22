@@ -1,4 +1,5 @@
 import { NativeDateAdapter } from '@angular/material/core';
+import { Injectable } from '@angular/core';
 
 function pad(value: number): string {
   return value.toString().padStart(2, '0');
@@ -16,6 +17,7 @@ export const ASISTENCIAS_DATE_FORMATS = {
   }
 };
 
+@Injectable()
 export class AsistenciasDateAdapter extends NativeDateAdapter {
   override parse(value: unknown, parseFormat?: unknown): Date | null {
     if (typeof value === 'string') {

@@ -1,6 +1,6 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -60,6 +60,7 @@ const dateRangeValidator: ValidatorFn = (
   return fechaHasta < fechaDesde ? { invalidDateRange: true } : null;
 };
 
+@Injectable()
 class PagosDateAdapter extends NativeDateAdapter {
   override parse(value: unknown): Date | null {
     if (typeof value === 'string' && value.trim()) {

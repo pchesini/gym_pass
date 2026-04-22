@@ -117,7 +117,7 @@
         <article class="summary-item">
           <span class="summary-label">Ultimo pago del filtro</span>
           <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy') : '-' }}</strong>
-          <span>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</span>
+          <span>{{ summaryData.ultimoPagoSocio ? summaryData.ultimoPagoSocio : 'Sin referencia' }}</span>
         </article>
       </div>
     }
