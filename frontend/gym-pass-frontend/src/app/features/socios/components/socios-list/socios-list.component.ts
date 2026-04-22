@@ -49,7 +49,6 @@ export class SociosListComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly displayedColumns = [
-    'id',
     'nombre',
     'apellido',
     'dni',

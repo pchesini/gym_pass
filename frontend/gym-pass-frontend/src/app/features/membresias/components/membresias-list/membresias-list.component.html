@@ -120,11 +120,6 @@
         } @else {
         <div class="table-wrapper">
           <table mat-table [dataSource]="membresias()" [trackBy]="trackByMembresiaId" class="membresias-table">
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef>ID</th>
-              <td mat-cell *matCellDef="let membresia">{{ membresia.id }}</td>
-            </ng-container>
-
             <ng-container matColumnDef="socio">
               <th mat-header-cell *matHeaderCellDef>Socio</th>
               <td mat-cell *matCellDef="let membresia">{{ membresia.socioNombre }}</td>

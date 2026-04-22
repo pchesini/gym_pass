@@ -53,7 +53,6 @@ export class MembresiasListComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly displayedColumns = [
-    'id',
     'socio',
     'dni',
     'fechaInicio',

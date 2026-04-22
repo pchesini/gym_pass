@@ -140,7 +140,6 @@ export class PagosListComponent {
     'OTRO'
   ];
   protected readonly displayedColumns = [
-    'id',
     'socio',
     'membresia',
     'fechaPago',

@@ -65,7 +65,6 @@ export class AsistenciasListComponent {
 
   protected readonly estados: EstadoAsistencia[] = ['ABIERTA', 'CERRADA'];
   protected readonly displayedColumns = [
-    'id',
     'socio',
     'fechaHoraEntrada',
     'fechaHoraSalida',
