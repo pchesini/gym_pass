@@ -8,6 +8,7 @@ import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,6 +22,7 @@ import { MatTableModule } from '@angular/material/table';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
+import { ASISTENCIAS_DATE_FORMATS, AsistenciasDateAdapter } from '../../config/asistencias-date-adapter';
 import { buscarSociosEnFrontend, formatAsistenciaDateTime } from '../../mappers/asistencia.mapper';
 import { AsistenciaViewModel, EstadoAsistencia } from '../../models/asistencia.model';
 import { AsistenciasService } from '../../services/asistencias.service';
@@ -44,6 +46,11 @@ import { AsistenciasService } from '../../services/asistencias.service';
     MatSelectModule,
     MatSnackBarModule,
     MatTableModule
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
+    { provide: DateAdapter, useClass: AsistenciasDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: ASISTENCIAS_DATE_FORMATS }
   ],
   templateUrl: './asistencias-list.component.html',
   styleUrl: './asistencias-list.component.css'
@@ -90,6 +97,7 @@ export class AsistenciasListComponent {
   protected loadAsistencias(): void {
     const rawValue = this.filtersForm.getRawValue();
     const socioSearch = (rawValue.socio ?? '').trim();
+    const fechaSeleccionada = this.formatDate(rawValue.fecha);
 
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -99,11 +107,11 @@ export class AsistenciasListComponent {
       .pipe(
         switchMap((socios) => {
           this.socios.set(socios);
-          return this.resolveAsistenciasSource(socios, socioSearch);
+          return this.resolveAsistenciasSource(socios, socioSearch, fechaSeleccionada);
         }),
         map((asistencias) =>
           this.asistenciasService.filterAsistencias(asistencias, {
-            fecha: this.formatDate(rawValue.fecha),
+            fecha: fechaSeleccionada,
             socio: rawValue.socio ?? '',
             estado: rawValue.estado ?? '',
             busqueda: rawValue.busqueda ?? ''
@@ -197,7 +205,16 @@ export class AsistenciasListComponent {
       .subscribe(() => this.loadAsistencias());
   }
 
-  private resolveAsistenciasSource(socios: SocioViewModel[], socioSearch: string) {
+  private resolveAsistenciasSource(
+    socios: SocioViewModel[],
+    socioSearch: string,
+    fechaSeleccionada?: string
+  ) {
+    if (fechaSeleccionada) {
+      this.dataScopeLabel.set(`Asistencias del ${this.formatDisplayDate(fechaSeleccionada)}`);
+      return this.asistenciasService.getAsistenciasByFecha(fechaSeleccionada, socios);
+    }
+
     if (!socioSearch) {
       this.dataScopeLabel.set('Asistencias de hoy');
       return this.asistenciasService.getAsistenciasHoy(socios);
@@ -219,6 +236,16 @@ export class AsistenciasListComponent {
 
     this.dataScopeLabel.set('Asistencias de hoy');
     return this.asistenciasService.getAsistenciasHoy(socios);
+  }
+
+  private formatDisplayDate(value: string): string {
+    const [year, month, day] = value.split('-');
+
+    if (!year || !month || !day) {
+      return value;
+    }
+
+    return `${day}-${month}-${year}`;
   }
 
   private formatDate(date: Date | null): string | undefined {

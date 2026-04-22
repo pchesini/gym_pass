@@ -127,6 +127,17 @@ public class AsistenciaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<AsistenciaResponse> listarAsistenciasPorFecha(LocalDate fecha) {
+        LocalDate fechaConsulta = fecha != null ? fecha : LocalDate.now();
+        return asistenciaRepository.findByFechaHoraEntradaBetween(
+                        fechaConsulta.atStartOfDay(),
+                        fechaConsulta.plusDays(1).atStartOfDay()
+                ).stream()
+                .map(AsistenciaMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private void validarSocioExiste(Long socioId) {
         if (!socioRepository.existsById(socioId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado");

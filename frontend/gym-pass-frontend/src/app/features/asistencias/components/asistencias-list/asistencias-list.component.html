@@ -10,7 +10,7 @@
   <form class="filters-grid" [formGroup]="filtersForm">
     <mat-form-field appearance="outline">
       <mat-label>Fecha</mat-label>
-      <input matInput [matDatepicker]="fechaPicker" formControlName="fecha" />
+      <input matInput [matDatepicker]="fechaPicker" formControlName="fecha" placeholder="dd-mm-yyyy" />
       <mat-datepicker-toggle matIconSuffix [for]="fechaPicker" />
       <mat-datepicker #fechaPicker />
     </mat-form-field>

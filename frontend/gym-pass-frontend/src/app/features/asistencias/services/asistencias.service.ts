@@ -42,6 +42,17 @@ export class AsistenciasService {
       .pipe(map((asistencias) => asistencias.map((asistencia) => this.mapWithSocio(asistencia, socios))));
   }
 
+  getAsistenciasByFecha(
+    fecha: string,
+    socios?: SocioViewModel[]
+  ): Observable<AsistenciaViewModel[]> {
+    const params = new HttpParams().set('fecha', fecha);
+
+    return this.http
+      .get<AsistenciaApiResponse[]>(this.asistenciasUrl, { params })
+      .pipe(map((asistencias) => asistencias.map((asistencia) => this.mapWithSocio(asistencia, socios))));
+  }
+
   getAsistenciasBySocioId(socioId: number, socios?: SocioViewModel[]): Observable<AsistenciaViewModel[]> {
     return this.http
       .get<AsistenciaApiResponse[]>(`${this.asistenciasUrl}/socio/${socioId}`)
