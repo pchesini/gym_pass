@@ -4,7 +4,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { startWith } from 'rxjs';
+import { forkJoin, of, startWith } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -19,6 +19,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
+import { MembresiaViewModel } from '../../../membresias/models/membresia.model';
+import { MembresiasService } from '../../../membresias/services/membresias.service';
 import { buildPagoPreview, mapPagoFormToCreateRequest } from '../../mappers/pago.mapper';
 import { MetodoPago, PagoFormValue, PagoPreviewViewModel } from '../../models/pago.model';
 import { PagosService } from '../../services/pagos.service';
@@ -59,6 +61,7 @@ export class PagoFormComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly pagosService = inject(PagosService);
   private readonly sociosService = inject(SociosService);
+  private readonly membresiasService = inject(MembresiasService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -72,6 +75,7 @@ export class PagoFormComponent {
     'OTRO'
   ];
   protected readonly socios = signal<SocioViewModel[]>([]);
+  protected readonly membresiaContext = signal<MembresiaViewModel | null>(null);
   protected readonly preview = signal<PagoPreviewViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
@@ -140,23 +144,46 @@ export class PagoFormComponent {
   }
 
   private loadInitialData(): void {
+    const membresiaId = this.form.controls.membresiaId.value;
+
     this.sociosService
       .getSocios()
-      .pipe(
-        finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (socios) => {
           this.socios.set(socios);
-          this.preview.set(
-            buildPagoPreview(
-              this.buildPayload(),
-              socios.find((socio) => socio.id === this.form.controls.socioId.value)
+          const membresia$ = membresiaId
+            ? this.membresiasService.getMembresiaById(membresiaId, socios)
+            : of(null);
+
+          forkJoin({
+            membresia: membresia$
+          })
+            .pipe(
+              finalize(() => this.loading.set(false)),
+              takeUntilDestroyed(this.destroyRef)
             )
-          );
+            .subscribe({
+              next: ({ membresia }) => {
+                this.membresiaContext.set(membresia);
+
+                if (membresia?.saldoPendiente !== null && membresia?.saldoPendiente !== undefined) {
+                  this.form.patchValue({
+                    monto: membresia.saldoPendiente
+                  });
+                }
+
+                this.updatePreview();
+              },
+              error: (error) => {
+                this.membresiaContext.set(null);
+                this.updatePreview();
+                this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4500 });
+              }
+            });
         },
         error: (error) => {
+          this.loading.set(false);
           this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4500 });
         }
       });
@@ -177,11 +204,7 @@ export class PagoFormComponent {
   private observePreview(): void {
     this.form.valueChanges
       .pipe(startWith(this.form.getRawValue()), takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => {
-        const formValue = this.normalizeFormValue(value);
-        const socio = this.socios().find((item) => item.id === formValue.socioId);
-        this.preview.set(buildPagoPreview(formValue, socio));
-      });
+      .subscribe(() => this.updatePreview());
   }
 
   private buildPayload(): PagoFormValue {
@@ -197,6 +220,26 @@ export class PagoFormComponent {
       metodoPago: value.metodoPago ?? 'EFECTIVO',
       observaciones: value.observaciones ?? ''
     };
+  }
+
+  private updatePreview(): void {
+    const formValue = this.buildPayload();
+    const socio = this.socios().find((item) => item.id === formValue.socioId);
+    this.preview.set(buildPagoPreview(formValue, socio, this.membresiaContext()));
+  }
+
+  protected getMontoLabel(): string {
+    return this.membresiaContext() ? 'Monto a cobrar ahora' : 'Monto';
+  }
+
+  protected getPageTitle(): string {
+    return this.membresiaContext() ? 'Registrar pago de saldo pendiente' : 'Registrar pago';
+  }
+
+  protected getPageDescription(): string {
+    return this.membresiaContext()
+      ? 'Registra un pago asociado a una membresia pendiente, mostrando el saldo actual y el impacto estimado antes de confirmar.'
+      : 'Registra un pago real contra el backend actual, con socio obligatorio, membresia opcional y un resumen local antes de confirmar.';
   }
 
   private resolveErrorMessage(error: unknown): string {

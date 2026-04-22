@@ -2,11 +2,8 @@
   <header class="page-header">
     <div>
       <span class="eyebrow">Pagos</span>
-      <h1>Registrar pago</h1>
-      <p>
-        Registra un pago real contra el backend actual, con socio obligatorio, membresia opcional
-        y un resumen local antes de confirmar.
-      </p>
+      <h1>{{ getPageTitle() }}</h1>
+      <p>{{ getPageDescription() }}</p>
     </div>
 
     <a mat-stroked-button routerLink="/pagos">
@@ -23,6 +20,36 @@
       </div>
     } @else {
       <form class="pago-form" [formGroup]="form" (ngSubmit)="submit()">
+        @if (membresiaContext(); as currentMembresia) {
+          <div class="preview-card">
+            <div class="preview-header">
+              <div>
+                <span class="eyebrow">Contexto de membresia</span>
+                <h2>Pago aplicado a una membresia pendiente</h2>
+              </div>
+            </div>
+
+            <div class="preview-grid">
+              <div>
+                <span class="label">Membresia</span>
+                <strong>#{{ currentMembresia.id }}</strong>
+              </div>
+              <div>
+                <span class="label">Estado</span>
+                <strong>{{ currentMembresia.estadoVisual }}</strong>
+              </div>
+              <div>
+                <span class="label">Precio lista</span>
+                <strong>{{ (currentMembresia.precioLista ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+              </div>
+              <div>
+                <span class="label">Saldo pendiente actual</span>
+                <strong>{{ (currentMembresia.saldoPendiente ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+              </div>
+            </div>
+          </div>
+        }
+
         <div class="form-grid">
           <mat-form-field appearance="outline">
             <mat-label>Socio</mat-label>
@@ -49,7 +76,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Monto</mat-label>
+            <mat-label>{{ getMontoLabel() }}</mat-label>
             <input matInput type="number" min="0" step="0.01" formControlName="monto" />
             <span matTextPrefix>$&nbsp;</span>
             <mat-error>{{ getErrorMessage('monto') }}</mat-error>
@@ -95,6 +122,26 @@
                 <strong>{{ currentPreview.descripcionMembresia ?? 'Sin asociar' }}</strong>
               </div>
               <div>
+                <span class="label">Precio lista</span>
+                <strong>
+                  {{
+                    currentPreview.precioLista !== null
+                      ? (currentPreview.precioLista | currency: 'ARS' : 'symbol' : '1.0-0')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+              <div>
+                <span class="label">Saldo pendiente actual</span>
+                <strong>
+                  {{
+                    currentPreview.saldoPendienteActual !== null
+                      ? (currentPreview.saldoPendienteActual | currency: 'ARS' : 'symbol' : '1.0-0')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+              <div>
                 <span class="label">Fecha de pago</span>
                 <strong>{{ currentPreview.fechaPago ? (currentPreview.fechaPago | date: 'dd/MM/yyyy HH:mm') : '-' }}</strong>
               </div>
@@ -103,11 +150,21 @@
                 <strong>{{ currentPreview.metodoPago ?? '-' }}</strong>
               </div>
               <div>
-                <span class="label">Monto</span>
+                <span class="label">Monto a registrar</span>
                 <strong>
                   {{
                     currentPreview.monto !== null
                       ? (currentPreview.monto | currency: 'ARS' : 'symbol' : '1.0-0')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+              <div>
+                <span class="label">Saldo restante estimado</span>
+                <strong>
+                  {{
+                    currentPreview.saldoRestanteEstimado !== null
+                      ? (currentPreview.saldoRestanteEstimado | currency: 'ARS' : 'symbol' : '1.0-0')
                       : '-'
                   }}
                 </strong>

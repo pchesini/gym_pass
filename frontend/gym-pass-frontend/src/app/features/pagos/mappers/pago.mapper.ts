@@ -1,4 +1,5 @@
 import { SocioViewModel } from '../../socios/models/socio.model';
+import { MembresiaViewModel } from '../../membresias/models/membresia.model';
 import {
   PagoApiResponse,
   PagoCreateApiRequest,
@@ -18,6 +19,10 @@ function roundMoney(value: number | null | undefined): number {
 
 function buildMembresiaDescription(membresiaId: number | null): string | null {
   return membresiaId ? `Membresia #${membresiaId}` : null;
+}
+
+function clampMoney(value: number): number {
+  return Math.max(0, roundMoney(value));
 }
 
 export function mapPagoApiResponseToViewModel(
@@ -56,15 +61,24 @@ export function mapPagoFormToCreateRequest(formValue: PagoFormValue): PagoCreate
 
 export function buildPagoPreview(
   formValue: PagoFormValue,
-  socio?: SocioViewModel
+  socio?: SocioViewModel,
+  membresia?: MembresiaViewModel | null
 ): PagoPreviewViewModel {
+  const monto = formValue.monto === null ? null : roundMoney(formValue.monto);
+  const saldoPendienteActual = membresia?.saldoPendiente ?? null;
+  const saldoRestanteEstimado =
+    saldoPendienteActual === null || monto === null ? null : clampMoney(saldoPendienteActual - monto);
+
   return {
     socioNombre: socio?.nombreCompleto ?? 'Selecciona un socio',
     socioDni: socio?.dni ?? null,
     membresiaId: formValue.membresiaId,
     descripcionMembresia: buildMembresiaDescription(formValue.membresiaId),
+    precioLista: membresia?.precioLista ?? null,
+    saldoPendienteActual,
     fechaPago: formatDateTimeToIso(formValue.fechaPago),
-    monto: formValue.monto === null ? null : roundMoney(formValue.monto),
+    monto,
+    saldoRestanteEstimado,
     metodoPago: formValue.metodoPago ?? null,
     observaciones: formValue.observaciones.trim() || null
   };

@@ -61,8 +61,11 @@ export interface PagoPreviewViewModel {
   socioDni: string | null;
   membresiaId: number | null;
   descripcionMembresia: string | null;
+  precioLista: number | null;
+  saldoPendienteActual: number | null;
   fechaPago: string | null;
   monto: number | null;
+  saldoRestanteEstimado: number | null;
   metodoPago: MetodoPago | null;
   observaciones: string | null;
 }
