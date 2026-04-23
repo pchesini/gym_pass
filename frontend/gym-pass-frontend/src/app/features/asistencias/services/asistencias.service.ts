@@ -8,6 +8,8 @@ import {
   AsistenciaApiResponse,
   AsistenciaCreateApiRequest,
   AsistenciaFilters,
+  AsistenciaQrApiRequest,
+  AsistenciaQrApiResponse,
   AsistenciaViewModel
 } from '../models/asistencia.model';
 import { SocioViewModel } from '../../socios/models/socio.model';
@@ -24,6 +26,10 @@ export class AsistenciasService {
 
   createAsistencia(payload: AsistenciaCreateApiRequest): Observable<AsistenciaApiResponse> {
     return this.http.post<AsistenciaApiResponse>(this.asistenciasUrl, payload);
+  }
+
+  registrarEntradaPorQr(payload: AsistenciaQrApiRequest): Observable<AsistenciaQrApiResponse> {
+    return this.http.post<AsistenciaQrApiResponse>(`${this.asistenciasUrl}/qr`, payload);
   }
 
   registrarSalida(asistenciaId: number): Observable<AsistenciaApiResponse> {

@@ -9,6 +9,13 @@ export const asistenciasRoutes: Routes = [
       )
   },
   {
+    path: 'escaner',
+    loadComponent: () =>
+      import('./pages/asistencias-scanner-page/asistencias-scanner-page.component').then(
+        (m) => m.AsistenciasScannerPageComponent
+      )
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./components/asistencia-detail/asistencia-detail.component').then(

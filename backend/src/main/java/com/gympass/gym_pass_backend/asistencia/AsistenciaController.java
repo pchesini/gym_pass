@@ -1,6 +1,8 @@
 package com.gympass.gym_pass_backend.asistencia;
 
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaQrRequest;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaQrResponse;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,12 @@ public class AsistenciaController {
     @ResponseStatus(HttpStatus.CREATED)
     public AsistenciaResponse registrarEntrada(@RequestBody AsistenciaCrearRequest request) {
         return asistenciaService.registrarEntrada(request);
+    }
+
+    @PostMapping("/qr")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AsistenciaQrResponse registrarEntradaPorQr(@RequestBody AsistenciaQrRequest request) {
+        return asistenciaService.registrarEntradaPorQr(request);
     }
 
     @GetMapping("/{id}")

@@ -1,6 +1,8 @@
 package com.gympass.gym_pass_backend.asistencia;
 
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaQrRequest;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaQrResponse;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
@@ -17,11 +19,15 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class AsistenciaService {
+
+    private static final Pattern QR_CODE_PATTERN = Pattern.compile("S-[A-Z0-9]+");
 
     private final AsistenciaRepository asistenciaRepository;
     private final SocioRepository socioRepository;
@@ -51,11 +57,68 @@ public class AsistenciaService {
         SocioEntity socio = socioRepository.findById(request.getSocioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado"));
 
+        validarIngresoSocio(socio);
+
+        AsistenciaEntity guardada = guardarEntrada(socio, request);
+        return AsistenciaMapper.toResponse(guardada);
+    }
+
+    public AsistenciaQrResponse registrarEntradaPorQr(AsistenciaQrRequest request) {
+        String qrCode = normalizarQrCode(request.getQrCode());
+
+        if (qrCode == null || qrCode.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El codigo QR es obligatorio");
+        }
+
+        SocioEntity socio = socioRepository.findByQrCode(qrCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe un socio para el QR informado"));
+
+        validarIngresoSocio(socio);
+
+        AsistenciaCrearRequest asistenciaRequest = new AsistenciaCrearRequest();
+        asistenciaRequest.setSocioId(socio.getId());
+        asistenciaRequest.setCredencialId(socio.getId());
+        asistenciaRequest.setFechaHoraEntrada(LocalDateTime.now());
+        asistenciaRequest.setTipoRegistro(TipoRegistroAsistencia.STAFF);
+
+        AsistenciaEntity guardada = guardarEntrada(socio, asistenciaRequest);
+
+        AsistenciaQrResponse response = new AsistenciaQrResponse();
+        response.setAsistenciaId(guardada.getId());
+        response.setSocioId(socio.getId());
+        response.setNombreSocio(socio.getNombreCompleto());
+        response.setQrCode(socio.getQrCode());
+        response.setAccion("ENTRADA_REGISTRADA");
+        response.setMensaje("Entrada registrada correctamente");
+        response.setFechaHoraEntrada(guardada.getFechaHoraEntrada());
+        return response;
+    }
+
+    private String normalizarQrCode(String rawQrCode) {
+        if (rawQrCode == null) {
+            return null;
+        }
+
+        String normalizedValue = rawQrCode.trim().toUpperCase();
+        if (normalizedValue.isBlank()) {
+            return null;
+        }
+
+        Matcher matcher = QR_CODE_PATTERN.matcher(normalizedValue);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+
+        return normalizedValue;
+    }
+
+    private void validarIngresoSocio(SocioEntity socio) {
+
         if (socio.getEstado() != EstadoSocio.ACTIVO) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no esta activo");
         }
 
-        List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(request.getSocioId());
+        List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(socio.getId());
 
         if (membresias.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia vigente");
@@ -71,19 +134,20 @@ public class AsistenciaService {
             );
         }
 
-        asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(request.getSocioId())
+        asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(socio.getId())
                 .ifPresent(asistencia -> {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio ya tiene una asistencia abierta");
                 });
+    }
 
+    private AsistenciaEntity guardarEntrada(SocioEntity socio, AsistenciaCrearRequest request) {
         AsistenciaEntity entity = AsistenciaMapper.fromCrearRequest(request);
         entity.setSocio(socio);
         if (entity.getFechaHoraEntrada() == null) {
             entity.setFechaHoraEntrada(LocalDateTime.now());
         }
 
-        AsistenciaEntity guardada = asistenciaRepository.save(entity);
-        return AsistenciaMapper.toResponse(guardada);
+        return asistenciaRepository.save(entity);
     }
 
     @Transactional(readOnly = true)

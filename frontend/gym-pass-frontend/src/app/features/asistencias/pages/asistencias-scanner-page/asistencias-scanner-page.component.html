@@ -1,0 +1,132 @@
+<section class="scanner-page">
+  <header class="scanner-header">
+    <div>
+      <span class="eyebrow">Asistencias</span>
+      <h1>Escaner movil</h1>
+      <p>
+        Usa esta pantalla desde el celular para registrar entradas rapido. Por ahora ya
+        permite pegar o escribir el codigo QR; el lector de camara queda preparado para la
+        siguiente iteracion.
+      </p>
+    </div>
+
+    <a mat-stroked-button routerLink="/asistencias">
+      <mat-icon>arrow_back</mat-icon>
+      Volver a asistencias
+    </a>
+  </header>
+
+  <div class="scanner-layout">
+    <mat-card class="scanner-card">
+      <div class="scanner-card__header">
+        <div>
+          <h2>Registrar entrada</h2>
+          <p>Abre esta ruta como favorito en el celular y trabaja directo desde recepcion.</p>
+        </div>
+
+        <button mat-stroked-button type="button" (click)="toggleCamera()" [disabled]="cameraLoading()">
+          @if (cameraLoading()) {
+            <mat-spinner diameter="20" />
+          } @else if (cameraActive()) {
+            <mat-icon>videocam_off</mat-icon>
+          } @else {
+            <mat-icon>photo_camera</mat-icon>
+          }
+          {{ cameraActive() ? 'Cerrar camara' : 'Abrir camara' }}
+        </button>
+      </div>
+
+      <div class="camera-preview" [class.camera-preview--hidden]="!cameraActive() && !cameraLoading()">
+        <div id="qr-reader"></div>
+        <div class="camera-overlay" aria-hidden="true"></div>
+      </div>
+
+      @if (!cameraSupported()) {
+        <div class="camera-note">
+          <mat-icon>info</mat-icon>
+          <p>
+            Este navegador no permite usar la camara para escanear. La pantalla sigue funcionando
+            con ingreso manual del codigo.
+          </p>
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="registrarPorQr()" class="scanner-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Codigo QR del socio</mat-label>
+          <input
+            matInput
+            formControlName="qrCode"
+            autocomplete="off"
+            autocapitalize="characters"
+            placeholder="Ejemplo: S-ABCDEFGH"
+          />
+          <mat-icon matSuffix>qr_code_2</mat-icon>
+          @if (getQrErrorMessage()) {
+            <mat-error>{{ getQrErrorMessage() }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="scanner-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+            @if (loading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              <mat-icon>login</mat-icon>
+            }
+            Registrar entrada
+          </button>
+
+          <button mat-button type="button" (click)="limpiar()" [disabled]="loading()">
+            Limpiar
+          </button>
+        </div>
+      </form>
+
+      @if (cameraReady() && cameraActive()) {
+        <div class="camera-note">
+          <mat-icon>qr_code_scanner</mat-icon>
+          <p>
+            Apunta al QR del socio. Si la lectura es valida, la entrada se registra en forma
+            automatica.
+          </p>
+        </div>
+      }
+    </mat-card>
+
+    @if (response()) {
+      <mat-card class="result-card result-card--success">
+        <span class="result-label">Ultimo registro</span>
+        <h2>{{ response()!.nombreSocio }}</h2>
+        <p>{{ response()!.mensaje }}</p>
+
+        <dl class="result-grid">
+          <div>
+            <dt>Socio</dt>
+            <dd>#{{ response()!.socioId }}</dd>
+          </div>
+          <div>
+            <dt>QR</dt>
+            <dd>{{ response()!.qrCode }}</dd>
+          </div>
+          <div>
+            <dt>Accion</dt>
+            <dd>{{ response()!.accion }}</dd>
+          </div>
+          <div>
+            <dt>Entrada</dt>
+            <dd>{{ response()!.fechaHoraEntrada | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          </div>
+        </dl>
+      </mat-card>
+    }
+
+    @if (errorMessage()) {
+      <mat-card class="result-card result-card--error">
+        <span class="result-label">No se pudo registrar</span>
+        <h2>Revisar QR o estado del socio</h2>
+        <p>{{ errorMessage() }}</p>
+      </mat-card>
+    }
+  </div>
+</section>

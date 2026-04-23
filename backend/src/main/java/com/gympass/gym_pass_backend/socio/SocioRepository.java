@@ -13,6 +13,8 @@ public interface SocioRepository extends JpaRepository<SocioEntity, Long> {
 
     Optional<SocioEntity> findByEmail(String email);
 
+    Optional<SocioEntity> findByQrCode(String qrCode);
+
     List<SocioEntity> findByEstado(EstadoSocio estado);
 
     // BUSCADOR GENERAL (nombre, dni o email)

@@ -23,6 +23,20 @@ export interface AsistenciaCreateApiRequest {
   registradoPorUsuarioId?: number | null;
 }
 
+export interface AsistenciaQrApiRequest {
+  qrCode: string;
+}
+
+export interface AsistenciaQrApiResponse {
+  asistenciaId: number;
+  socioId: number;
+  nombreSocio: string;
+  qrCode: string;
+  accion: string;
+  mensaje: string;
+  fechaHoraEntrada: string | null;
+}
+
 export interface AsistenciaViewModel {
   id: number;
   socioId: number | null;
