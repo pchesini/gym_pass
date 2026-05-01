@@ -1,4 +1,4 @@
-package com.gympass.gym_pass_backend.membresia;
+mvmpackage com.gympass.gym_pass_backend.membresia;
 
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaActualizarRequest;
 import com.gympass.gym_pass_backend.membresia.dto.MembresiaAltaConPagoRequest;
