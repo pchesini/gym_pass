@@ -130,6 +130,7 @@ export function buildPagosSummary(
     saldoPendienteTotal: deudores.reduce((total, deudor) => total + deudor.saldoPendiente, 0),
     ultimoPagoFecha: pagosRecientes[0]?.fechaPago ?? null,
     ultimoPagoSocio: pagosRecientes[0]?.socioNombre ?? null,
+    ultimoPagoMonto: pagosRecientes[0]?.monto ?? null,
     pagosRecientes
   };
 }

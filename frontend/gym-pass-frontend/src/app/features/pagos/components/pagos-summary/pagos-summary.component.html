@@ -42,9 +42,16 @@
             <strong>{{ summaryData.saldoPendienteTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
           </article>
           <article class="summary-item">
-            <span class="summary-label">Ultimo pago</span>
-            <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy HH:mm') : '-' }}</strong>
-            <span>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</span>
+            <span class="summary-label">Ultimo pago registrado</span>
+            <strong>{{ summaryData.ultimoPagoSocio ?? 'Sin referencia' }}</strong>
+            <span>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
+            <span>
+              {{
+                summaryData.ultimoPagoMonto !== null
+                  ? (summaryData.ultimoPagoMonto | currency: 'ARS' : 'symbol' : '1.0-0')
+                  : '-'
+              }}
+            </span>
           </article>
         </div>
 

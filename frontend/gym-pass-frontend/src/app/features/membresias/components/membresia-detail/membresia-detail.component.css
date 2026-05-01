@@ -32,6 +32,11 @@
 .detail-card {
   padding: 1.5rem;
   border-radius: 24px;
+  border-color: #c084fc;
+  background:
+    linear-gradient(180deg, rgba(243, 232, 255, 0.98) 0%, rgba(250, 245, 255, 0.98) 42%, #ffffff 100%);
+  box-shadow: 0 18px 40px rgba(147, 51, 234, 0.14);
+  border-top: 5px solid #9333ea;
 }
 
 .detail-header {
@@ -61,8 +66,8 @@
 .detail-grid > div {
   padding: 1rem;
   border-radius: 18px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid #d8b4fe;
+  background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
 }
 
 .estado-chip {

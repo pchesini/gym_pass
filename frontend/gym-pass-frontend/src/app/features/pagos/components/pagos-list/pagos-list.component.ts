@@ -164,7 +164,8 @@ export class PagosListComponent {
       totalPagos,
       montoTotal,
       ultimoPagoFecha: ultimoPago?.fechaPago ?? null,
-      ultimoPagoSocio: ultimoPago?.socioNombre ?? null
+      ultimoPagoSocio: ultimoPago?.socioNombre ?? null,
+      ultimoPagoMonto: ultimoPago?.monto ?? null
     };
   });
   protected readonly filtersForm = this.formBuilder.group({

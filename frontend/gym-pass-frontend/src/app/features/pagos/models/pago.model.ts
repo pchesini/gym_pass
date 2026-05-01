@@ -97,5 +97,6 @@ export interface PagosSummaryViewModel {
   saldoPendienteTotal: number;
   ultimoPagoFecha: string | null;
   ultimoPagoSocio: string | null;
+  ultimoPagoMonto: number | null;
   pagosRecientes: PagoViewModel[];
 }

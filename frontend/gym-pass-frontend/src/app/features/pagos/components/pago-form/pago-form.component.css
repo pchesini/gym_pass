@@ -35,6 +35,11 @@
 .form-card {
   padding: 1.5rem;
   border-radius: 24px;
+  border-color: #2dd4bf;
+  background:
+    linear-gradient(180deg, rgba(204, 251, 241, 0.98) 0%, rgba(240, 253, 250, 0.98) 42%, #ffffff 100%);
+  box-shadow: 0 18px 40px rgba(13, 148, 136, 0.14);
+  border-top: 5px solid #0d9488;
 }
 
 .pago-form {
@@ -55,8 +60,8 @@
 .preview-card {
   padding: 1.25rem;
   border-radius: 20px;
-  border: 1px solid #dbeafe;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #5eead4;
+  background: linear-gradient(180deg, #ffffff 0%, #ccfbf1 100%);
 }
 
 .preview-header {
@@ -80,7 +85,7 @@
 .preview-grid > div {
   padding: 1rem;
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #99f6e4;
   background: #fff;
 }
 

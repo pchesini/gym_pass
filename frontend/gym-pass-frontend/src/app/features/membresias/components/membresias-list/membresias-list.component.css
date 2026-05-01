@@ -37,6 +37,11 @@
   border-radius: 24px;
   display: grid;
   gap: 1rem;
+  border-color: #c084fc;
+  background:
+    linear-gradient(180deg, rgba(243, 232, 255, 0.98) 0%, rgba(250, 245, 255, 0.98) 42%, #ffffff 100%);
+  box-shadow: 0 18px 40px rgba(147, 51, 234, 0.14);
+  border-top: 5px solid #9333ea;
 }
 
 .table-wrapper {
@@ -93,8 +98,8 @@
   align-items: stretch;
   padding: 1rem 1.25rem;
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #d8b4fe;
+  background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
 }
 
 .selected-socio-banner h2 {
@@ -114,7 +119,7 @@
   gap: 0.35rem;
   padding: 1rem;
   border-radius: 18px;
-  border: 1px solid #dbeafe;
+  border: 1px solid #d8b4fe;
   background: #fff;
 }
 
