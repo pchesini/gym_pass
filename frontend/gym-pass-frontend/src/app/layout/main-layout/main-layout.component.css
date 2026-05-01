@@ -60,14 +60,13 @@
   backdrop-filter: blur(12px);
 }
 
-.menu-button,
-.toolbar-spacer {
+.menu-button {
   min-width: 84px;
   color: #422006;
 }
 
 .toolbar-spacer {
-  visibility: hidden;
+  flex: 1;
 }
 
 .toolbar-copy {
@@ -99,6 +98,24 @@
   color: #7c4a03;
 }
 
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 160px;
+  justify-content: flex-end;
+  color: #422006;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.session-actions span {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .content-wrapper {
   padding: 1.5rem;
 }
@@ -124,6 +141,14 @@
   }
 
   .toolbar-spacer {
+    display: none;
+  }
+
+  .session-actions {
+    min-width: auto;
+  }
+
+  .session-actions span {
     display: none;
   }
 

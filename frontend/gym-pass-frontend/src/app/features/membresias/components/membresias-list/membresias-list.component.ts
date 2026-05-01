@@ -1,6 +1,6 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,6 +16,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
+import { AuthService } from '../../../../core/services/auth.service';
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
 import { mapMembresiaApiResponseToViewModel } from '../../mappers/membresia.mapper';
@@ -51,17 +52,23 @@ export class MembresiasListComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
-  protected readonly displayedColumns = [
-    'socio',
-    'dni',
-    'fechaInicio',
-    'fechaVencimiento',
-    'precioLista',
-    'saldoPendiente',
-    'estado',
-    'acciones'
-  ];
+  protected readonly isAdmin = this.authService.isAdmin;
+  protected readonly displayedColumns = computed(() =>
+    this.isAdmin()
+      ? [
+          'socio',
+          'dni',
+          'fechaInicio',
+          'fechaVencimiento',
+          'precioLista',
+          'saldoPendiente',
+          'estado',
+          'acciones'
+        ]
+      : ['socio', 'dni', 'fechaInicio', 'fechaVencimiento', 'estado', 'acciones']
+  );
   protected readonly estados: EstadoMembresia[] = [
     'ACTIVA',
     'VENCIDA',
@@ -229,7 +236,7 @@ export class MembresiasListComponent {
   }
 
   protected shouldShowRegistrarPago(membresia: MembresiaViewModel): boolean {
-    return membresia.estado === 'PENDIENTE_PAGO';
+    return this.isAdmin() && membresia.estado === 'PENDIENTE_PAGO';
   }
 
   protected getEstadoActionLabel(membresia: MembresiaViewModel): string {

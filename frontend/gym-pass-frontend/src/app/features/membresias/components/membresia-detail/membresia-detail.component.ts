@@ -11,6 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { AuthService } from '../../../../core/services/auth.service';
 import { SociosService } from '../../../socios/services/socios.service';
 import { MembresiaViewModel } from '../../models/membresia.model';
 import { MembresiasService } from '../../services/membresias.service';
@@ -37,7 +38,9 @@ export class MembresiaDetailComponent {
   private readonly membresiasService = inject(MembresiasService);
   private readonly sociosService = inject(SociosService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
+  protected readonly isAdmin = this.authService.isAdmin;
   protected readonly membresia = signal<MembresiaViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);

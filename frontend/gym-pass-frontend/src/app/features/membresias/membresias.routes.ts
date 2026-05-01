@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { roleGuard } from '../../core/guards/role.guard';
+
 export const membresiasRoutes: Routes = [
   {
     path: '',
@@ -10,6 +12,7 @@ export const membresiasRoutes: Routes = [
   },
   {
     path: 'nueva',
+    canActivate: [roleGuard(['ADMIN'])],
     loadComponent: () =>
       import('./components/membresia-form/membresia-form.component').then(
         (m) => m.MembresiaFormComponent
@@ -17,6 +20,7 @@ export const membresiasRoutes: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [roleGuard(['ADMIN'])],
     loadComponent: () =>
       import('./components/membresia-form/membresia-form.component').then(
         (m) => m.MembresiaFormComponent

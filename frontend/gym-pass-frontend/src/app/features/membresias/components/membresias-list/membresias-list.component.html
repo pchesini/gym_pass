@@ -9,16 +9,18 @@
       </p>
     </div>
 
-    <button
-      mat-flat-button
-      color="primary"
-      type="button"
-      [disabled]="!selectedSocio()"
-      (click)="createForSelectedSocio()"
-    >
-      <mat-icon>add_card</mat-icon>
-      Nueva membresia asignada
-    </button>
+    @if (isAdmin()) {
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="!selectedSocio()"
+        (click)="createForSelectedSocio()"
+      >
+        <mat-icon>add_card</mat-icon>
+        Nueva membresia asignada
+      </button>
+    }
   </header>
 
   <mat-card appearance="outlined" class="table-card">
@@ -173,9 +175,11 @@
                     <mat-icon>visibility</mat-icon>
                   </button>
 
-                  <button mat-icon-button type="button" aria-label="Editar membresia" (click)="navigateToEdit(membresia.id)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
+                  @if (isAdmin()) {
+                    <button mat-icon-button type="button" aria-label="Editar membresia" (click)="navigateToEdit(membresia.id)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
 
                   @if (shouldShowRegistrarPago(membresia)) {
                     <button
@@ -207,8 +211,8 @@
               </td>
             </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
           </table>
         </div>
       }

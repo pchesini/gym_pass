@@ -11,7 +11,7 @@
     </div>
 
     <mat-nav-list>
-      @for (item of navigationItems; track item.route) {
+      @for (item of navigationItems(); track item.route) {
         <a
           mat-list-item
           [routerLink]="item.route"
@@ -37,6 +37,15 @@
       </div>
 
       <div class="toolbar-spacer" aria-hidden="true"></div>
+
+      <div class="session-actions">
+        @if (session(); as currentSession) {
+          <span>{{ currentSession.username }} · {{ currentSession.rol }}</span>
+        }
+        <button mat-icon-button type="button" aria-label="Cerrar sesion" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
     </mat-toolbar>
 
     <main class="content-wrapper">

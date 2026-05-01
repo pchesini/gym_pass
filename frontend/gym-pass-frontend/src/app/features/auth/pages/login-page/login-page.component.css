@@ -1,0 +1,64 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    linear-gradient(180deg, rgba(255, 213, 74, 0.32), rgba(255, 248, 220, 0.86)),
+    #fffaf0;
+}
+
+.login-card {
+  width: min(100%, 420px);
+  padding: 2rem;
+  border-color: #e3b505;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(122, 74, 3, 0.14);
+}
+
+.brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  color: #422006;
+}
+
+.brand-title {
+  font-family: 'Bebas Neue', Roboto, sans-serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-subtitle {
+  color: #7c4a03;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #f4a3a3;
+  border-radius: 8px;
+  background: #fff1f1;
+  color: #8a1f1f;
+}
+
+button[mat-flat-button] {
+  min-height: 44px;
+}
+
+button[mat-flat-button] mat-spinner {
+  margin: 0 auto;
+}
