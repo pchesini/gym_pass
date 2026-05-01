@@ -111,10 +111,6 @@
           <strong>{{ summaryData.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
         </article>
         <article class="summary-item">
-          <span class="summary-label">Promedio por pago</span>
-          <strong>{{ summaryData.promedioPorPago | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
-        </article>
-        <article class="summary-item">
           <span class="summary-label">Ultimo pago del filtro</span>
           <strong>{{ summaryData.ultimoPagoFecha ? (summaryData.ultimoPagoFecha | date: 'dd-MM-yyyy') : '-' }}</strong>
           <span>{{ summaryData.ultimoPagoSocio ? summaryData.ultimoPagoSocio : 'Sin referencia' }}</span>

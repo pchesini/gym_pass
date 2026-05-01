@@ -155,8 +155,7 @@ export class PagosListComponent {
   protected readonly filteredSummary = computed(() => {
     const pagos = this.pagos();
     const totalPagos = pagos.length;
-    const montoTotal = pagos.reduce((total, pago) => total + pago.monto, 0);
-    const promedioPorPago = totalPagos ? Math.round(montoTotal / totalPagos) : 0;
+    const montoTotal = this.calcularMontoTotal(pagos);
     const ultimoPago = [...pagos].sort((left, right) =>
       (right.fechaPago ?? '').localeCompare(left.fechaPago ?? '')
     )[0] ?? null;
@@ -164,7 +163,6 @@ export class PagosListComponent {
     return {
       totalPagos,
       montoTotal,
-      promedioPorPago,
       ultimoPagoFecha: ultimoPago?.fechaPago ?? null,
       ultimoPagoSocio: ultimoPago?.socioNombre ?? null
     };
@@ -455,6 +453,10 @@ export class PagosListComponent {
       left.getMonth() === right.getMonth() &&
       left.getDate() === right.getDate()
     );
+  }
+
+  private calcularMontoTotal(pagos: PagoViewModel[]): number {
+    return pagos.reduce((total, pago) => total + Number(pago.monto ?? 0), 0);
   }
 
   private resolveErrorMessage(error: unknown): string {
