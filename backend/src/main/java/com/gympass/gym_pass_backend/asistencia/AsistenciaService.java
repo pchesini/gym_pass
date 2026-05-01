@@ -1,5 +1,6 @@
 package com.gympass.gym_pass_backend.asistencia;
 
+import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
@@ -13,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,10 +68,7 @@ public class AsistenciaService {
                 .anyMatch(membresiaEstadoResolver::permiteIngreso);
 
         if (!permiteIngreso) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El socio no tiene una membresia vigente habilitada para registrar asistencia"
-            );
+            throw construirAccesoBloqueado(socio, membresias);
         }
 
         asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(request.getSocioId())
@@ -144,5 +144,51 @@ public class AsistenciaService {
         if (!socioRepository.existsById(socioId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado");
         }
+    }
+
+    private AsistenciaAccesoBloqueadoException construirAccesoBloqueado(
+            SocioEntity socio,
+            List<MembresiaEntity> membresias
+    ) {
+        MembresiaEntity membresiaReferencia = membresias.stream()
+                .max(Comparator.comparing(
+                        MembresiaEntity::getFechaVencimiento,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .orElse(null);
+
+        EstadoMembresia estadoMembresia = membresiaReferencia != null
+                ? membresiaEstadoResolver.resolveEstadoAutomatico(membresiaReferencia)
+                : null;
+        BigDecimal saldoPendiente = membresiaReferencia != null && membresiaReferencia.getSaldoPendiente() != null
+                ? membresiaReferencia.getSaldoPendiente()
+                : BigDecimal.ZERO;
+        boolean membresiaVencida = estadoMembresia == EstadoMembresia.VENCIDA;
+        boolean tieneSaldoPendiente = saldoPendiente.compareTo(BigDecimal.ZERO) > 0;
+
+        return new AsistenciaAccesoBloqueadoException(
+                construirMensajeBloqueo(membresiaVencida, tieneSaldoPendiente),
+                socio.getId(),
+                socio.getNombreCompleto(),
+                membresiaReferencia != null ? membresiaReferencia.getId() : null,
+                estadoMembresia,
+                membresiaReferencia != null ? membresiaReferencia.getFechaVencimiento() : null,
+                saldoPendiente,
+                membresiaVencida,
+                tieneSaldoPendiente
+        );
+    }
+
+    private String construirMensajeBloqueo(boolean membresiaVencida, boolean tieneSaldoPendiente) {
+        if (membresiaVencida && tieneSaldoPendiente) {
+            return "No se puede registrar asistencia porque la membresia esta vencida y registra saldo pendiente";
+        }
+        if (membresiaVencida) {
+            return "No se puede registrar asistencia porque la membresia esta vencida";
+        }
+        if (tieneSaldoPendiente) {
+            return "No se puede registrar asistencia porque la membresia registra saldo pendiente";
+        }
+        return "El socio no tiene una membresia habilitada para registrar asistencia";
     }
 }
