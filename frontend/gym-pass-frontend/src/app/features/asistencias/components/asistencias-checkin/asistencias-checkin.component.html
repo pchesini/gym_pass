@@ -55,6 +55,57 @@
 
   @if (socio(); as currentSocio) {
     <div class="socio-grid">
+      @if (accesoBloqueado(); as bloqueo) {
+        <div class="access-blocked-card">
+          <div class="access-blocked-card__header">
+            <mat-icon>block</mat-icon>
+            <div>
+              <span class="label">Acceso bloqueado</span>
+              <strong>{{ bloqueo.socioNombre ?? currentSocio.socio.nombreCompleto }}</strong>
+              <p>{{ bloqueo.message }}</p>
+            </div>
+          </div>
+
+          <div class="access-blocked-card__grid">
+            <div>
+              <span class="label">Membresia</span>
+              <strong>
+                @if (bloqueo.membresiaId) {
+                  #{{ bloqueo.membresiaId }}
+                } @else {
+                  Sin referencia
+                }
+              </strong>
+            </div>
+            <div>
+              <span class="label">Estado</span>
+              <strong>{{ bloqueo.estadoMembresia ?? 'Sin referencia' }}</strong>
+            </div>
+            <div>
+              <span class="label">Vencimiento</span>
+              <strong>{{ bloqueo.fechaVencimiento ? (bloqueo.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}</strong>
+            </div>
+            <div>
+              <span class="label">Saldo pendiente</span>
+              <strong>
+                {{
+                  bloqueo.saldoPendiente !== null
+                    ? (bloqueo.saldoPendiente | currency: 'ARS' : 'symbol' : '1.0-0')
+                    : '-'
+                }}
+              </strong>
+            </div>
+          </div>
+
+          @if (bloqueo.tieneSaldoPendiente && bloqueo.socioId && bloqueo.membresiaId) {
+            <button mat-flat-button color="primary" type="button" (click)="registrarPagoBloqueo()">
+              <mat-icon>payments</mat-icon>
+              Registrar pago
+            </button>
+          }
+        </div>
+      }
+
       <div class="identity-block">
         <div>
           <span class="label">Socio</span>

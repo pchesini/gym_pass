@@ -23,6 +23,18 @@ export interface AsistenciaCreateApiRequest {
   registradoPorUsuarioId?: number | null;
 }
 
+export interface AsistenciaAccesoBloqueadoResponse {
+  message: string;
+  socioId: number | null;
+  socioNombre: string | null;
+  membresiaId: number | null;
+  estadoMembresia: string | null;
+  fechaVencimiento: string | null;
+  saldoPendiente: number | null;
+  membresiaVencida: boolean;
+  tieneSaldoPendiente: boolean;
+}
+
 export interface AsistenciaViewModel {
   id: number;
   socioId: number | null;

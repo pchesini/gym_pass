@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import {
+  AsistenciaAccesoBloqueadoResponse,
   CriterioBusquedaSocio,
   BuscarSocioRequest,
   SocioAsistenciaLookup
@@ -58,6 +60,7 @@ export class AsistenciasCheckinComponent {
   private readonly membresiasService = inject(MembresiasService);
   private readonly sociosService = inject(SociosService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly criterios: { value: CriterioBusquedaSocio; label: string }[] = [
@@ -71,6 +74,7 @@ export class AsistenciasCheckinComponent {
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly resultados = signal<SocioViewModel[]>([]);
   protected readonly socio = signal<SocioAsistenciaLookup | null>(null);
+  protected readonly accesoBloqueado = signal<AsistenciaAccesoBloqueadoResponse | null>(null);
   protected readonly feedbackMessage = signal<string | null>(null);
   protected readonly feedbackTone = signal<'info' | 'warn' | 'error' | 'success'>('info');
   protected readonly statusChipClass = computed(() => {
@@ -100,6 +104,7 @@ export class AsistenciasCheckinComponent {
 
     this.loading.set(true);
     this.feedbackMessage.set(null);
+    this.accesoBloqueado.set(null);
     this.socio.set(null);
 
     const resultados = buscarSociosEnFrontend(this.socios(), payload);
@@ -123,6 +128,7 @@ export class AsistenciasCheckinComponent {
   protected selectSocio(socio: SocioViewModel): void {
     this.loading.set(true);
     this.resultados.set([]);
+    this.accesoBloqueado.set(null);
 
     this.asistenciasService
       .getAsistenciasBySocioId(socio.id, this.socios())
@@ -180,6 +186,7 @@ export class AsistenciasCheckinComponent {
         },
         error: (error) => {
           const message = this.resolveErrorMessage(error);
+          this.accesoBloqueado.set(this.resolveAccesoBloqueado(error));
           this.setFeedback('error', message);
           this.snackBar.open(message, 'Cerrar', { duration: 4000 });
         }
@@ -241,6 +248,22 @@ export class AsistenciasCheckinComponent {
 
   protected trackBySocioId(_: number, socio: SocioViewModel): number {
     return socio.id;
+  }
+
+  protected registrarPagoBloqueo(): void {
+    const bloqueo = this.accesoBloqueado();
+
+    if (!bloqueo?.socioId || !bloqueo?.membresiaId) {
+      return;
+    }
+
+    void this.router.navigate(['/pagos/nuevo'], {
+      queryParams: {
+        socioId: bloqueo.socioId,
+        membresiaId: bloqueo.membresiaId,
+        monto: bloqueo.saldoPendiente ?? 0
+      }
+    });
   }
 
   private loadSocios(): void {
@@ -311,5 +334,29 @@ export class AsistenciasCheckinComponent {
     }
 
     return 'Ocurrio un error inesperado al procesar la asistencia.';
+  }
+
+  private resolveAccesoBloqueado(error: unknown): AsistenciaAccesoBloqueadoResponse | null {
+    if (!(error instanceof HttpErrorResponse) || !error.error) {
+      return null;
+    }
+
+    const response = error.error as Partial<AsistenciaAccesoBloqueadoResponse>;
+
+    if (!('membresiaVencida' in response) && !('tieneSaldoPendiente' in response)) {
+      return null;
+    }
+
+    return {
+      message: response.message ?? 'No se puede registrar asistencia.',
+      socioId: response.socioId ?? null,
+      socioNombre: response.socioNombre ?? null,
+      membresiaId: response.membresiaId ?? null,
+      estadoMembresia: response.estadoMembresia ?? null,
+      fechaVencimiento: response.fechaVencimiento ?? null,
+      saldoPendiente: response.saldoPendiente ?? null,
+      membresiaVencida: !!response.membresiaVencida,
+      tieneSaldoPendiente: !!response.tieneSaldoPendiente
+    };
   }
 }
