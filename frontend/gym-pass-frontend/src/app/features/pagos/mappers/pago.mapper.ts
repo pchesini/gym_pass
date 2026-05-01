@@ -1,6 +1,8 @@
 import { SocioViewModel } from '../../socios/models/socio.model';
 import { MembresiaViewModel } from '../../membresias/models/membresia.model';
 import {
+  DeudorApiResponse,
+  DeudorViewModel,
   PagoApiResponse,
   PagoCreateApiRequest,
   PagoFormValue,
@@ -62,6 +64,18 @@ export function mapPagoApiResponseToViewModel(
   };
 }
 
+export function mapDeudorApiResponseToViewModel(deudor: DeudorApiResponse): DeudorViewModel {
+  return {
+    socioId: deudor.socioId,
+    socioNombre: deudor.socioNombre ?? `Socio #${deudor.socioId ?? 'N/D'}`,
+    socioDni: deudor.socioDni,
+    membresiaId: deudor.membresiaId,
+    fechaVencimiento: deudor.fechaVencimiento,
+    estadoMembresia: deudor.estadoMembresia,
+    saldoPendiente: roundMoney(deudor.saldoPendiente)
+  };
+}
+
 export function mapPagoFormToCreateRequest(formValue: PagoFormValue): PagoCreateApiRequest {
   return {
     socioId: Number(formValue.socioId),
@@ -100,7 +114,10 @@ export function buildPagoPreview(
   };
 }
 
-export function buildPagosSummary(pagos: PagoViewModel[]): PagosSummaryViewModel {
+export function buildPagosSummary(
+  pagos: PagoViewModel[],
+  deudores: DeudorViewModel[] = []
+): PagosSummaryViewModel {
   const pagosRecientes = [...pagos]
     .sort((left, right) => (right.fechaPago ?? '').localeCompare(left.fechaPago ?? ''))
     .slice(0, 4);
@@ -109,6 +126,8 @@ export function buildPagosSummary(pagos: PagoViewModel[]): PagosSummaryViewModel
   return {
     totalPagos: pagosUltimoMes.length,
     montoTotal: pagosUltimoMes.reduce((total, pago) => total + pago.monto, 0),
+    totalDeudores: deudores.length,
+    saldoPendienteTotal: deudores.reduce((total, deudor) => total + deudor.saldoPendiente, 0),
     ultimoPagoFecha: pagosRecientes[0]?.fechaPago ?? null,
     ultimoPagoSocio: pagosRecientes[0]?.socioNombre ?? null,
     pagosRecientes

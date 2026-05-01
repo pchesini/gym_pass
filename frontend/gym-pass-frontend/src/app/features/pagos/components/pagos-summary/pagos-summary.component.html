@@ -18,7 +18,7 @@
     </div>
   } @else {
     <ng-container *ngIf="currentSummary() as summaryData; else emptySummaryState">
-      @if (!summaryData.totalPagos) {
+      @if (!summaryData.totalPagos && !summaryData.totalDeudores) {
         <div class="state-box">
           <mat-icon>payments</mat-icon>
           <p>No hay pagos registrados para resumir.</p>
@@ -32,6 +32,14 @@
           <article class="summary-item">
             <span class="summary-label">Monto ultimo mes</span>
             <strong>{{ summaryData.montoTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+          </article>
+          <article class="summary-item">
+            <span class="summary-label">Deudores</span>
+            <strong>{{ summaryData.totalDeudores }}</strong>
+          </article>
+          <article class="summary-item">
+            <span class="summary-label">Saldo pendiente</span>
+            <strong>{{ summaryData.saldoPendienteTotal | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
           </article>
           <article class="summary-item">
             <span class="summary-label">Ultimo pago</span>

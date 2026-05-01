@@ -1,0 +1,103 @@
+<mat-card appearance="outlined" class="deudores-card">
+  <div class="card-header">
+    <div>
+      <span class="eyebrow">Deudores</span>
+      <h2>Membresias con saldo pendiente</h2>
+      <p>Listado operativo de socios con deuda registrada para iniciar el cobro rapidamente.</p>
+    </div>
+
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="loadDeudores()" [disabled]="loading()">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  @if (!loading() && !errorMessage() && deudores().length) {
+    <div class="summary-grid">
+      <article class="summary-item">
+        <span class="summary-label">Deudores</span>
+        <strong>{{ deudores().length }}</strong>
+      </article>
+      <article class="summary-item">
+        <span class="summary-label">Saldo pendiente total</span>
+        <strong>{{ totalPendiente() | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+      </article>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="state-box">
+      <mat-spinner diameter="40" />
+      <p>Cargando deudores...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-box state-box--error">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h3>No se pudo cargar deudores</h3>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    </div>
+  } @else if (!deudores().length) {
+    <div class="state-box">
+      <mat-icon>task_alt</mat-icon>
+      <div>
+        <h3>Sin deudores</h3>
+        <p>No hay membresias con saldo pendiente.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="deudores()" [trackBy]="trackByMembresiaId" class="deudores-table">
+        <ng-container matColumnDef="socio">
+          <th mat-header-cell *matHeaderCellDef>Socio</th>
+          <td mat-cell *matCellDef="let deudor">
+            <div class="stack-cell">
+              <strong>{{ deudor.socioNombre }}</strong>
+              <span>{{ deudor.socioDni ?? 'DNI no disponible' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="membresia">
+          <th mat-header-cell *matHeaderCellDef>Membresia</th>
+          <td mat-cell *matCellDef="let deudor">#{{ deudor.membresiaId }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="vencimiento">
+          <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
+          <td mat-cell *matCellDef="let deudor">
+            {{ deudor.fechaVencimiento ? (deudor.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let deudor">{{ deudor.estadoMembresia ?? '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="saldoPendiente">
+          <th mat-header-cell *matHeaderCellDef>Saldo pendiente</th>
+          <td mat-cell *matCellDef="let deudor">
+            <strong>{{ deudor.saldoPendiente | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let deudor">
+            <button mat-stroked-button type="button" (click)="registrarPago(deudor)">
+              <mat-icon>payments</mat-icon>
+              Registrar pago
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</mat-card>

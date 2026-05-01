@@ -4,8 +4,15 @@ import { Observable, map } from 'rxjs';
 
 import { apiBaseUrl } from '../../../core/config/api.config';
 import { SocioViewModel } from '../../socios/models/socio.model';
-import { mapPagoApiResponseToViewModel } from '../mappers/pago.mapper';
-import { PagoApiResponse, PagoCreateApiRequest, PagoFilters, PagoViewModel } from '../models/pago.model';
+import { mapDeudorApiResponseToViewModel, mapPagoApiResponseToViewModel } from '../mappers/pago.mapper';
+import {
+  DeudorApiResponse,
+  DeudorViewModel,
+  PagoApiResponse,
+  PagoCreateApiRequest,
+  PagoFilters,
+  PagoViewModel
+} from '../models/pago.model';
 
 @Injectable({
   providedIn: 'root'
@@ -39,6 +46,12 @@ export class PagosService {
     return this.http
       .get<PagoApiResponse[]>(`${this.pagosUrl}/membresia/${membresiaId}`)
       .pipe(map((pagos) => pagos.map((pago) => this.mapWithSocio(pago, socios))));
+  }
+
+  getDeudores(): Observable<DeudorViewModel[]> {
+    return this.http
+      .get<DeudorApiResponse[]>(`${this.pagosUrl}/deudores`)
+      .pipe(map((deudores) => deudores.map(mapDeudorApiResponseToViewModel)));
   }
 
   createPago(payload: PagoCreateApiRequest): Observable<PagoApiResponse> {

@@ -12,6 +12,26 @@ export interface PagoApiResponse {
   registradoPorUsuarioId: number | null;
 }
 
+export interface DeudorApiResponse {
+  socioId: number | null;
+  socioNombre: string | null;
+  socioDni: string | null;
+  membresiaId: number;
+  fechaVencimiento: string | null;
+  estadoMembresia: string | null;
+  saldoPendiente: number;
+}
+
+export interface DeudorViewModel {
+  socioId: number | null;
+  socioNombre: string;
+  socioDni: string | null;
+  membresiaId: number;
+  fechaVencimiento: string | null;
+  estadoMembresia: string | null;
+  saldoPendiente: number;
+}
+
 export interface PagoCreateApiRequest {
   socioId: number;
   membresiaId?: number | null;
@@ -73,6 +93,8 @@ export interface PagoPreviewViewModel {
 export interface PagosSummaryViewModel {
   totalPagos: number;
   montoTotal: number;
+  totalDeudores: number;
+  saldoPendienteTotal: number;
   ultimoPagoFecha: string | null;
   ultimoPagoSocio: string | null;
   pagosRecientes: PagoViewModel[];

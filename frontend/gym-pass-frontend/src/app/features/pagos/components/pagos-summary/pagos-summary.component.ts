@@ -2,7 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,12 +42,17 @@ export class PagosSummaryComponent {
     this.sociosService
       .getSocios()
       .pipe(
-        switchMap((socios) => this.pagosService.getPagos(socios)),
+        switchMap((socios) =>
+          forkJoin({
+            pagos: this.pagosService.getPagos(socios),
+            deudores: this.pagosService.getDeudores()
+          })
+        ),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (pagos) => this.summary.set(buildPagosSummary(pagos)),
+        next: ({ pagos, deudores }) => this.summary.set(buildPagosSummary(pagos, deudores)),
         error: (error) => {
           this.errorMessage.set(this.resolveErrorMessage(error));
           this.summary.set(null);
