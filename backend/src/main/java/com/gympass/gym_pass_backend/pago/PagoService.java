@@ -48,6 +48,9 @@ public class PagoService {
         }
 
         BigDecimal montoPago = normalizeMoney(request.getMonto());
+        if (montoPago.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El monto debe ser mayor a cero");
+        }
 
         SocioEntity socio = socioRepository.findById(request.getSocioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado"));

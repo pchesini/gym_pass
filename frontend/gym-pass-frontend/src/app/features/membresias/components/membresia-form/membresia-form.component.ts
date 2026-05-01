@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -40,7 +40,6 @@ import { MembresiasService } from '../../services/membresias.service';
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    DatePipe,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -82,6 +81,13 @@ export class MembresiaFormComponent {
     const precioLista = Number(this.form.controls.precioLista.value ?? 0);
     const montoPagado = Number(this.form.controls.montoPagado.value ?? 0);
     return Math.max(Math.round(precioLista - montoPagado), 0);
+  });
+  protected readonly saldoPendienteAlta = computed(() => {
+    const precioLista = Number(this.form.controls.precioLista.value ?? 0);
+
+    return this.form.controls.registrarPagoInicial.value
+      ? this.saldoRestante()
+      : Math.max(Math.round(precioLista), 0);
   });
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
@@ -242,7 +248,12 @@ export class MembresiaFormComponent {
           this.form.controls.montoPagado.setValidators([Validators.required, Validators.min(0.01)]);
           this.form.controls.metodoPago.setValidators([Validators.required]);
           this.form.controls.saldoPendiente.disable({ emitEvent: false });
-          this.form.controls.saldoPendiente.setValue(this.saldoRestante(), { emitEvent: false });
+          this.form.controls.saldoPendiente.setValue(this.saldoPendienteAlta(), { emitEvent: false });
+        } else if (!this.isEditMode()) {
+          this.form.controls.montoPagado.clearValidators();
+          this.form.controls.metodoPago.clearValidators();
+          this.form.controls.saldoPendiente.disable({ emitEvent: false });
+          this.form.controls.saldoPendiente.setValue(this.saldoPendienteAlta(), { emitEvent: false });
         } else {
           this.form.controls.montoPagado.clearValidators();
           this.form.controls.metodoPago.clearValidators();
@@ -255,11 +266,11 @@ export class MembresiaFormComponent {
 
     this.form.controls.precioLista.valueChanges
       .pipe(startWith(this.form.controls.precioLista.value), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.syncSaldoPendienteFromPago());
+      .subscribe(() => this.syncSaldoPendienteAlta());
 
     this.form.controls.montoPagado.valueChanges
       .pipe(startWith(this.form.controls.montoPagado.value), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.syncSaldoPendienteFromPago());
+      .subscribe(() => this.syncSaldoPendienteAlta());
   }
 
   private patchForm(membresia: MembresiaViewModel): void {
@@ -271,6 +282,7 @@ export class MembresiaFormComponent {
       saldoPendiente: Math.round(membresia.saldoPendiente ?? 0)
     });
     this.form.controls.socioId.disable();
+    this.form.controls.saldoPendiente.enable({ emitEvent: false });
   }
 
   private buildPayload(): MembresiaFormValue {
@@ -281,7 +293,7 @@ export class MembresiaFormComponent {
       fechaInicio: rawValue.fechaInicio ?? null,
       fechaVencimiento: rawValue.fechaVencimiento ?? null,
       precioLista: rawValue.precioLista ?? 0,
-      saldoPendiente: rawValue.registrarPagoInicial ? this.saldoRestante() : (rawValue.saldoPendiente ?? 0),
+      saldoPendiente: this.isEditMode() ? (rawValue.saldoPendiente ?? 0) : this.saldoPendienteAlta(),
       registrarPagoInicial: rawValue.registrarPagoInicial ?? false,
       montoPagado: rawValue.montoPagado ?? 0,
       metodoPago: rawValue.metodoPago ?? 'EFECTIVO',
@@ -289,12 +301,12 @@ export class MembresiaFormComponent {
     };
   }
 
-  private syncSaldoPendienteFromPago(): void {
-    if (!this.form.controls.registrarPagoInicial.value || this.isEditMode()) {
+  private syncSaldoPendienteAlta(): void {
+    if (this.isEditMode()) {
       return;
     }
 
-    this.form.controls.saldoPendiente.setValue(this.saldoRestante(), { emitEvent: false });
+    this.form.controls.saldoPendiente.setValue(this.saldoPendienteAlta(), { emitEvent: false });
   }
 
   private resolveErrorMessage(error: unknown): string {

@@ -51,11 +51,15 @@ public class MembresiaService {
     public MembresiaResponse crearMembresia(MembresiaCrearRequest request, boolean incluirDatosFinancieros) {
         validarRangoFechas(request.getFechaInicio(), request.getFechaVencimiento());
         SocioEntity socio = obtenerSocioObligatorio(request.getSocioId());
-        BigDecimal saldoPendiente = normalizeMoney(request.getSaldoPendiente());
+        BigDecimal precioLista = normalizeMoney(request.getPrecioLista());
+        BigDecimal saldoPendiente = request.getSaldoPendiente() == null
+                ? precioLista
+                : normalizeMoney(request.getSaldoPendiente());
+        validarSaldoPendiente(precioLista, saldoPendiente);
 
         MembresiaEntity entity = MembresiaMapper.fromCrearRequest(request);
         entity.setSocio(socio);
-        entity.setPrecioLista(normalizeMoney(entity.getPrecioLista()));
+        entity.setPrecioLista(precioLista);
         entity.setSaldoPendiente(saldoPendiente);
         entity.setEstado(definirEstadoInicial(saldoPendiente));
         syncEstado(entity);
@@ -79,6 +83,7 @@ public class MembresiaService {
         BigDecimal precioLista = normalizeMoney(request.getPrecioLista());
         BigDecimal montoPagado = normalizeMoney(request.getMontoPagado());
         BigDecimal saldoPendiente = normalizeMoney(precioLista.subtract(montoPagado));
+        validarSaldoPendiente(precioLista, saldoPendiente);
 
         MembresiaEntity membresia = MembresiaEntity.builder()
                 .socio(socio)
@@ -208,6 +213,10 @@ public class MembresiaService {
         }
         if (request.getSaldoPendiente() != null) {
             BigDecimal saldoPendiente = normalizeMoney(request.getSaldoPendiente());
+            BigDecimal precioListaActual = request.getPrecioLista() != null
+                    ? normalizeMoney(request.getPrecioLista())
+                    : entity.getPrecioLista();
+            validarSaldoPendiente(precioListaActual, saldoPendiente);
             entity.setSaldoPendiente(saldoPendiente);
             if (saldoPendiente.compareTo(BigDecimal.ZERO) > 0) {
                 entity.setEstado(EstadoMembresia.PENDIENTE_PAGO);
@@ -278,6 +287,18 @@ public class MembresiaService {
         }
         if (request.getMetodoPago() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El metodo de pago es obligatorio");
+        }
+    }
+
+    private void validarSaldoPendiente(BigDecimal precioLista, BigDecimal saldoPendiente) {
+        if (saldoPendiente.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El saldo pendiente no puede ser negativo");
+        }
+        if (saldoPendiente.compareTo(precioLista) > 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El saldo pendiente no puede superar el precio de lista"
+            );
         }
     }
 
