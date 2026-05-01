@@ -1,6 +1,7 @@
 package com.gympass.gym_pass_backend.pago;
 
 import com.gympass.gym_pass_backend.pago.dto.PagoCrearRequest;
+import com.gympass.gym_pass_backend.pago.dto.DeudorResponse;
 import com.gympass.gym_pass_backend.pago.dto.PagoResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,11 @@ public class PagoController {
     @GetMapping
     public List<PagoResponse> listarPagos() {
         return pagoService.listarPagos();
+    }
+
+    @GetMapping("/deudores")
+    public List<DeudorResponse> listarDeudores() {
+        return pagoService.listarDeudores();
     }
 
     @GetMapping("/{id}")

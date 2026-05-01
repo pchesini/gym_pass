@@ -25,6 +25,22 @@ function clampMoney(value: number): number {
   return Math.max(0, roundMoney(value));
 }
 
+function isPagoDelUltimoMes(pago: PagoViewModel, referenceDate = new Date()): boolean {
+  if (!pago.fechaPago) {
+    return false;
+  }
+
+  const fechaPago = new Date(pago.fechaPago);
+  if (Number.isNaN(fechaPago.getTime())) {
+    return false;
+  }
+
+  const fechaDesde = new Date(referenceDate);
+  fechaDesde.setMonth(fechaDesde.getMonth() - 1);
+
+  return fechaPago >= fechaDesde && fechaPago <= referenceDate;
+}
+
 export function mapPagoApiResponseToViewModel(
   pago: PagoApiResponse,
   socio?: SocioViewModel
@@ -88,10 +104,11 @@ export function buildPagosSummary(pagos: PagoViewModel[]): PagosSummaryViewModel
   const pagosRecientes = [...pagos]
     .sort((left, right) => (right.fechaPago ?? '').localeCompare(left.fechaPago ?? ''))
     .slice(0, 4);
+  const pagosUltimoMes = pagos.filter((pago) => isPagoDelUltimoMes(pago));
 
   return {
-    totalPagos: pagos.length,
-    montoTotal: pagos.reduce((total, pago) => total + pago.monto, 0),
+    totalPagos: pagosUltimoMes.length,
+    montoTotal: pagosUltimoMes.reduce((total, pago) => total + pago.monto, 0),
     ultimoPagoFecha: pagosRecientes[0]?.fechaPago ?? null,
     ultimoPagoSocio: pagosRecientes[0]?.socioNombre ?? null,
     pagosRecientes

@@ -4,6 +4,7 @@ import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
 import com.gympass.gym_pass_backend.pago.dto.PagoCrearRequest;
+import com.gympass.gym_pass_backend.pago.dto.DeudorResponse;
 import com.gympass.gym_pass_backend.pago.dto.PagoResponse;
 import com.gympass.gym_pass_backend.socio.SocioEntity;
 import com.gympass.gym_pass_backend.socio.SocioRepository;
@@ -115,6 +116,15 @@ public class PagoService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<DeudorResponse> listarDeudores() {
+        return membresiaRepository
+                .findBySaldoPendienteGreaterThanOrderByFechaVencimientoAscIdAsc(BigDecimal.ZERO)
+                .stream()
+                .map(this::toDeudorResponse)
+                .collect(Collectors.toList());
+    }
+
     private void validarSocioExiste(Long socioId) {
         if (!socioRepository.existsById(socioId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado");
@@ -161,6 +171,19 @@ public class PagoService {
                         ? EstadoMembresia.ACTIVA
                         : EstadoMembresia.PENDIENTE_PAGO
         );
+    }
+
+    private DeudorResponse toDeudorResponse(MembresiaEntity membresia) {
+        SocioEntity socio = membresia.getSocio();
+        DeudorResponse response = new DeudorResponse();
+        response.setSocioId(socio != null ? socio.getId() : null);
+        response.setSocioNombre(socio != null ? socio.getNombreCompleto() : null);
+        response.setSocioDni(socio != null ? socio.getDni() : null);
+        response.setMembresiaId(membresia.getId());
+        response.setFechaVencimiento(membresia.getFechaVencimiento());
+        response.setEstadoMembresia(membresia.getEstado());
+        response.setSaldoPendiente(membresia.getSaldoPendiente());
+        return response;
     }
 
     private BigDecimal normalizeMoney(BigDecimal value) {

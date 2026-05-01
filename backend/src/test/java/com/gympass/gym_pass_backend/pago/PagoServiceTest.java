@@ -3,6 +3,7 @@ package com.gympass.gym_pass_backend.pago;
 import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
+import com.gympass.gym_pass_backend.pago.dto.DeudorResponse;
 import com.gympass.gym_pass_backend.pago.dto.PagoCrearRequest;
 import com.gympass.gym_pass_backend.socio.EstadoSocio;
 import com.gympass.gym_pass_backend.socio.SocioEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,6 +74,25 @@ class PagoServiceTest {
 
         assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.ACTIVA);
+    }
+
+    @Test
+    void listarDeudoresDevuelveMembresiasConSaldoPendiente() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = membresia(socio);
+
+        when(membresiaRepository.findBySaldoPendienteGreaterThanOrderByFechaVencimientoAscIdAsc(BigDecimal.ZERO))
+                .thenReturn(List.of(membresia));
+
+        List<DeudorResponse> deudores = pagoService.listarDeudores();
+
+        assertThat(deudores).hasSize(1);
+        assertThat(deudores.get(0).getSocioId()).isEqualTo(1L);
+        assertThat(deudores.get(0).getSocioNombre()).isEqualTo("Socio Test");
+        assertThat(deudores.get(0).getSocioDni()).isEqualTo("12345678");
+        assertThat(deudores.get(0).getMembresiaId()).isEqualTo(10L);
+        assertThat(deudores.get(0).getSaldoPendiente()).isEqualByComparingTo("10000.00");
+        assertThat(deudores.get(0).getEstadoMembresia()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
     }
 
     private PagoCrearRequest pagoRequest(BigDecimal monto) {
