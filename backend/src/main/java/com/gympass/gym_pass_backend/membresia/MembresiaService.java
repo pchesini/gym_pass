@@ -45,6 +45,10 @@ public class MembresiaService {
     }
 
     public MembresiaResponse crearMembresia(MembresiaCrearRequest request) {
+        return crearMembresia(request, true);
+    }
+
+    public MembresiaResponse crearMembresia(MembresiaCrearRequest request, boolean incluirDatosFinancieros) {
         validarRangoFechas(request.getFechaInicio(), request.getFechaVencimiento());
         SocioEntity socio = obtenerSocioObligatorio(request.getSocioId());
         BigDecimal saldoPendiente = normalizeMoney(request.getSaldoPendiente());
@@ -57,10 +61,17 @@ public class MembresiaService {
         syncEstado(entity);
 
         MembresiaEntity guardada = membresiaRepository.save(entity);
-        return MembresiaMapper.toResponse(guardada);
+        return MembresiaMapper.toResponse(guardada, incluirDatosFinancieros);
     }
 
     public MembresiaResponse crearMembresiaConPagoInicial(MembresiaAltaConPagoRequest request) {
+        return crearMembresiaConPagoInicial(request, true);
+    }
+
+    public MembresiaResponse crearMembresiaConPagoInicial(
+            MembresiaAltaConPagoRequest request,
+            boolean incluirDatosFinancieros
+    ) {
         validarRangoFechas(request.getFechaInicio(), request.getFechaVencimiento());
         validarPagoInicial(request);
 
@@ -94,37 +105,57 @@ public class MembresiaService {
         pago.setMembresia(guardada);
         pagoRepository.save(pago);
 
-        return MembresiaMapper.toResponse(guardada);
+        return MembresiaMapper.toResponse(guardada, incluirDatosFinancieros);
     }
 
     @Transactional(readOnly = true)
     public MembresiaResponse obtenerPorId(Long id) {
+        return obtenerPorId(id, true);
+    }
+
+    @Transactional(readOnly = true)
+    public MembresiaResponse obtenerPorId(Long id, boolean incluirDatosFinancieros) {
         MembresiaEntity entity = membresiaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
         syncEstado(entity);
-        return MembresiaMapper.toResponse(entity);
+        return MembresiaMapper.toResponse(entity, incluirDatosFinancieros);
     }
 
     @Transactional(readOnly = true)
     public List<MembresiaResponse> listarTodas() {
+        return listarTodas(true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MembresiaResponse> listarTodas(boolean incluirDatosFinancieros) {
         return membresiaRepository.findAllByOrderByFechaVencimientoDescIdDesc().stream()
                 .map(this::syncEstado)
-                .map(MembresiaMapper::toResponse)
+                .map(membresia -> MembresiaMapper.toResponse(membresia, incluirDatosFinancieros))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<MembresiaResponse> listarPorSocio(Long socioId) {
+        return listarPorSocio(socioId, true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MembresiaResponse> listarPorSocio(Long socioId, boolean incluirDatosFinancieros) {
         validarSocioExiste(socioId);
 
         return membresiaRepository.findBySocioId(socioId).stream()
                 .map(this::syncEstado)
-                .map(MembresiaMapper::toResponse)
+                .map(membresia -> MembresiaMapper.toResponse(membresia, incluirDatosFinancieros))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public MembresiaResponse obtenerActivaPorSocio(Long socioId) {
+        return obtenerActivaPorSocio(socioId, true);
+    }
+
+    @Transactional(readOnly = true)
+    public MembresiaResponse obtenerActivaPorSocio(Long socioId, boolean incluirDatosFinancieros) {
         validarSocioExiste(socioId);
 
         MembresiaEntity entity = membresiaRepository.findBySocioId(socioId).stream()
@@ -149,10 +180,18 @@ public class MembresiaService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia activa no encontrada"));
 
-        return MembresiaMapper.toResponse(entity);
+        return MembresiaMapper.toResponse(entity, incluirDatosFinancieros);
     }
 
     public MembresiaResponse actualizarMembresia(Long id, MembresiaActualizarRequest request) {
+        return actualizarMembresia(id, request, true);
+    }
+
+    public MembresiaResponse actualizarMembresia(
+            Long id,
+            MembresiaActualizarRequest request,
+            boolean incluirDatosFinancieros
+    ) {
         MembresiaEntity entity = membresiaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
 
@@ -181,17 +220,25 @@ public class MembresiaService {
         syncEstado(entity);
 
         MembresiaEntity actualizada = membresiaRepository.save(entity);
-        return MembresiaMapper.toResponse(actualizada);
+        return MembresiaMapper.toResponse(actualizada, incluirDatosFinancieros);
     }
 
     public MembresiaResponse cambiarEstado(Long id, MembresiaEstadoRequest request) {
+        return cambiarEstado(id, request, true);
+    }
+
+    public MembresiaResponse cambiarEstado(
+            Long id,
+            MembresiaEstadoRequest request,
+            boolean incluirDatosFinancieros
+    ) {
         MembresiaEntity entity = membresiaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
 
         entity.setEstado(resolveEstadoCambioManual(entity, request.getEstado()));
         syncEstado(entity);
         MembresiaEntity actualizada = membresiaRepository.save(entity);
-        return MembresiaMapper.toResponse(actualizada);
+        return MembresiaMapper.toResponse(actualizada, incluirDatosFinancieros);
     }
 
     private void validarSocioExiste(Long socioId) {

@@ -20,14 +20,22 @@ public class MembresiaMapper {
     }
 
     public static MembresiaResponse toResponse(MembresiaEntity entity) {
+        return toResponse(entity, true);
+    }
+
+    public static MembresiaResponse toResponse(MembresiaEntity entity, boolean incluirDatosFinancieros) {
         MembresiaResponse dto = new MembresiaResponse();
         dto.setId(entity.getId());
         dto.setSocioId(entity.getSocio() != null ? entity.getSocio().getId() : null);
         dto.setFechaInicio(entity.getFechaInicio());
         dto.setFechaVencimiento(entity.getFechaVencimiento());
         dto.setEstado(entity.getEstado());
-        dto.setPrecioLista(entity.getPrecioLista());
-        dto.setSaldoPendiente(entity.getSaldoPendiente());
+
+        if (incluirDatosFinancieros) {
+            dto.setPrecioLista(entity.getPrecioLista());
+            dto.setSaldoPendiente(entity.getSaldoPendiente());
+        }
+
         return dto;
     }
 }
