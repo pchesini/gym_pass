@@ -60,6 +60,7 @@ export class MembresiasListComponent {
       ? [
           'socio',
           'dni',
+          'estadoSocio',
           'fechaInicio',
           'fechaVencimiento',
           'precioLista',
@@ -67,7 +68,7 @@ export class MembresiasListComponent {
           'estado',
           'acciones'
         ]
-      : ['socio', 'dni', 'fechaInicio', 'fechaVencimiento', 'estado', 'acciones']
+      : ['socio', 'dni', 'estadoSocio', 'fechaInicio', 'fechaVencimiento', 'estado', 'acciones']
   );
   protected readonly estados: EstadoMembresia[] = [
     'ACTIVA',
@@ -83,6 +84,7 @@ export class MembresiasListComponent {
   protected readonly membresias = signal<MembresiaViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly actionLoadingId = signal<number | null>(null);
+  protected readonly socioActionLoadingId = signal<number | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly form = this.formBuilder.group({
     criterio: ['NOMBRE' as 'DNI' | 'NOMBRE' | 'APELLIDO', [Validators.required]],
@@ -230,6 +232,55 @@ export class MembresiasListComponent {
       });
   }
 
+  protected reactivarSocio(socioId: number | null | undefined): void {
+    if (!socioId) {
+      return;
+    }
+
+    const socio = this.socios().find((currentSocio) => currentSocio.id === socioId);
+    const socioNombre = socio?.nombreCompleto ?? `Socio #${socioId}`;
+
+    if (!window.confirm(`Queres reactivar a ${socioNombre}?`)) {
+      return;
+    }
+
+    this.socioActionLoadingId.set(socioId);
+
+    this.sociosService
+      .activarSocio(socioId)
+      .pipe(
+        finalize(() => this.socioActionLoadingId.set(null)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (updatedSocio) => {
+          this.socios.update((currentSocios) =>
+            currentSocios.map((currentSocio) =>
+              currentSocio.id === updatedSocio.id ? updatedSocio : currentSocio
+            )
+          );
+
+          if (this.selectedSocio()?.id === updatedSocio.id) {
+            this.selectedSocio.set(updatedSocio);
+          }
+
+          this.allMembresias.update((currentMembresias) =>
+            currentMembresias.map((currentMembresia) =>
+              currentMembresia.socioId === updatedSocio.id
+                ? { ...currentMembresia, socioEstado: updatedSocio.estado }
+                : currentMembresia
+            )
+          );
+          this.syncVisibleMembresias();
+
+          this.snackBar.open('Socio reactivado correctamente.', 'Cerrar', { duration: 3000 });
+        },
+        error: (error) => {
+          this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4000 });
+        }
+      });
+  }
+
   protected trackByMembresiaId(_: number, membresia: MembresiaViewModel): number {
     return membresia.id;
   }
@@ -255,6 +306,10 @@ export class MembresiasListComponent {
 
   protected getEstadoChipClass(estado: EstadoMembresia): string {
     return `estado-chip estado-chip--${estado.toLowerCase()}`;
+  }
+
+  protected getSocioEstadoChipClass(estado: string | null | undefined): string {
+    return `socio-estado-chip socio-estado-chip--${(estado ?? 'sin_estado').toLowerCase()}`;
   }
 
   protected getErrorMessage(controlName: 'criterio' | 'valor'): string {

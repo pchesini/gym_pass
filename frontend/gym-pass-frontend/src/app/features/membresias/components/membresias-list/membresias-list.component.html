@@ -85,7 +85,32 @@
             <span class="eyebrow">Socio seleccionado</span>
             <h2>{{ selectedSocio()?.nombreCompleto }}</h2>
             <p>DNI: {{ selectedSocio()?.dni }}</p>
+            <mat-chip [class]="getSocioEstadoChipClass(selectedSocio()?.estado)">
+              Socio {{ selectedSocio()?.estado }}
+            </mat-chip>
           </div>
+
+          @if (selectedSocio()?.estado === 'INACTIVO') {
+            <div class="inactive-socio-box">
+              <span class="label">Acceso a asistencia</span>
+              <strong>Socio inactivo</strong>
+              <span>La membresia puede estar vigente, pero el socio no puede registrar asistencia.</span>
+              @if (isAdmin()) {
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="socioActionLoadingId() === selectedSocio()?.id"
+                  (click)="reactivarSocio(selectedSocio()?.id)"
+                >
+                  @if (socioActionLoadingId() === selectedSocio()?.id) {
+                    <mat-spinner diameter="18" />
+                  } @else {
+                    Reactivar socio
+                  }
+                </button>
+              }
+            </div>
+          }
 
           @if (activeMembresia(); as currentActiveMembresia) {
             <div class="active-box">
@@ -130,6 +155,15 @@
             <ng-container matColumnDef="dni">
               <th mat-header-cell *matHeaderCellDef>DNI</th>
               <td mat-cell *matCellDef="let membresia">{{ membresia.socioDni ?? '-' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="estadoSocio">
+              <th mat-header-cell *matHeaderCellDef>Estado socio</th>
+              <td mat-cell *matCellDef="let membresia">
+                <mat-chip [class]="getSocioEstadoChipClass(membresia.socioEstado)">
+                  {{ membresia.socioEstado ?? 'Sin estado' }}
+                </mat-chip>
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="fechaInicio">
@@ -178,6 +212,22 @@
                   @if (isAdmin()) {
                     <button mat-icon-button type="button" aria-label="Editar membresia" (click)="navigateToEdit(membresia.id)">
                       <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+
+                  @if (isAdmin() && membresia.socioEstado === 'INACTIVO') {
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      class="toggle-button"
+                      [disabled]="socioActionLoadingId() === membresia.socioId"
+                      (click)="reactivarSocio(membresia.socioId)"
+                    >
+                      @if (socioActionLoadingId() === membresia.socioId) {
+                        <mat-spinner diameter="18" />
+                      } @else {
+                        Reactivar socio
+                      }
                     </button>
                   }
 

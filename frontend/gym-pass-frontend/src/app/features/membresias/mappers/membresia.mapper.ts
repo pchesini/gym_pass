@@ -67,6 +67,7 @@ export function mapMembresiaApiResponseToViewModel(
     socioId: membresia.socioId,
     socioNombre: socio?.nombreCompleto ?? `Socio #${membresia.socioId ?? 'N/D'}`,
     socioDni: socio?.dni ?? null,
+    socioEstado: socio?.estado ?? null,
     fechaInicio: membresia.fechaInicio,
     fechaVencimiento: membresia.fechaVencimiento,
     estado: membresia.estado,

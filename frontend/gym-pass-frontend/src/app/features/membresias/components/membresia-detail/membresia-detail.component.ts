@@ -10,6 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { SociosService } from '../../../socios/services/socios.service';
@@ -28,7 +29,8 @@ import { MembresiasService } from '../../services/membresias.service';
     MatCardModule,
     MatChipsModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   templateUrl: './membresia-detail.component.html',
   styleUrl: './membresia-detail.component.css'
@@ -37,12 +39,14 @@ export class MembresiaDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly membresiasService = inject(MembresiasService);
   private readonly sociosService = inject(SociosService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
 
   protected readonly isAdmin = this.authService.isAdmin;
   protected readonly membresia = signal<MembresiaViewModel | null>(null);
   protected readonly loading = signal(true);
+  protected readonly actionLoading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
@@ -51,6 +55,49 @@ export class MembresiaDetailComponent {
 
   protected getEstadoClass(estado: string): string {
     return `estado-chip estado-chip--${estado.toLowerCase()}`;
+  }
+
+  protected getSocioEstadoClass(estado: string | null | undefined): string {
+    return `socio-estado-chip socio-estado-chip--${(estado ?? 'sin_estado').toLowerCase()}`;
+  }
+
+  protected reactivarSocio(): void {
+    const membresia = this.membresia();
+
+    if (!membresia?.socioId || membresia.socioEstado !== 'INACTIVO') {
+      return;
+    }
+
+    if (!window.confirm(`Queres reactivar a ${membresia.socioNombre}?`)) {
+      return;
+    }
+
+    this.actionLoading.set(true);
+
+    this.sociosService
+      .activarSocio(membresia.socioId)
+      .pipe(
+        finalize(() => this.actionLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (updatedSocio) => {
+          this.membresia.update((currentMembresia) =>
+            currentMembresia
+              ? {
+                  ...currentMembresia,
+                  socioEstado: updatedSocio.estado,
+                  socioNombre: updatedSocio.nombreCompleto,
+                  socioDni: updatedSocio.dni
+                }
+              : currentMembresia
+          );
+          this.snackBar.open('Socio reactivado correctamente.', 'Cerrar', { duration: 3000 });
+        },
+        error: (error) => {
+          this.snackBar.open(this.resolveErrorMessage(error), 'Cerrar', { duration: 4000 });
+        }
+      });
   }
 
   private loadMembresia(): void {

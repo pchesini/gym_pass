@@ -44,14 +44,45 @@
           <span class="label">Socio</span>
           <h2>{{ currentMembresia.socioNombre }}</h2>
           <p>DNI: {{ currentMembresia.socioDni ?? 'No disponible' }}</p>
+          <mat-chip [class]="getSocioEstadoClass(currentMembresia.socioEstado)">
+            Socio {{ currentMembresia.socioEstado ?? 'Sin estado' }}
+          </mat-chip>
         </div>
         <mat-chip [class]="getEstadoClass(currentMembresia.estadoVisual)">{{ currentMembresia.estadoVisual }}</mat-chip>
       </div>
+
+      @if (currentMembresia.socioEstado === 'INACTIVO') {
+        <div class="inactive-socio-alert">
+          <mat-icon>warning</mat-icon>
+          <div>
+            <span class="label">Socio inactivo</span>
+            <strong>La membresia puede estar activa, pero el socio no puede registrar asistencia.</strong>
+          </div>
+          @if (isAdmin()) {
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="actionLoading()"
+              (click)="reactivarSocio()"
+            >
+              @if (actionLoading()) {
+                <mat-spinner diameter="18" />
+              } @else {
+                Reactivar socio
+              }
+            </button>
+          }
+        </div>
+      }
 
       <div class="detail-grid">
         <div>
           <span class="label">ID</span>
           <strong>{{ currentMembresia.id }}</strong>
+        </div>
+        <div>
+          <span class="label">Estado socio</span>
+          <strong>{{ currentMembresia.socioEstado ?? 'Sin estado' }}</strong>
         </div>
         <div>
           <span class="label">Fecha inicio</span>

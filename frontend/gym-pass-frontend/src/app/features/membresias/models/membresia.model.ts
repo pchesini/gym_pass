@@ -1,4 +1,5 @@
 export type EstadoMembresia = 'ACTIVA' | 'VENCIDA' | 'CANCELADA' | 'PENDIENTE_PAGO';
+export type EstadoSocioMembresia = 'ACTIVO' | 'INACTIVO';
 export type MetodoPagoMembresia = 'CREDITO' | 'DEBITO' | 'TRANSFERENCIA' | 'EFECTIVO' | 'OTRO';
 
 export interface MembresiaApiResponse {
@@ -45,6 +46,7 @@ export interface MembresiaViewModel {
   socioId: number | null;
   socioNombre: string;
   socioDni?: string | null;
+  socioEstado?: EstadoSocioMembresia | null;
   fechaInicio: string | null;
   fechaVencimiento: string | null;
   estado: EstadoMembresia;

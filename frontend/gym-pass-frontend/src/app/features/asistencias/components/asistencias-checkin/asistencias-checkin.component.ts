@@ -70,7 +70,7 @@ export class AsistenciasCheckinComponent {
     { value: 'CODIGO', label: 'Codigo / referencia' }
   ];
   protected readonly loading = signal(false);
-  protected readonly actionLoading = signal<'entrada' | 'salida' | null>(null);
+  protected readonly actionLoading = signal<'entrada' | 'salida' | 'reactivar' | null>(null);
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly resultados = signal<SocioViewModel[]>([]);
   protected readonly socio = signal<SocioAsistenciaLookup | null>(null);
@@ -215,6 +215,41 @@ export class AsistenciasCheckinComponent {
           this.snackBar.open(message, 'Cerrar', { duration: 3000 });
           this.asistenciasService.notifyRefresh();
           this.selectSocio(currentSocio.socio);
+        },
+        error: (error) => {
+          const message = this.resolveErrorMessage(error);
+          this.setFeedback('error', message);
+          this.snackBar.open(message, 'Cerrar', { duration: 4000 });
+        }
+      });
+  }
+
+  protected reactivarSocioActual(): void {
+    const currentSocio = this.socio();
+
+    if (!currentSocio || currentSocio.socio.estado !== 'INACTIVO') {
+      return;
+    }
+
+    if (!window.confirm(`Queres reactivar a ${currentSocio.socio.nombreCompleto}?`)) {
+      return;
+    }
+
+    this.actionLoading.set('reactivar');
+
+    this.sociosService
+      .activarSocio(currentSocio.socio.id)
+      .pipe(
+        finalize(() => this.actionLoading.set(null)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (updatedSocio) => {
+          this.socios.update((currentSocios) =>
+            currentSocios.map((socio) => (socio.id === updatedSocio.id ? updatedSocio : socio))
+          );
+          this.snackBar.open('Socio reactivado correctamente.', 'Cerrar', { duration: 3000 });
+          this.selectSocio(updatedSocio);
         },
         error: (error) => {
           const message = this.resolveErrorMessage(error);

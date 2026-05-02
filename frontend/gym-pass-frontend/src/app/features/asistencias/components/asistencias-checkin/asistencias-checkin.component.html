@@ -156,6 +156,23 @@
       </div>
 
       <div class="action-row">
+        @if (currentSocio.socio.estado === 'INACTIVO') {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="actionLoading() !== null"
+            (click)="reactivarSocioActual()"
+          >
+            @if (actionLoading() === 'reactivar') {
+              <mat-spinner diameter="18" />
+            } @else {
+              <mat-icon>person_add</mat-icon>
+              Reactivar socio
+            }
+          </button>
+        }
+
         @if (currentSocio.tieneSaldoPendiente && currentSocio.membresiaId) {
           <button
             mat-stroked-button
