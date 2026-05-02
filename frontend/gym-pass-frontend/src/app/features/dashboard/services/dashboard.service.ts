@@ -175,6 +175,25 @@ export class DashboardService {
             const asistenciasAbiertasHoy = asistencias.filter(
               (asistencia) => asistencia.estado === 'ABIERTA'
             ).length;
+            const asistenciasPorDia = resumenAsistencias.asistenciasPorDia ?? [];
+            const asistenciasPorFranjaHoraria =
+              resumenAsistencias.asistenciasPorFranjaHoraria ?? [];
+            const asistenciasPorDiaYFranja =
+              resumenAsistencias.asistenciasPorDiaYFranja ?? [];
+            const diasAsistencia = asistenciasPorDia
+              .map((item) => item.dia)
+              .filter((dia): dia is string => !!dia);
+            const franjasAsistencia = asistenciasPorFranjaHoraria
+              .map((item) => item.franja)
+              .filter((franja): franja is string => !!franja);
+            const maxAsistenciasPorCelda = Math.max(
+              0,
+              ...asistenciasPorDiaYFranja.map((item) => item.cantidad)
+            );
+            const maxAsistenciasPorFranja = Math.max(
+              0,
+              ...asistenciasPorFranjaHoraria.map((item) => item.cantidad)
+            );
 
             const sociosMetrics: DashboardMetricCardViewModel[] = [
               {
@@ -363,6 +382,13 @@ export class DashboardService {
               ultimosPagos,
               ultimasAsistencias,
               topSociosAsistencias: resumenAsistencias.topSocios,
+              diasAsistencia,
+              franjasAsistencia,
+              asistenciasPorDia,
+              asistenciasPorFranjaHoraria,
+              asistenciasPorDiaYFranja,
+              maxAsistenciasPorCelda,
+              maxAsistenciasPorFranja,
               resumenAsistencias,
               sociosRecientes,
               metrics,

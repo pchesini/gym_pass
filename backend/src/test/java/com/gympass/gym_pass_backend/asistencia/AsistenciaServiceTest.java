@@ -1,6 +1,7 @@
 package com.gympass.gym_pass_backend.asistencia;
 
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
+import com.gympass.gym_pass_backend.asistencia.dto.DistribucionAsistenciaResponse;
 import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
@@ -136,6 +137,34 @@ class AsistenciaServiceTest {
         assertThat(response.getTopSocios().get(1).getCantidadAsistencias()).isEqualTo(1);
     }
 
+    @Test
+    void obtenerResumenAgrupaAsistenciasPorDiaYFranjaHorariaOperativa() {
+        LocalDate desde = LocalDate.of(2026, 5, 4);
+        LocalDate hasta = LocalDate.of(2026, 5, 4);
+        SocioEntity socio = socio();
+
+        when(asistenciaRepository.findByFechaHoraEntradaBetween(
+                desde.atStartOfDay(),
+                hasta.plusDays(1).atStartOfDay()
+        )).thenReturn(List.of(
+                asistencia(1L, socio, LocalDateTime.of(2026, 5, 4, 7, 29)),
+                asistencia(2L, socio, LocalDateTime.of(2026, 5, 4, 7, 30)),
+                asistencia(3L, socio, LocalDateTime.of(2026, 5, 4, 18, 15)),
+                asistencia(4L, socio, LocalDateTime.of(2026, 5, 4, 21, 59)),
+                asistencia(5L, socio, LocalDateTime.of(2026, 5, 4, 22, 0))
+        ));
+
+        var response = asistenciaService.obtenerResumen(desde, hasta);
+
+        assertThat(findPorDia(response.getAsistenciasPorDia(), "Lunes").getCantidad()).isEqualTo(3);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "07:30 - 10:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "17:30 - 20:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "20:00 - 22:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "07:30 - 10:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "20:00 - 22:00").getCantidad()).isEqualTo(1);
+        assertThat(response.getAsistenciasPorDiaYFranja()).hasSize(42);
+    }
+
     private SocioEntity socio() {
         return SocioEntity.builder()
                 .id(1L)
@@ -179,5 +208,36 @@ class AsistenciaServiceTest {
                 .fechaHoraEntrada(fechaHoraEntrada)
                 .tipoRegistro(TipoRegistroAsistencia.STAFF)
                 .build();
+    }
+
+    private DistribucionAsistenciaResponse findPorDia(
+            List<DistribucionAsistenciaResponse> distribucion,
+            String dia
+    ) {
+        return distribucion.stream()
+                .filter(item -> dia.equals(item.getDia()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private DistribucionAsistenciaResponse findPorFranja(
+            List<DistribucionAsistenciaResponse> distribucion,
+            String franja
+    ) {
+        return distribucion.stream()
+                .filter(item -> franja.equals(item.getFranja()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private DistribucionAsistenciaResponse findPorDiaYFranja(
+            List<DistribucionAsistenciaResponse> distribucion,
+            String dia,
+            String franja
+    ) {
+        return distribucion.stream()
+                .filter(item -> dia.equals(item.getDia()) && franja.equals(item.getFranja()))
+                .findFirst()
+                .orElseThrow();
     }
 }

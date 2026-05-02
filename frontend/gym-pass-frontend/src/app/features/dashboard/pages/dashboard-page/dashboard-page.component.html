@@ -170,6 +170,54 @@
           <h2>Asistencias</h2>
         </div>
 
+        <mat-card appearance="outlined" class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">07:30 a 22:00</span>
+              <h3>Dias y horarios con mas asistencia</h3>
+            </div>
+          </div>
+
+          <div class="attendance-insights">
+            <div class="heatmap-wrapper">
+              <div class="heatmap-grid">
+                <div class="heatmap-corner"></div>
+                @for (franja of currentSummary.franjasAsistencia; track trackByString($index, franja)) {
+                  <div class="heatmap-header">{{ franja }}</div>
+                }
+
+                @for (dia of currentSummary.diasAsistencia; track trackByString($index, dia)) {
+                  <div class="heatmap-day">{{ dia }}</div>
+                  @for (franja of currentSummary.franjasAsistencia; track trackByString($index, franja)) {
+                    <div
+                      [class]="getHeatmapClass(getHeatmapCantidad(currentSummary, dia, franja), currentSummary.maxAsistenciasPorCelda)"
+                    >
+                      {{ getHeatmapCantidad(currentSummary, dia, franja) }}
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+
+            <div class="bar-list">
+              @for (franja of currentSummary.asistenciasPorFranjaHoraria; track trackByFranjaAsistencia($index, franja)) {
+                <div class="bar-item">
+                  <div class="bar-item__header">
+                    <span>{{ franja.franja }}</span>
+                    <strong>{{ franja.cantidad }}</strong>
+                  </div>
+                  <div class="bar-track">
+                    <div
+                      class="bar-fill"
+                      [style.width]="getBarWidth(franja.cantidad, currentSummary.maxAsistenciasPorFranja)"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </mat-card>
+
         <div class="panel-grid">
           <mat-card appearance="outlined" class="panel-card">
             <div class="panel-header">
@@ -223,36 +271,6 @@
         </div>
       </section>
 
-      <section class="dashboard-section">
-        <div class="section-heading">
-          <mat-icon>payments</mat-icon>
-          <h2>Pagos</h2>
-        </div>
-
-        <mat-card appearance="outlined" class="panel-card">
-          <div class="panel-header">
-            <div>
-              <span class="eyebrow">Movimientos</span>
-              <h3>Ultimos 5 pagos</h3>
-            </div>
-          </div>
-
-          @if (!currentSummary.ultimosPagos.length) {
-            <p class="panel-empty">No hay pagos registrados.</p>
-          } @else {
-            <div class="list-grid">
-              @for (pago of currentSummary.ultimosPagos; track trackByPagoId($index, pago)) {
-                <article class="list-item">
-                  <strong>{{ pago.socioNombre }}</strong>
-                  <span>{{ pago.monto | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
-                  <span>{{ pago.metodoPago }}</span>
-                  <span>{{ pago.fechaPago ? (pago.fechaPago | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
-                </article>
-              }
-            </div>
-          }
-        </mat-card>
-      </section>
     }
   }
 </section>

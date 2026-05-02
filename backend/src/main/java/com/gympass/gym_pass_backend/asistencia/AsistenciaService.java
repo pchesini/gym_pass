@@ -4,6 +4,7 @@ import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResumenResponse;
+import com.gympass.gym_pass_backend.asistencia.dto.DistribucionAsistenciaResponse;
 import com.gympass.gym_pass_backend.asistencia.dto.TopSocioAsistenciaResponse;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
@@ -18,11 +19,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +35,24 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class AsistenciaService {
+
+    private static final List<DayOfWeek> DIAS_ORDENADOS = List.of(
+            DayOfWeek.MONDAY,
+            DayOfWeek.TUESDAY,
+            DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY,
+            DayOfWeek.FRIDAY,
+            DayOfWeek.SATURDAY,
+            DayOfWeek.SUNDAY
+    );
+    private static final List<FranjaHoraria> FRANJAS_HORARIAS = List.of(
+            new FranjaHoraria("07:30 - 10:00", LocalTime.of(7, 30), LocalTime.of(10, 0)),
+            new FranjaHoraria("10:00 - 12:30", LocalTime.of(10, 0), LocalTime.of(12, 30)),
+            new FranjaHoraria("12:30 - 15:00", LocalTime.of(12, 30), LocalTime.of(15, 0)),
+            new FranjaHoraria("15:00 - 17:30", LocalTime.of(15, 0), LocalTime.of(17, 30)),
+            new FranjaHoraria("17:30 - 20:00", LocalTime.of(17, 30), LocalTime.of(20, 0)),
+            new FranjaHoraria("20:00 - 22:00", LocalTime.of(20, 0), LocalTime.of(22, 0))
+    );
 
     private final AsistenciaRepository asistenciaRepository;
     private final SocioRepository socioRepository;
@@ -184,6 +207,121 @@ public class AsistenciaService {
         response.setSociosUnicos(asistenciasPorSocio.size());
         response.setPromedioDiario(promedioDiario);
         response.setTopSocios(topSocios);
+        response.setAsistenciasPorDia(buildAsistenciasPorDia(asistencias));
+        response.setAsistenciasPorFranjaHoraria(buildAsistenciasPorFranjaHoraria(asistencias));
+        response.setAsistenciasPorDiaYFranja(buildAsistenciasPorDiaYFranja(asistencias));
+        return response;
+    }
+
+    private List<DistribucionAsistenciaResponse> buildAsistenciasPorDia(List<AsistenciaEntity> asistencias) {
+        Map<String, Long> conteoPorDia = DIAS_ORDENADOS.stream()
+                .collect(Collectors.toMap(
+                        this::formatDia,
+                        dia -> 0L,
+                        Long::sum,
+                        LinkedHashMap::new
+                ));
+
+        asistencias.stream()
+                .filter(asistencia -> asistencia.getFechaHoraEntrada() != null)
+                .filter(this::estaDentroDeFranjasOperativas)
+                .forEach(asistencia -> {
+                    String dia = formatDia(asistencia.getFechaHoraEntrada().getDayOfWeek());
+                    conteoPorDia.computeIfPresent(dia, (key, value) -> value + 1);
+                });
+
+        return conteoPorDia.entrySet().stream()
+                .map(entry -> mapDistribucion(entry.getKey(), null, entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private List<DistribucionAsistenciaResponse> buildAsistenciasPorFranjaHoraria(List<AsistenciaEntity> asistencias) {
+        Map<String, Long> conteoPorFranja = FRANJAS_HORARIAS.stream()
+                .collect(Collectors.toMap(
+                        FranjaHoraria::label,
+                        franja -> 0L,
+                        Long::sum,
+                        LinkedHashMap::new
+                ));
+
+        asistencias.stream()
+                .filter(asistencia -> asistencia.getFechaHoraEntrada() != null)
+                .map(asistencia -> resolveFranja(asistencia.getFechaHoraEntrada().toLocalTime()))
+                .filter(franja -> franja != null)
+                .forEach(franja -> conteoPorFranja.computeIfPresent(franja.label(), (key, value) -> value + 1));
+
+        return conteoPorFranja.entrySet().stream()
+                .map(entry -> mapDistribucion(null, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private List<DistribucionAsistenciaResponse> buildAsistenciasPorDiaYFranja(List<AsistenciaEntity> asistencias) {
+        Map<String, Long> conteoPorDiaYFranja = new LinkedHashMap<>();
+        DIAS_ORDENADOS.forEach(dia -> FRANJAS_HORARIAS.forEach(franja ->
+                conteoPorDiaYFranja.put(buildDiaFranjaKey(formatDia(dia), franja.label()), 0L)
+        ));
+
+        asistencias.stream()
+                .filter(asistencia -> asistencia.getFechaHoraEntrada() != null)
+                .forEach(asistencia -> {
+                    LocalDateTime fechaHoraEntrada = asistencia.getFechaHoraEntrada();
+                    FranjaHoraria franja = resolveFranja(fechaHoraEntrada.toLocalTime());
+
+                    if (franja == null) {
+                        return;
+                    }
+
+                    String dia = formatDia(fechaHoraEntrada.getDayOfWeek());
+                    String key = buildDiaFranjaKey(dia, franja.label());
+                    conteoPorDiaYFranja.computeIfPresent(key, (currentKey, value) -> value + 1);
+                });
+
+        List<DistribucionAsistenciaResponse> distribucion = new ArrayList<>();
+        DIAS_ORDENADOS.forEach(dia -> FRANJAS_HORARIAS.forEach(franja -> {
+            String diaLabel = formatDia(dia);
+            String franjaLabel = franja.label();
+            distribucion.add(mapDistribucion(
+                    diaLabel,
+                    franjaLabel,
+                    conteoPorDiaYFranja.get(buildDiaFranjaKey(diaLabel, franjaLabel))
+            ));
+        }));
+
+        return distribucion;
+    }
+
+    private boolean estaDentroDeFranjasOperativas(AsistenciaEntity asistencia) {
+        return resolveFranja(asistencia.getFechaHoraEntrada().toLocalTime()) != null;
+    }
+
+    private FranjaHoraria resolveFranja(LocalTime hora) {
+        return FRANJAS_HORARIAS.stream()
+                .filter(franja -> !hora.isBefore(franja.desde()) && hora.isBefore(franja.hasta()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String formatDia(DayOfWeek dia) {
+        return switch (dia) {
+            case MONDAY -> "Lunes";
+            case TUESDAY -> "Martes";
+            case WEDNESDAY -> "Miercoles";
+            case THURSDAY -> "Jueves";
+            case FRIDAY -> "Viernes";
+            case SATURDAY -> "Sabado";
+            case SUNDAY -> "Domingo";
+        };
+    }
+
+    private String buildDiaFranjaKey(String dia, String franja) {
+        return dia + "|" + franja;
+    }
+
+    private DistribucionAsistenciaResponse mapDistribucion(String dia, String franja, Long cantidad) {
+        DistribucionAsistenciaResponse response = new DistribucionAsistenciaResponse();
+        response.setDia(dia);
+        response.setFranja(franja);
+        response.setCantidad(cantidad != null ? cantidad : 0L);
         return response;
     }
 
@@ -249,5 +387,8 @@ public class AsistenciaService {
             return "No se puede registrar asistencia porque la membresia registra saldo pendiente";
         }
         return "El socio no tiene una membresia habilitada para registrar asistencia";
+    }
+
+    private record FranjaHoraria(String label, LocalTime desde, LocalTime hasta) {
     }
 }

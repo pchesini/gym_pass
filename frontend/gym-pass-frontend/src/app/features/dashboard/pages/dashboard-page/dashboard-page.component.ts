@@ -74,6 +74,55 @@ export class DashboardPageComponent {
     return socio.socioId ?? index;
   }
 
+  protected trackByString(_: number, value: string): string {
+    return value;
+  }
+
+  protected trackByFranjaAsistencia(
+    index: number,
+    item: DashboardSummaryViewModel['asistenciasPorFranjaHoraria'][number]
+  ): string {
+    return item.franja ?? index.toString();
+  }
+
+  protected getHeatmapCantidad(
+    summary: DashboardSummaryViewModel,
+    dia: string,
+    franja: string
+  ): number {
+    return (
+      summary.asistenciasPorDiaYFranja.find(
+        (item) => item.dia === dia && item.franja === franja
+      )?.cantidad ?? 0
+    );
+  }
+
+  protected getHeatmapClass(cantidad: number, maxCantidad: number): string {
+    if (!cantidad || !maxCantidad) {
+      return 'heatmap-cell heatmap-cell--empty';
+    }
+
+    const ratio = cantidad / maxCantidad;
+
+    if (ratio >= 0.75) {
+      return 'heatmap-cell heatmap-cell--high';
+    }
+
+    if (ratio >= 0.45) {
+      return 'heatmap-cell heatmap-cell--medium';
+    }
+
+    return 'heatmap-cell heatmap-cell--low';
+  }
+
+  protected getBarWidth(cantidad: number, maxCantidad: number): string {
+    if (!cantidad || !maxCantidad) {
+      return '0%';
+    }
+
+    return `${Math.max(8, Math.round((cantidad / maxCantidad) * 100))}%`;
+  }
+
   private loadDashboard(): void {
     this.loading.set(true);
     this.errorMessage.set(null);

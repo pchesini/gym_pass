@@ -2,6 +2,7 @@ import { MembresiaViewModel } from '../../membresias/models/membresia.model';
 import {
   AsistenciaResumenApiResponse,
   AsistenciaViewModel,
+  DistribucionAsistenciaApiResponse,
   TopSocioAsistenciaApiResponse
 } from '../../asistencias/models/asistencia.model';
 import { PagoViewModel } from '../../pagos/models/pago.model';
@@ -44,6 +45,13 @@ export interface DashboardSummaryViewModel {
   ultimosPagos: PagoViewModel[];
   ultimasAsistencias: AsistenciaViewModel[];
   topSociosAsistencias: TopSocioAsistenciaApiResponse[];
+  diasAsistencia: string[];
+  franjasAsistencia: string[];
+  asistenciasPorDia: DistribucionAsistenciaApiResponse[];
+  asistenciasPorFranjaHoraria: DistribucionAsistenciaApiResponse[];
+  asistenciasPorDiaYFranja: DistribucionAsistenciaApiResponse[];
+  maxAsistenciasPorCelda: number;
+  maxAsistenciasPorFranja: number;
   resumenAsistencias: AsistenciaResumenApiResponse;
   sociosRecientes: SocioViewModel[];
   metrics: DashboardMetricCardViewModel[];
