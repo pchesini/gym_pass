@@ -180,6 +180,7 @@ class AsistenciaServiceTest {
         assertThat(response.getSociosConMenosAsistencias()).hasSize(3);
         assertThat(response.getSociosConMenosAsistencias().get(0).getSocioId()).isEqualTo(3L);
         assertThat(response.getSociosConMenosAsistencias().get(0).getCantidadAsistencias()).isZero();
+        assertThat(response.getSociosActivosSinAsistencia()).isEqualTo(1);
     }
 
     @Test

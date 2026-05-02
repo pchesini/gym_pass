@@ -28,6 +28,7 @@ public class SocioMapper {
         dto.setEmail(entity.getEmail());
         dto.setTelefono(entity.getTelefono());
         dto.setEstado(entity.getEstado());
+        dto.setFechaAlta(entity.getFechaAlta());
         dto.setFechaNacimiento(entity.getFechaNacimiento());
         return dto;
     }

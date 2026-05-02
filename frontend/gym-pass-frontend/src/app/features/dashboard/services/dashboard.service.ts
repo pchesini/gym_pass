@@ -263,14 +263,14 @@ export class DashboardService {
                 helper: 'Socios distintos que asistieron en el dia actual.'
               },
               {
-                label: 'Registros mes anterior',
+                label: 'Asistencias mes anterior',
                 value: resumenAsistencias.totalAsistencias.toString(),
                 helper: `Dias/asistencias registradas en ${mesAnteriorReferencia}.`
               },
               {
-                label: 'Unicos mes anterior',
-                value: resumenAsistencias.sociosUnicos.toString(),
-                helper: `Socios distintos que asistieron en ${mesAnteriorReferencia}.`
+                label: 'Activos sin asistencia',
+                value: resumenAsistencias.sociosActivosSinAsistencia.toString(),
+                helper: `Socios activos sin registros en ${mesAnteriorReferencia}.`
               }
             ];
 
@@ -281,9 +281,9 @@ export class DashboardService {
                 helper: formatCurrency(montoCobradoHoy)
               },
               {
-                label: 'Mes',
+                label: 'Mes actual',
                 value: pagosMes.length.toString(),
-                helper: formatCurrency(montoCobradoMes)
+                helper: `${mesReferencia}: ${formatCurrency(montoCobradoMes)}`
               },
               {
                 label: 'Total',
@@ -390,7 +390,7 @@ export class DashboardService {
               pagosMes: pagosMes.length,
               montoCobradoMes,
               asistenciasMesAnterior: resumenAsistencias.totalAsistencias,
-              sociosUnicosAsistenciaMesAnterior: resumenAsistencias.sociosUnicos,
+              sociosActivosSinAsistenciaMesAnterior: resumenAsistencias.sociosActivosSinAsistencia,
               asistenciasAbiertasHoy,
               membresiasPorVencer,
               membresiasConDeuda,

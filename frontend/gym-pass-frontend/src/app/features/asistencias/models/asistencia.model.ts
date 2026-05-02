@@ -41,6 +41,7 @@ export interface AsistenciaResumenApiResponse {
   fechaHasta: string | null;
   totalAsistencias: number;
   sociosUnicos: number;
+  sociosActivosSinAsistencia: number;
   promedioDiario: number;
   topSocios: TopSocioAsistenciaApiResponse[];
   sociosConMenosAsistencias: TopSocioAsistenciaApiResponse[];

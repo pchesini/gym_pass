@@ -38,7 +38,7 @@ export interface DashboardSummaryViewModel {
   pagosMes: number;
   montoCobradoMes: number;
   asistenciasMesAnterior: number;
-  sociosUnicosAsistenciaMesAnterior: number;
+  sociosActivosSinAsistenciaMesAnterior: number;
   asistenciasAbiertasHoy: number;
   membresiasPorVencer: MembresiaViewModel[];
   membresiasConDeuda: MembresiaViewModel[];

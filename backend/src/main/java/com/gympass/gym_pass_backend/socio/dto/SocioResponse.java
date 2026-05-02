@@ -16,6 +16,6 @@ public class SocioResponse {
     private String email;
     private String telefono;
     private EstadoSocio estado;
+    private LocalDate fechaAlta;
     private LocalDate fechaNacimiento;
-    ;
 }

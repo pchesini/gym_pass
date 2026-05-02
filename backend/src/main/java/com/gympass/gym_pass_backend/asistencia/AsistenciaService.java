@@ -204,7 +204,11 @@ public class AsistenciaService {
                 )
                 .limit(5)
                 .collect(Collectors.toList());
-        List<TopSocioAsistenciaResponse> sociosConMenosAsistencias = socioRepository.findByEstado(EstadoSocio.ACTIVO).stream()
+        List<SocioEntity> sociosActivos = socioRepository.findByEstado(EstadoSocio.ACTIVO);
+        long sociosActivosSinAsistencia = sociosActivos.stream()
+                .filter(socio -> !asistenciasPorSocio.containsKey(socio.getId()))
+                .count();
+        List<TopSocioAsistenciaResponse> sociosConMenosAsistencias = sociosActivos.stream()
                 .map(socio -> mapSocioAsistencia(
                         socio,
                         asistenciasPorSocio.getOrDefault(socio.getId(), List.of()).size()
@@ -221,6 +225,7 @@ public class AsistenciaService {
         response.setFechaHasta(fechaHasta);
         response.setTotalAsistencias(asistencias.size());
         response.setSociosUnicos(asistenciasPorSocio.size());
+        response.setSociosActivosSinAsistencia(sociosActivosSinAsistencia);
         response.setPromedioDiario(promedioDiario);
         response.setTopSocios(topSocios);
         response.setSociosConMenosAsistencias(sociosConMenosAsistencias);

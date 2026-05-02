@@ -16,6 +16,7 @@ public class AsistenciaResumenResponse {
     private LocalDate fechaHasta;
     private long totalAsistencias;
     private long sociosUnicos;
+    private long sociosActivosSinAsistencia;
     private BigDecimal promedioDiario = BigDecimal.ZERO;
     private List<TopSocioAsistenciaResponse> topSocios = new ArrayList<>();
     private List<TopSocioAsistenciaResponse> sociosConMenosAsistencias = new ArrayList<>();
