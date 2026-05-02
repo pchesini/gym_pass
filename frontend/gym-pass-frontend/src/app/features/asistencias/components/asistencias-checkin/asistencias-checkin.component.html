@@ -97,7 +97,7 @@
             </div>
           </div>
 
-          @if (bloqueo.tieneSaldoPendiente && bloqueo.socioId && bloqueo.membresiaId) {
+          @if ((bloqueo.tieneSaldoPendiente || bloqueo.membresiaVencida) && bloqueo.socioId && bloqueo.membresiaId) {
             <button mat-flat-button color="primary" type="button" (click)="registrarPagoBloqueo()">
               <mat-icon>payments</mat-icon>
               Registrar pago
@@ -156,6 +156,18 @@
       </div>
 
       <div class="action-row">
+        @if (currentSocio.tieneSaldoPendiente && currentSocio.membresiaId) {
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="actionLoading() !== null"
+            (click)="registrarPagoSocio()"
+          >
+            <mat-icon>payments</mat-icon>
+            Registrar pago
+          </button>
+        }
+
         <button
           mat-flat-button
           color="primary"

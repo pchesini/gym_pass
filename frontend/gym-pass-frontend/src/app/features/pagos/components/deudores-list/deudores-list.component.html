@@ -2,8 +2,8 @@
   <div class="card-header">
     <div>
       <span class="eyebrow">Deudores</span>
-      <h2>Membresias con saldo pendiente</h2>
-      <p>Listado operativo de socios con deuda registrada para iniciar el cobro rapidamente.</p>
+      <h2>Membresias con saldo pendiente o vencidas</h2>
+      <p>Listado operativo de socios con deuda registrada o membresia vencida para iniciar el cobro rapidamente.</p>
     </div>
 
     <div class="header-actions">
@@ -17,8 +17,12 @@
   @if (!loading() && !errorMessage() && deudores().length) {
     <div class="summary-grid">
       <article class="summary-item">
-        <span class="summary-label">Deudores</span>
+        <span class="summary-label">Casos a revisar</span>
         <strong>{{ deudores().length }}</strong>
+      </article>
+      <article class="summary-item">
+        <span class="summary-label">Membresias vencidas</span>
+        <strong>{{ totalVencidas() }}</strong>
       </article>
       <article class="summary-item">
         <span class="summary-label">Saldo pendiente total</span>
@@ -44,8 +48,8 @@
     <div class="state-box">
       <mat-icon>task_alt</mat-icon>
       <div>
-        <h3>Sin deudores</h3>
-        <p>No hay membresias con saldo pendiente.</p>
+        <h3>Sin casos pendientes</h3>
+        <p>No hay membresias con saldo pendiente ni vencidas.</p>
       </div>
     </div>
   } @else {

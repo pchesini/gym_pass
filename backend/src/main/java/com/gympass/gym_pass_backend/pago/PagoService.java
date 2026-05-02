@@ -115,8 +115,12 @@ public class PagoService {
     @Transactional(readOnly = true)
     public List<DeudorResponse> listarDeudores() {
         return membresiaRepository
-                .findBySaldoPendienteGreaterThanOrderByFechaVencimientoAscIdAsc(BigDecimal.ZERO)
+                .findAllByOrderByFechaVencimientoDescIdDesc()
                 .stream()
+                .filter(this::debeFigurarEnDeudores)
+                .sorted(Comparator
+                        .comparing(MembresiaEntity::getFechaVencimiento, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(MembresiaEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(this::toDeudorResponse)
                 .collect(Collectors.toList());
     }
@@ -154,23 +158,23 @@ public class PagoService {
     }
 
     private void validarMontoContraSaldoPendiente(MembresiaEntity membresia, BigDecimal montoPago) {
-        if (membresia.getSaldoPendiente() == null) {
+        BigDecimal saldoACobrar = obtenerSaldoACobrar(membresia);
+
+        if (saldoACobrar == null) {
             return;
         }
 
-        if (montoPago.compareTo(membresia.getSaldoPendiente()) > 0 && !estaVencida(membresia)) {
+        if (montoPago.compareTo(saldoACobrar) > 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El monto del pago no puede superar el saldo pendiente de la membresia"
+                    "El monto del pago no puede superar el valor a cobrar de la membresia"
             );
         }
     }
 
     private void actualizarSaldoYEstadoMembresia(MembresiaEntity membresia, BigDecimal montoPago) {
         boolean estabaVencida = estaVencida(membresia);
-        BigDecimal saldoActual = membresia.getSaldoPendiente() == null
-                ? BigDecimal.ZERO
-                : membresia.getSaldoPendiente();
+        BigDecimal saldoActual = obtenerSaldoACobrar(membresia);
         BigDecimal nuevoSaldo = normalizeMoney(saldoActual.subtract(montoPago));
 
         if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
@@ -183,7 +187,7 @@ public class PagoService {
             return;
         }
 
-        if (nuevoSaldo.compareTo(BigDecimal.ZERO) == 0 && estabaVencida) {
+        if (estabaVencida) {
             renovarPeriodoVencido(membresia);
         }
 
@@ -192,6 +196,18 @@ public class PagoService {
                         ? EstadoMembresia.ACTIVA
                         : EstadoMembresia.PENDIENTE_PAGO
         );
+    }
+
+    private BigDecimal obtenerSaldoACobrar(MembresiaEntity membresia) {
+        if (estaVencida(membresia)) {
+            return membresia.getPrecioLista() == null
+                    ? BigDecimal.ZERO
+                    : normalizeMoney(membresia.getPrecioLista());
+        }
+
+        return membresia.getSaldoPendiente() == null
+                ? BigDecimal.ZERO
+                : membresia.getSaldoPendiente();
     }
 
     private boolean estaVencida(MembresiaEntity membresia) {
@@ -218,6 +234,15 @@ public class PagoService {
         );
     }
 
+    private boolean debeFigurarEnDeudores(MembresiaEntity membresia) {
+        return tieneSaldoPendiente(membresia) || estaVencida(membresia);
+    }
+
+    private boolean tieneSaldoPendiente(MembresiaEntity membresia) {
+        return membresia.getSaldoPendiente() != null
+                && membresia.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0;
+    }
+
     private DeudorResponse toDeudorResponse(MembresiaEntity membresia) {
         SocioEntity socio = membresia.getSocio();
         DeudorResponse response = new DeudorResponse();
@@ -226,7 +251,7 @@ public class PagoService {
         response.setSocioDni(socio != null ? socio.getDni() : null);
         response.setMembresiaId(membresia.getId());
         response.setFechaVencimiento(membresia.getFechaVencimiento());
-        response.setEstadoMembresia(membresia.getEstado());
+        response.setEstadoMembresia(estaVencida(membresia) ? EstadoMembresia.VENCIDA : membresia.getEstado());
         response.setSaldoPendiente(membresia.getSaldoPendiente());
         return response;
     }

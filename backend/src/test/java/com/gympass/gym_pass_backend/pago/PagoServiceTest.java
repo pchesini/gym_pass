@@ -147,22 +147,57 @@ class PagoServiceTest {
     }
 
     @Test
-    void listarDeudoresDevuelveMembresiasConSaldoPendiente() {
+    void crearPagoParcialDeMembresiaVencidaCalculaSaldoContraPrecioLista() {
         SocioEntity socio = socio();
         MembresiaEntity membresia = membresia(socio);
+        membresia.setFechaInicio(LocalDate.now().minusMonths(2));
+        membresia.setFechaVencimiento(LocalDate.now().minusMonths(1));
+        membresia.setSaldoPendiente(BigDecimal.ZERO);
+        membresia.setEstado(EstadoMembresia.VENCIDA);
+        PagoCrearRequest request = pagoRequest(new BigDecimal("4000"));
+        request.setMembresiaId(10L);
 
-        when(membresiaRepository.findBySaldoPendienteGreaterThanOrderByFechaVencimientoAscIdAsc(BigDecimal.ZERO))
-                .thenReturn(List.of(membresia));
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findById(10L)).thenReturn(Optional.of(membresia));
+        when(pagoRepository.save(any(PagoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        pagoService.crearPago(request);
+
+        assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("6000.00");
+        assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
+        assertThat(membresia.getFechaInicio()).isEqualTo(LocalDate.now());
+        assertThat(membresia.getFechaVencimiento()).isAfter(LocalDate.now());
+    }
+
+    @Test
+    void listarDeudoresDevuelveMembresiasConSaldoPendienteOVencidas() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresiaConSaldo = membresia(socio);
+        MembresiaEntity membresiaVencida = membresia(socio);
+        membresiaVencida.setId(11L);
+        membresiaVencida.setFechaVencimiento(LocalDate.now().minusDays(1));
+        membresiaVencida.setSaldoPendiente(BigDecimal.ZERO);
+        membresiaVencida.setEstado(EstadoMembresia.ACTIVA);
+        MembresiaEntity membresiaActivaSinSaldo = membresia(socio);
+        membresiaActivaSinSaldo.setId(12L);
+        membresiaActivaSinSaldo.setSaldoPendiente(BigDecimal.ZERO);
+        membresiaActivaSinSaldo.setEstado(EstadoMembresia.ACTIVA);
+
+        when(membresiaRepository.findAllByOrderByFechaVencimientoDescIdDesc())
+                .thenReturn(List.of(membresiaActivaSinSaldo, membresiaConSaldo, membresiaVencida));
 
         List<DeudorResponse> deudores = pagoService.listarDeudores();
 
-        assertThat(deudores).hasSize(1);
+        assertThat(deudores).hasSize(2);
         assertThat(deudores.get(0).getSocioId()).isEqualTo(1L);
         assertThat(deudores.get(0).getSocioNombre()).isEqualTo("Socio Test");
         assertThat(deudores.get(0).getSocioDni()).isEqualTo("12345678");
-        assertThat(deudores.get(0).getMembresiaId()).isEqualTo(10L);
-        assertThat(deudores.get(0).getSaldoPendiente()).isEqualByComparingTo("10000.00");
-        assertThat(deudores.get(0).getEstadoMembresia()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
+        assertThat(deudores.get(0).getMembresiaId()).isEqualTo(11L);
+        assertThat(deudores.get(0).getSaldoPendiente()).isEqualByComparingTo("0.00");
+        assertThat(deudores.get(0).getEstadoMembresia()).isEqualTo(EstadoMembresia.VENCIDA);
+        assertThat(deudores.get(1).getMembresiaId()).isEqualTo(10L);
+        assertThat(deudores.get(1).getSaldoPendiente()).isEqualByComparingTo("10000.00");
+        assertThat(deudores.get(1).getEstadoMembresia()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
     }
 
     private PagoCrearRequest pagoRequest(BigDecimal monto) {

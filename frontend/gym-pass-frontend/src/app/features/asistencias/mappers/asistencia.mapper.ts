@@ -165,6 +165,7 @@ export function buildSocioAsistenciaLookup(
     asistenciaAbierta,
     ultimaAsistencia,
     mensajeRecepcion,
+    membresiaId: membresiaVigente?.id ?? null,
     estadoMembresia: membresiaVigente?.estadoVisual ?? null,
     saldoPendienteMembresia: membresiaVigente?.saldoPendiente ?? null,
     tieneSaldoPendiente,

@@ -48,6 +48,9 @@ export class DeudoresListComponent {
   protected readonly totalPendiente = computed(() =>
     this.deudores().reduce((total, deudor) => total + deudor.saldoPendiente, 0)
   );
+  protected readonly totalVencidas = computed(() =>
+    this.deudores().filter((deudor) => deudor.estadoMembresia === 'VENCIDA').length
+  );
 
   constructor() {
     this.loadDeudores();

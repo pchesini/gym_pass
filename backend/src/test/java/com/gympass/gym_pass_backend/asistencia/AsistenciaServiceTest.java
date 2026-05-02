@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,6 +76,30 @@ class AsistenciaServiceTest {
                 });
     }
 
+    @Test
+    void registrarEntradaPermiteIngresoCuandoLaMembresiaTieneSaldoPendiente() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = membresiaPendienteDePago(socio);
+        AsistenciaCrearRequest request = new AsistenciaCrearRequest();
+        request.setSocioId(1L);
+        request.setCredencialId(100L);
+        request.setTipoRegistro(TipoRegistroAsistencia.STAFF);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findBySocioId(1L)).thenReturn(List.of(membresia));
+        when(asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(1L)).thenReturn(Optional.empty());
+        when(asistenciaRepository.save(any(AsistenciaEntity.class))).thenAnswer(invocation -> {
+            AsistenciaEntity asistencia = invocation.getArgument(0);
+            asistencia.setId(20L);
+            return asistencia;
+        });
+
+        var response = asistenciaService.registrarEntrada(request);
+
+        assertThat(response.getId()).isEqualTo(20L);
+        assertThat(response.getSocioId()).isEqualTo(1L);
+    }
+
     private SocioEntity socio() {
         return SocioEntity.builder()
                 .id(1L)
@@ -94,6 +119,18 @@ class AsistenciaServiceTest {
                 .fechaVencimiento(LocalDate.now().minusDays(1))
                 .precioLista(new BigDecimal("10000.00"))
                 .saldoPendiente(new BigDecimal("5000.00"))
+                .estado(EstadoMembresia.PENDIENTE_PAGO)
+                .build();
+    }
+
+    private MembresiaEntity membresiaPendienteDePago(SocioEntity socio) {
+        return MembresiaEntity.builder()
+                .id(10L)
+                .socio(socio)
+                .fechaInicio(LocalDate.now())
+                .fechaVencimiento(LocalDate.now().plusMonths(1))
+                .precioLista(new BigDecimal("10000.00"))
+                .saldoPendiente(new BigDecimal("6000.00"))
                 .estado(EstadoMembresia.PENDIENTE_PAGO)
                 .build();
     }

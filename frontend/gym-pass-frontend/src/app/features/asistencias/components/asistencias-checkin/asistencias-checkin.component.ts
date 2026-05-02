@@ -257,12 +257,43 @@ export class AsistenciasCheckinComponent {
       return;
     }
 
+    this.navegarARegistroPago(
+      bloqueo.socioId,
+      bloqueo.membresiaId,
+      bloqueo.saldoPendiente
+    );
+  }
+
+  protected registrarPagoSocio(): void {
+    const currentSocio = this.socio();
+
+    if (!currentSocio?.membresiaId) {
+      return;
+    }
+
+    this.navegarARegistroPago(
+      currentSocio.socio.id,
+      currentSocio.membresiaId,
+      currentSocio.saldoPendienteMembresia
+    );
+  }
+
+  private navegarARegistroPago(
+    socioId: number,
+    membresiaId: number,
+    monto: number | null | undefined
+  ): void {
+    const queryParams: { socioId: number; membresiaId: number; monto?: number } = {
+      socioId,
+      membresiaId
+    };
+
+    if (monto !== null && monto !== undefined && monto > 0) {
+      queryParams.monto = monto;
+    }
+
     void this.router.navigate(['/pagos/nuevo'], {
-      queryParams: {
-        socioId: bloqueo.socioId,
-        membresiaId: bloqueo.membresiaId,
-        monto: bloqueo.saldoPendiente ?? 0
-      }
+      queryParams
     });
   }
 

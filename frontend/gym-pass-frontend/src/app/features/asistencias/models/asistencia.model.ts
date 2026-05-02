@@ -59,6 +59,7 @@ export interface SocioAsistenciaLookup {
   asistenciaAbierta: AsistenciaViewModel | null;
   ultimaAsistencia: AsistenciaViewModel | null;
   mensajeRecepcion: string | null;
+  membresiaId: number | null;
   estadoMembresia: string | null;
   saldoPendienteMembresia: number | null;
   tieneSaldoPendiente: boolean;
