@@ -140,6 +140,25 @@ export class DashboardPageComponent {
     return `${92 + summary.franjasAsistencia.length * 98}px`;
   }
 
+  protected getDiasParaVencimientoLabel(fechaVencimiento: string | null): string {
+    const dias = this.getDiasParaVencimiento(fechaVencimiento);
+
+    if (dias === null) {
+      return 'Sin fecha de vencimiento';
+    }
+
+    if (dias < 0) {
+      const diasVencida = Math.abs(dias);
+      return diasVencida === 1 ? 'Vencida hace 1 dia' : `Vencida hace ${diasVencida} dias`;
+    }
+
+    if (dias === 0) {
+      return 'Vence hoy';
+    }
+
+    return dias === 1 ? 'Falta 1 dia' : `Faltan ${dias} dias`;
+  }
+
   private loadDashboard(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -165,5 +184,34 @@ export class DashboardPageComponent {
     }
 
     return 'Ocurrio un error inesperado al cargar el resumen general.';
+  }
+
+  private getDiasParaVencimiento(fechaVencimiento: string | null): number | null {
+    const fecha = this.parseLocalDate(fechaVencimiento);
+
+    if (!fecha) {
+      return null;
+    }
+
+    const hoy = new Date();
+    const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+
+    return Math.round((fecha.getTime() - inicioHoy.getTime()) / millisecondsPerDay);
+  }
+
+  private parseLocalDate(value: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+    if (!match) {
+      return null;
+    }
+
+    const [, year, month, day] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day));
   }
 }

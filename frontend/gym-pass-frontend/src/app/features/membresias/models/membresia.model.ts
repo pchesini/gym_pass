@@ -46,6 +46,7 @@ export interface MembresiaViewModel {
   socioId: number | null;
   socioNombre: string;
   socioDni?: string | null;
+  socioTelefono?: string | null;
   socioEstado?: EstadoSocioMembresia | null;
   fechaInicio: string | null;
   fechaVencimiento: string | null;

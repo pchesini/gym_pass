@@ -163,11 +163,6 @@
   color: #111827;
 }
 
-.highlight-date {
-  font-weight: 700;
-  color: #9a3412;
-}
-
 .panel-card--warning {
   border-top: 4px solid #f59e0b;
 }
@@ -179,6 +174,34 @@
 .list-item--warning {
   border-color: #fed7aa;
   background: #fff7ed;
+}
+
+.due-date-box {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.25rem 0;
+  padding: 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #fdba74;
+  background: #ffedd5;
+}
+
+.due-date-label {
+  color: #9a3412;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.due-date-value {
+  color: #7c2d12;
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
+.due-date-days {
+  color: #9a3412;
+  font-weight: 700;
 }
 
 .list-item--debt {

@@ -114,11 +114,14 @@
                 @for (membresia of currentSummary.membresiasPorVencer; track trackByMembresiaId($index, membresia)) {
                   <article class="list-item list-item--warning">
                     <strong>{{ membresia.socioNombre }}</strong>
-                    <span>DNI: {{ membresia.socioDni ?? 'No disponible' }}</span>
-                    <span class="highlight-date">
-                      Vence:
-                      {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
-                    </span>
+                    <span>Telefono: {{ membresia.socioTelefono ?? 'No disponible' }}</span>
+                    <div class="due-date-box">
+                      <span class="due-date-label">Vencimiento</span>
+                      <strong class="due-date-value">
+                        {{ membresia.fechaVencimiento ? (membresia.fechaVencimiento | date: 'dd-MM-yyyy') : '-' }}
+                      </strong>
+                      <span class="due-date-days">{{ getDiasParaVencimientoLabel(membresia.fechaVencimiento) }}</span>
+                    </div>
                     <span>Estado: {{ membresia.estadoVisual }}</span>
                   </article>
                 }
