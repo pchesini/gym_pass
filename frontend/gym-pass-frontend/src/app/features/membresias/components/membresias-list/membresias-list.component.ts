@@ -166,7 +166,10 @@ export class MembresiasListComponent {
       queryParams: {
         socioId: membresia.socioId ?? undefined,
         membresiaId: membresia.id,
-        monto: membresia.saldoPendiente ?? undefined
+        monto:
+          membresia.saldoPendiente && membresia.saldoPendiente > 0
+            ? membresia.saldoPendiente
+            : undefined
       }
     });
   }
@@ -236,7 +239,10 @@ export class MembresiasListComponent {
   }
 
   protected shouldShowRegistrarPago(membresia: MembresiaViewModel): boolean {
-    return this.isAdmin() && membresia.estado === 'PENDIENTE_PAGO';
+    return (
+      this.isAdmin() &&
+      (membresia.estado === 'PENDIENTE_PAGO' || membresia.estadoVisual === 'VENCIDA')
+    );
   }
 
   protected getEstadoActionLabel(membresia: MembresiaViewModel): string {
