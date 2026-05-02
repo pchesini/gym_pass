@@ -75,4 +75,10 @@ export class SociosService {
   getQr(id: number): Observable<SocioQrApiResponse> {
     return this.http.get<SocioQrApiResponse>(`${this.apiUrl}/${id}/qr`);
   }
+
+  checkDniExists(dni: string): Observable<boolean> {
+    return this.getSocios({ busqueda: dni }).pipe(
+      map(socios => socios.some(s => s.dni === dni))
+    );
+  }
 }

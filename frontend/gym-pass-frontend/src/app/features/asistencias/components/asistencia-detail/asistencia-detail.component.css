@@ -54,11 +54,11 @@
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .detail-grid > div {
-  padding: 1rem;
+  padding: 2rem;
   border-radius: 18px;
   border: 1px solid #6ee7b7;
   background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);

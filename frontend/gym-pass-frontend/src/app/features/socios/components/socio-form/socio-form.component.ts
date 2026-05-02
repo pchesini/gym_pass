@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, AsyncValidatorFn, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map, take } from 'rxjs/operators';
 import { switchMap } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -71,7 +71,7 @@ export class SocioFormComponent {
   protected readonly form = this.formBuilder.group({
     nombre: ['', [Validators.required, Validators.maxLength(60)]],
     apellido: ['', [Validators.maxLength(80)]],
-    dni: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
+    dni: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)], [this.dniExistsValidator()]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(120)]],
     telefono: ['', [Validators.required, Validators.maxLength(30)]],
     fechaNacimiento: [null as Date | null],
@@ -80,6 +80,19 @@ export class SocioFormComponent {
 
   constructor() {
     this.loadFormData();
+  }
+
+  private dniExistsValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value || !control.value.trim()) {
+        return of(null);
+      }
+
+      return this.sociosService.checkDniExists(control.value.trim()).pipe(
+        map(exists => exists ? { dniExists: true } : null),
+        catchError(() => of(null))
+      );
+    };
   }
 
   protected submit(): void {
@@ -168,6 +181,10 @@ export class SocioFormComponent {
 
     if (control.hasError('pattern')) {
       return 'El formato ingresado no es valido.';
+    }
+
+    if (control.hasError('dniExists')) {
+      return 'El DNI ya está registrado.';
     }
 
     return '';
