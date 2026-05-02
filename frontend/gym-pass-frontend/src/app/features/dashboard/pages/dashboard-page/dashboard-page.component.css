@@ -211,6 +211,11 @@
   gap: 0.2rem;
 }
 
+.ranking-count {
+  justify-self: end;
+  white-space: nowrap;
+}
+
 .attendance-insights {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);

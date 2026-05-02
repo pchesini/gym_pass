@@ -202,6 +202,17 @@ public class AsistenciaService {
                 )
                 .limit(5)
                 .collect(Collectors.toList());
+        List<TopSocioAsistenciaResponse> sociosConMenosAsistencias = socioRepository.findByEstado(EstadoSocio.ACTIVO).stream()
+                .map(socio -> mapSocioAsistencia(
+                        socio,
+                        asistenciasPorSocio.getOrDefault(socio.getId(), List.of()).size()
+                ))
+                .sorted(
+                        Comparator.comparing(TopSocioAsistenciaResponse::getCantidadAsistencias)
+                                .thenComparing(TopSocioAsistenciaResponse::getSocioNombre, Comparator.nullsLast(String::compareToIgnoreCase))
+                )
+                .limit(5)
+                .collect(Collectors.toList());
 
         AsistenciaResumenResponse response = new AsistenciaResumenResponse();
         response.setFechaDesde(fechaDesde);
@@ -210,6 +221,7 @@ public class AsistenciaService {
         response.setSociosUnicos(asistenciasPorSocio.size());
         response.setPromedioDiario(promedioDiario);
         response.setTopSocios(topSocios);
+        response.setSociosConMenosAsistencias(sociosConMenosAsistencias);
         response.setAsistenciasPorDia(buildAsistenciasPorDia(asistencias));
         response.setAsistenciasPorFranjaHoraria(buildAsistenciasPorFranjaHoraria(asistencias));
         response.setAsistenciasPorDiaYFranja(buildAsistenciasPorDiaYFranja(asistencias));
@@ -332,11 +344,15 @@ public class AsistenciaService {
         AsistenciaEntity asistenciaReferencia = asistenciasSocio.get(0);
         SocioEntity socio = asistenciaReferencia.getSocio();
 
+        return mapSocioAsistencia(socio, asistenciasSocio.size());
+    }
+
+    private TopSocioAsistenciaResponse mapSocioAsistencia(SocioEntity socio, long cantidadAsistencias) {
         TopSocioAsistenciaResponse response = new TopSocioAsistenciaResponse();
         response.setSocioId(socio.getId());
         response.setSocioNombre(socio.getNombreCompleto());
         response.setSocioDni(socio.getDni());
-        response.setCantidadAsistencias(asistenciasSocio.size());
+        response.setCantidadAsistencias(cantidadAsistencias);
         return response;
     }
 

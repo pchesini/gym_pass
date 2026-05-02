@@ -115,6 +115,14 @@ class AsistenciaServiceTest {
                 .qrCode("QR-TEST-2")
                 .fechaAlta(LocalDate.now())
                 .build();
+        SocioEntity socioSinAsistencias = SocioEntity.builder()
+                .id(3L)
+                .nombreCompleto("Socio Sin Asistencias")
+                .dni("11222333")
+                .estado(EstadoSocio.ACTIVO)
+                .qrCode("QR-TEST-3")
+                .fechaAlta(LocalDate.now())
+                .build();
 
         when(asistenciaRepository.findByFechaHoraEntradaBetween(
                 desde.atStartOfDay(),
@@ -123,6 +131,11 @@ class AsistenciaServiceTest {
                 asistencia(1L, socioFrecuente, LocalDateTime.of(2026, 5, 1, 9, 0)),
                 asistencia(2L, socioFrecuente, LocalDateTime.of(2026, 5, 2, 9, 0)),
                 asistencia(3L, socioOcasional, LocalDateTime.of(2026, 5, 2, 18, 0))
+        ));
+        when(socioRepository.findByEstado(EstadoSocio.ACTIVO)).thenReturn(List.of(
+                socioFrecuente,
+                socioOcasional,
+                socioSinAsistencias
         ));
 
         var response = asistenciaService.obtenerResumen(desde, hasta);
@@ -135,6 +148,9 @@ class AsistenciaServiceTest {
         assertThat(response.getTopSocios().get(0).getCantidadAsistencias()).isEqualTo(2);
         assertThat(response.getTopSocios().get(1).getSocioId()).isEqualTo(2L);
         assertThat(response.getTopSocios().get(1).getCantidadAsistencias()).isEqualTo(1);
+        assertThat(response.getSociosConMenosAsistencias()).hasSize(3);
+        assertThat(response.getSociosConMenosAsistencias().get(0).getSocioId()).isEqualTo(3L);
+        assertThat(response.getSociosConMenosAsistencias().get(0).getCantidadAsistencias()).isZero();
     }
 
     @Test

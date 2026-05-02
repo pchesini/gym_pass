@@ -74,6 +74,15 @@ export class DashboardPageComponent {
     return socio.socioId ?? index;
   }
 
+  protected trackBySocioAsistencia(
+    index: number,
+    socio:
+      | NonNullable<DashboardSummaryViewModel['topSociosAsistencias']>[number]
+      | NonNullable<DashboardSummaryViewModel['sociosMenosAsistencias']>[number]
+  ): number {
+    return socio.socioId ?? index;
+  }
+
   protected trackByString(_: number, value: string): string {
     return value;
   }

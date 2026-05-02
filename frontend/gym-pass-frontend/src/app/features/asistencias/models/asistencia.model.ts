@@ -43,6 +43,7 @@ export interface AsistenciaResumenApiResponse {
   sociosUnicos: number;
   promedioDiario: number;
   topSocios: TopSocioAsistenciaApiResponse[];
+  sociosConMenosAsistencias: TopSocioAsistenciaApiResponse[];
   asistenciasPorDia: DistribucionAsistenciaApiResponse[];
   asistenciasPorFranjaHoraria: DistribucionAsistenciaApiResponse[];
   asistenciasPorDiaYFranja: DistribucionAsistenciaApiResponse[];

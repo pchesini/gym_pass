@@ -46,6 +46,7 @@ export interface DashboardSummaryViewModel {
   ultimosPagos: PagoViewModel[];
   ultimasAsistencias: AsistenciaViewModel[];
   topSociosAsistencias: TopSocioAsistenciaApiResponse[];
+  sociosMenosAsistencias: TopSocioAsistenciaApiResponse[];
   diasAsistencia: string[];
   franjasAsistencia: string[];
   asistenciasPorDia: DistribucionAsistenciaApiResponse[];

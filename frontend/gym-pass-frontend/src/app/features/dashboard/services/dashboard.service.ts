@@ -393,6 +393,7 @@ export class DashboardService {
               ultimosPagos,
               ultimasAsistencias,
               topSociosAsistencias: resumenAsistencias.topSocios,
+              sociosMenosAsistencias: resumenAsistencias.sociosConMenosAsistencias ?? [],
               diasAsistencia,
               franjasAsistencia,
               asistenciasPorDia,

@@ -213,31 +213,53 @@
           </div>
         </mat-card>
 
-        <mat-card appearance="outlined" class="panel-card">
-          <div class="panel-header">
-            <div>
-              <span class="eyebrow">{{ currentSummary.mesAnteriorReferencia }}</span>
-              <h3>Socios que mas asistieron</h3>
+        <div class="panel-grid">
+          <mat-card appearance="outlined" class="panel-card">
+            <div class="panel-header">
+              <div>
+                <span class="eyebrow">{{ currentSummary.mesAnteriorReferencia }}</span>
+                <h3>Socios que mas asistieron</h3>
+              </div>
             </div>
-          </div>
 
-          @if (!currentSummary.topSociosAsistencias.length) {
-            <p class="panel-empty">No hay asistencias registradas en {{ currentSummary.mesAnteriorReferencia }}.</p>
-          } @else {
-            <div class="ranking-list">
-              @for (socio of currentSummary.topSociosAsistencias; track trackByTopSocioAsistencia($index, socio)) {
-                <article class="ranking-item">
-                  <span class="ranking-position">{{ $index + 1 }}</span>
-                  <div>
+            @if (!currentSummary.topSociosAsistencias.length) {
+              <p class="panel-empty">No hay asistencias registradas en {{ currentSummary.mesAnteriorReferencia }}.</p>
+            } @else {
+              <div class="ranking-list">
+                @for (socio of currentSummary.topSociosAsistencias; track trackBySocioAsistencia($index, socio)) {
+                  <article class="ranking-item">
+                    <span class="ranking-position">{{ $index + 1 }}</span>
                     <strong>{{ socio.socioNombre ?? 'Socio sin nombre' }}</strong>
-                    <span>DNI: {{ socio.socioDni ?? 'No disponible' }}</span>
-                  </div>
-                  <strong>{{ socio.cantidadAsistencias }} veces</strong>
-                </article>
-              }
+                    <strong class="ranking-count">{{ socio.cantidadAsistencias }} veces</strong>
+                  </article>
+                }
+              </div>
+            }
+          </mat-card>
+
+          <mat-card appearance="outlined" class="panel-card">
+            <div class="panel-header">
+              <div>
+                <span class="eyebrow">{{ currentSummary.mesAnteriorReferencia }}</span>
+                <h3>Socios que menos asistieron</h3>
+              </div>
             </div>
-          }
-        </mat-card>
+
+            @if (!currentSummary.sociosMenosAsistencias.length) {
+              <p class="panel-empty">No hay socios activos para comparar.</p>
+            } @else {
+              <div class="ranking-list">
+                @for (socio of currentSummary.sociosMenosAsistencias; track trackBySocioAsistencia($index, socio)) {
+                  <article class="ranking-item">
+                    <span class="ranking-position">{{ $index + 1 }}</span>
+                    <strong>{{ socio.socioNombre ?? 'Socio sin nombre' }}</strong>
+                    <strong class="ranking-count">{{ socio.cantidadAsistencias }} veces</strong>
+                  </article>
+                }
+              </div>
+            }
+          </mat-card>
+        </div>
       </section>
 
     }
