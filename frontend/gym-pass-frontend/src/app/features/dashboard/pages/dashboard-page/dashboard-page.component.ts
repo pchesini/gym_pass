@@ -123,6 +123,14 @@ export class DashboardPageComponent {
     return `${Math.max(8, Math.round((cantidad / maxCantidad) * 100))}%`;
   }
 
+  protected getHeatmapGridColumns(summary: DashboardSummaryViewModel): string {
+    return `92px repeat(${summary.franjasAsistencia.length}, minmax(92px, 1fr))`;
+  }
+
+  protected getHeatmapMinWidth(summary: DashboardSummaryViewModel): string {
+    return `${92 + summary.franjasAsistencia.length * 98}px`;
+  }
+
   private loadDashboard(): void {
     this.loading.set(true);
     this.errorMessage.set(null);

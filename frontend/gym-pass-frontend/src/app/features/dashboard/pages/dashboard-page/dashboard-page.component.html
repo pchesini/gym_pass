@@ -73,27 +73,18 @@
         <mat-card appearance="outlined" class="panel-card">
           <div class="panel-header">
             <div>
-              <span class="eyebrow">Altas</span>
-              <h3>Ultimos 5 socios</h3>
+              <span class="eyebrow">{{ currentSummary.mesAnteriorReferencia }}</span>
+              <h3>Socios dados de alta en el ultimo mes</h3>
             </div>
           </div>
 
           @if (!currentSummary.sociosRecientes.length) {
-            <p class="panel-empty">No hay socios registrados.</p>
+            <p class="panel-empty">No hay socios dados de alta en {{ currentSummary.mesAnteriorReferencia }}.</p>
           } @else {
             <div class="list-grid">
               @for (socio of currentSummary.sociosRecientes; track trackBySocioId($index, socio)) {
                 <article class="list-item">
                   <strong>{{ socio.nombreCompleto }}</strong>
-                  <span>DNI: {{ socio.dni }}</span>
-                  <span>{{ socio.estado }}</span>
-                  <span>
-                    @if (socio.fechaAlta) {
-                      Alta: {{ socio.fechaAlta | date: 'dd-MM-yyyy' }}
-                    } @else {
-                      ID: {{ socio.id }}
-                    }
-                  </span>
                 </article>
               }
             </div>
@@ -174,13 +165,17 @@
           <div class="panel-header">
             <div>
               <span class="eyebrow">07:30 a 22:00</span>
-              <h3>Dias y horarios con mas asistencia</h3>
+              <h3>Dias y horarios con mas asistencia en {{ currentSummary.mesAnteriorReferencia }}</h3>
             </div>
           </div>
 
           <div class="attendance-insights">
             <div class="heatmap-wrapper">
-              <div class="heatmap-grid">
+              <div
+                class="heatmap-grid"
+                [style.grid-template-columns]="getHeatmapGridColumns(currentSummary)"
+                [style.min-width]="getHeatmapMinWidth(currentSummary)"
+              >
                 <div class="heatmap-corner"></div>
                 @for (franja of currentSummary.franjasAsistencia; track trackByString($index, franja)) {
                   <div class="heatmap-header">{{ franja }}</div>
@@ -218,57 +213,31 @@
           </div>
         </mat-card>
 
-        <div class="panel-grid">
-          <mat-card appearance="outlined" class="panel-card">
-            <div class="panel-header">
-              <div>
-                <span class="eyebrow">{{ currentSummary.mesReferencia }}</span>
-                <h3>Socios que mas asistieron</h3>
-              </div>
+        <mat-card appearance="outlined" class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">{{ currentSummary.mesAnteriorReferencia }}</span>
+              <h3>Socios que mas asistieron</h3>
             </div>
+          </div>
 
-            @if (!currentSummary.topSociosAsistencias.length) {
-              <p class="panel-empty">No hay asistencias registradas este mes.</p>
-            } @else {
-              <div class="ranking-list">
-                @for (socio of currentSummary.topSociosAsistencias; track trackByTopSocioAsistencia($index, socio)) {
-                  <article class="ranking-item">
-                    <span class="ranking-position">{{ $index + 1 }}</span>
-                    <div>
-                      <strong>{{ socio.socioNombre ?? 'Socio sin nombre' }}</strong>
-                      <span>DNI: {{ socio.socioDni ?? 'No disponible' }}</span>
-                    </div>
-                    <strong>{{ socio.cantidadAsistencias }}</strong>
-                  </article>
-                }
-              </div>
-            }
-          </mat-card>
-
-          <mat-card appearance="outlined" class="panel-card">
-            <div class="panel-header">
-              <div>
-                <span class="eyebrow">Hoy</span>
-                <h3>Ultimas 5 asistencias</h3>
-              </div>
+          @if (!currentSummary.topSociosAsistencias.length) {
+            <p class="panel-empty">No hay asistencias registradas en {{ currentSummary.mesAnteriorReferencia }}.</p>
+          } @else {
+            <div class="ranking-list">
+              @for (socio of currentSummary.topSociosAsistencias; track trackByTopSocioAsistencia($index, socio)) {
+                <article class="ranking-item">
+                  <span class="ranking-position">{{ $index + 1 }}</span>
+                  <div>
+                    <strong>{{ socio.socioNombre ?? 'Socio sin nombre' }}</strong>
+                    <span>DNI: {{ socio.socioDni ?? 'No disponible' }}</span>
+                  </div>
+                  <strong>{{ socio.cantidadAsistencias }} veces</strong>
+                </article>
+              }
             </div>
-
-            @if (!currentSummary.ultimasAsistencias.length) {
-              <p class="panel-empty">No hay asistencias cargadas para hoy.</p>
-            } @else {
-              <div class="list-grid">
-                @for (asistencia of currentSummary.ultimasAsistencias; track trackByAsistenciaId($index, asistencia)) {
-                  <article class="list-item">
-                    <strong>{{ asistencia.socioNombre }}</strong>
-                    <span>Entrada: {{ asistencia.fechaHoraEntrada ? (asistencia.fechaHoraEntrada | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
-                    <span>Salida: {{ asistencia.fechaHoraSalida ? (asistencia.fechaHoraSalida | date: 'dd-MM-yyyy HH:mm') : '-' }}</span>
-                    <span>{{ asistencia.estado }}</span>
-                  </article>
-                }
-              </div>
-            }
-          </mat-card>
-        </div>
+          }
+        </mat-card>
       </section>
 
     }

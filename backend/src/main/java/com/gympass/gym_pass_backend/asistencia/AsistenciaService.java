@@ -42,16 +42,19 @@ public class AsistenciaService {
             DayOfWeek.WEDNESDAY,
             DayOfWeek.THURSDAY,
             DayOfWeek.FRIDAY,
-            DayOfWeek.SATURDAY,
-            DayOfWeek.SUNDAY
+            DayOfWeek.SATURDAY
     );
     private static final List<FranjaHoraria> FRANJAS_HORARIAS = List.of(
-            new FranjaHoraria("07:30 - 10:00", LocalTime.of(7, 30), LocalTime.of(10, 0)),
-            new FranjaHoraria("10:00 - 12:30", LocalTime.of(10, 0), LocalTime.of(12, 30)),
-            new FranjaHoraria("12:30 - 15:00", LocalTime.of(12, 30), LocalTime.of(15, 0)),
-            new FranjaHoraria("15:00 - 17:30", LocalTime.of(15, 0), LocalTime.of(17, 30)),
-            new FranjaHoraria("17:30 - 20:00", LocalTime.of(17, 30), LocalTime.of(20, 0)),
-            new FranjaHoraria("20:00 - 22:00", LocalTime.of(20, 0), LocalTime.of(22, 0))
+            new FranjaHoraria("07:30 - 09:00", LocalTime.of(7, 30), LocalTime.of(9, 0)),
+            new FranjaHoraria("09:00 - 10:30", LocalTime.of(9, 0), LocalTime.of(10, 30)),
+            new FranjaHoraria("10:30 - 12:00", LocalTime.of(10, 30), LocalTime.of(12, 0)),
+            new FranjaHoraria("12:00 - 13:30", LocalTime.of(12, 0), LocalTime.of(13, 30)),
+            new FranjaHoraria("13:30 - 15:00", LocalTime.of(13, 30), LocalTime.of(15, 0)),
+            new FranjaHoraria("15:00 - 16:30", LocalTime.of(15, 0), LocalTime.of(16, 30)),
+            new FranjaHoraria("16:30 - 18:00", LocalTime.of(16, 30), LocalTime.of(18, 0)),
+            new FranjaHoraria("18:00 - 19:30", LocalTime.of(18, 0), LocalTime.of(19, 30)),
+            new FranjaHoraria("19:30 - 21:00", LocalTime.of(19, 30), LocalTime.of(21, 0)),
+            new FranjaHoraria("21:00 - 22:00", LocalTime.of(21, 0), LocalTime.of(22, 0))
     );
 
     private final AsistenciaRepository asistenciaRepository;

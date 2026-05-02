@@ -22,6 +22,7 @@ export interface DashboardMetricGroupViewModel {
 
 export interface DashboardSummaryViewModel {
   mesReferencia: string;
+  mesAnteriorReferencia: string;
   totalSocios: number;
   sociosActivos: number;
   sociosInactivos: number;

@@ -27,6 +27,10 @@ function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
+function previousMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() - 1, 1);
+}
+
 function toLocalDate(dateValue: string | null | undefined): Date | null {
   if (!dateValue) {
     return null;
@@ -115,24 +119,35 @@ export class DashboardService {
   getDashboardSummary(): Observable<DashboardSummaryViewModel> {
     return this.sociosService.getSocios().pipe(
       map((socios) => {
-        const sortedSocios = [...socios].sort((left, right) => right.id - left.id);
         const today = new Date();
+        const previousMonthDate = previousMonth(today);
+        const sociosRecientes = [...socios]
+          .filter((socio) => isSameMonth(socio.fechaAlta, previousMonthDate))
+          .sort((left, right) => {
+            const fechaComparison = (right.fechaAlta ?? '').localeCompare(left.fechaAlta ?? '');
+            return fechaComparison || right.id - left.id;
+          })
+          .slice(0, 5);
+
         return {
           socios,
-          sociosRecientes: sortedSocios.slice(0, 5),
+          sociosRecientes,
           today,
           todayIso: toLocalIsoDate(today),
           monthStartIso: toLocalIsoDate(startOfMonth(today)),
           monthEndIso: toLocalIsoDate(endOfMonth(today)),
+          previousMonthStartIso: toLocalIsoDate(startOfMonth(previousMonthDate)),
+          previousMonthEndIso: toLocalIsoDate(endOfMonth(previousMonthDate)),
+          mesAnteriorReferencia: formatMonthLabel(previousMonthDate),
           sociosActivos: socios.filter((socio) => socio.estado === 'ACTIVO').length,
           sociosInactivos: socios.filter((socio) => socio.estado === 'INACTIVO').length
         };
       }),
-      switchMap(({ socios, sociosRecientes, today, todayIso, monthStartIso, monthEndIso, sociosActivos, sociosInactivos }) =>
+      switchMap(({ socios, sociosRecientes, today, todayIso, mesAnteriorReferencia, previousMonthStartIso, previousMonthEndIso, sociosActivos, sociosInactivos }) =>
         forkJoin({
           membresias: this.membresiasService.getMembresias(socios),
           asistencias: this.asistenciasService.getAsistenciasHoy(socios),
-          resumenAsistencias: this.asistenciasService.getResumenAsistencias(monthStartIso, monthEndIso),
+          resumenAsistencias: this.asistenciasService.getResumenAsistencias(previousMonthStartIso, previousMonthEndIso),
           pagos: this.pagosService.getPagos(socios)
         }).pipe(
           map(({ membresias, asistencias, resumenAsistencias, pagos }) => {
@@ -245,17 +260,12 @@ export class DashboardService {
               {
                 label: 'Mes',
                 value: resumenAsistencias.totalAsistencias.toString(),
-                helper: `Asistencias en ${mesReferencia}.`
+                helper: `Asistencias en ${mesAnteriorReferencia}.`
               },
               {
                 label: 'Socios unicos',
                 value: resumenAsistencias.sociosUnicos.toString(),
-                helper: 'Socios que asistieron este mes.'
-              },
-              {
-                label: 'Promedio diario',
-                value: resumenAsistencias.promedioDiario.toString(),
-                helper: 'Asistencias promedio por dia.'
+                helper: `Socios que asistieron en ${mesAnteriorReferencia}.`
               }
             ];
 
@@ -359,6 +369,7 @@ export class DashboardService {
 
             return {
               mesReferencia,
+              mesAnteriorReferencia,
               totalSocios: socios.length,
               sociosActivos,
               sociosInactivos,

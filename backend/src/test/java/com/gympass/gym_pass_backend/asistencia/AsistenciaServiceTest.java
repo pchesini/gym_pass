@@ -157,12 +157,13 @@ class AsistenciaServiceTest {
         var response = asistenciaService.obtenerResumen(desde, hasta);
 
         assertThat(findPorDia(response.getAsistenciasPorDia(), "Lunes").getCantidad()).isEqualTo(3);
-        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "07:30 - 10:00").getCantidad()).isEqualTo(1);
-        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "17:30 - 20:00").getCantidad()).isEqualTo(1);
-        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "20:00 - 22:00").getCantidad()).isEqualTo(1);
-        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "07:30 - 10:00").getCantidad()).isEqualTo(1);
-        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "20:00 - 22:00").getCantidad()).isEqualTo(1);
-        assertThat(response.getAsistenciasPorDiaYFranja()).hasSize(42);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "07:30 - 09:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "18:00 - 19:30").getCantidad()).isEqualTo(1);
+        assertThat(findPorFranja(response.getAsistenciasPorFranjaHoraria(), "21:00 - 22:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "07:30 - 09:00").getCantidad()).isEqualTo(1);
+        assertThat(findPorDiaYFranja(response.getAsistenciasPorDiaYFranja(), "Lunes", "21:00 - 22:00").getCantidad()).isEqualTo(1);
+        assertThat(response.getAsistenciasPorDia()).noneMatch(item -> "Domingo".equals(item.getDia()));
+        assertThat(response.getAsistenciasPorDiaYFranja()).hasSize(60);
     }
 
     private SocioEntity socio() {

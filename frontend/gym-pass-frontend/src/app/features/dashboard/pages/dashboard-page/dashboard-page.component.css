@@ -225,9 +225,7 @@
 }
 
 .heatmap-grid {
-  min-width: 720px;
   display: grid;
-  grid-template-columns: 92px repeat(6, minmax(92px, 1fr));
   gap: 0.45rem;
 }
 
