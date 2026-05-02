@@ -12,7 +12,7 @@ export const membresiasRoutes: Routes = [
   },
   {
     path: 'nueva',
-    canActivate: [roleGuard(['ADMIN'])],
+    canActivate: [roleGuard(['ADMIN', 'STAFF'])],
     loadComponent: () =>
       import('./components/membresia-form/membresia-form.component').then(
         (m) => m.MembresiaFormComponent

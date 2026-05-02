@@ -71,6 +71,11 @@
   color: #64748b;
 }
 
+.status-box--info {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+}
+
 .payment-box {
   gap: 0.75rem;
 }

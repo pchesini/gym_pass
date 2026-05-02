@@ -19,6 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
+import { AuthService } from '../../../../core/services/auth.service';
 import { SocioViewModel } from '../../../socios/models/socio.model';
 import { SociosService } from '../../../socios/services/socios.service';
 import {
@@ -63,6 +64,7 @@ export class MembresiaFormComponent {
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   protected readonly estados: EstadoMembresia[] = [
     'ACTIVA',
@@ -89,6 +91,7 @@ export class MembresiaFormComponent {
       ? this.saldoRestante()
       : Math.max(Math.round(precioLista), 0);
   });
+  protected readonly puedeRegistrarPagoInicial = this.authService.isAdmin;
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
@@ -132,7 +135,7 @@ export class MembresiaFormComponent {
             membresiaId,
             mapMembresiaFormToUpdateRequest(this.buildPayload())
           )
-        : this.form.controls.registrarPagoInicial.value
+        : this.puedeRegistrarPagoInicial() && this.form.controls.registrarPagoInicial.value
           ? this.membresiasService.createMembresiaConPagoInicial(
               mapMembresiaFormToCreateWithPagoRequest(this.buildPayload())
             )
@@ -242,7 +245,7 @@ export class MembresiaFormComponent {
     this.form.controls.registrarPagoInicial.valueChanges
       .pipe(startWith(this.form.controls.registrarPagoInicial.value), takeUntilDestroyed(this.destroyRef))
       .subscribe((registrarPagoInicial) => {
-        const shouldRegister = !!registrarPagoInicial && !this.isEditMode();
+        const shouldRegister = !!registrarPagoInicial && !this.isEditMode() && this.puedeRegistrarPagoInicial();
 
         if (shouldRegister) {
           this.form.controls.montoPagado.setValidators([Validators.required, Validators.min(0.01)]);
@@ -250,6 +253,9 @@ export class MembresiaFormComponent {
           this.form.controls.saldoPendiente.disable({ emitEvent: false });
           this.form.controls.saldoPendiente.setValue(this.saldoPendienteAlta(), { emitEvent: false });
         } else if (!this.isEditMode()) {
+          if (!this.puedeRegistrarPagoInicial()) {
+            this.form.controls.registrarPagoInicial.setValue(false, { emitEvent: false });
+          }
           this.form.controls.montoPagado.clearValidators();
           this.form.controls.metodoPago.clearValidators();
           this.form.controls.saldoPendiente.disable({ emitEvent: false });
@@ -294,7 +300,7 @@ export class MembresiaFormComponent {
       fechaVencimiento: rawValue.fechaVencimiento ?? null,
       precioLista: rawValue.precioLista ?? 0,
       saldoPendiente: this.isEditMode() ? (rawValue.saldoPendiente ?? 0) : this.saldoPendienteAlta(),
-      registrarPagoInicial: rawValue.registrarPagoInicial ?? false,
+      registrarPagoInicial: this.puedeRegistrarPagoInicial() ? (rawValue.registrarPagoInicial ?? false) : false,
       montoPagado: rawValue.montoPagado ?? 0,
       metodoPago: rawValue.metodoPago ?? 'EFECTIVO',
       observacionesPago: rawValue.observacionesPago ?? ''

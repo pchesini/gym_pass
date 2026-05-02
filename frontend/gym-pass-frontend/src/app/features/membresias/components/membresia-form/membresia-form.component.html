@@ -61,7 +61,7 @@
             <mat-error>{{ getErrorMessage('saldoPendiente') }}</mat-error>
           </mat-form-field>
 
-          @if (!isEditMode()) {
+          @if (!isEditMode() && puedeRegistrarPagoInicial()) {
             <div class="status-box form-grid__full payment-box">
               <mat-checkbox formControlName="registrarPagoInicial">
                 Registrar pago inicial al crear la membresia
@@ -99,6 +99,12 @@
                 <p>Si el saldo queda en cero, la membresia se registrara como activa. Si no, quedara pendiente de pago.</p>
               </div>
             }
+          } @else if (!isEditMode()) {
+            <div class="status-box status-box--info form-grid__full">
+              <span class="eyebrow">Pago inicial</span>
+              <strong>El pago inicial solo puede registrarlo un administrador.</strong>
+              <p>La membresia se creara con saldo pendiente y el pago podra cargarse luego desde una cuenta administradora.</p>
+            </div>
           }
 
           @if (isEditMode() && currentMembresia(); as currentMembresia) {
