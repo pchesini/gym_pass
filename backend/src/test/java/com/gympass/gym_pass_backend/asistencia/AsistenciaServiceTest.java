@@ -181,6 +181,11 @@ class AsistenciaServiceTest {
         assertThat(response.getSociosConMenosAsistencias().get(0).getSocioId()).isEqualTo(3L);
         assertThat(response.getSociosConMenosAsistencias().get(0).getCantidadAsistencias()).isZero();
         assertThat(response.getSociosActivosSinAsistencia()).isEqualTo(1);
+        assertThat(response.getAsistenciasPorFecha()).hasSize(3);
+        assertThat(response.getAsistenciasPorFecha().get(0).getFecha()).isEqualTo(desde);
+        assertThat(response.getAsistenciasPorFecha().get(0).getCantidad()).isEqualTo(1);
+        assertThat(response.getAsistenciasPorFecha().get(1).getCantidad()).isEqualTo(2);
+        assertThat(response.getAsistenciasPorFecha().get(2).getCantidad()).isZero();
     }
 
     @Test

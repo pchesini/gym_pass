@@ -7,6 +7,7 @@ import { MembresiasService } from '../../membresias/services/membresias.service'
 import { PagosService } from '../../pagos/services/pagos.service';
 import { SociosService } from '../../socios/services/socios.service';
 import {
+  DashboardCalendarDayViewModel,
   DashboardMetricCardViewModel,
   DashboardMetricGroupViewModel,
   DashboardSummaryViewModel
@@ -43,6 +44,65 @@ function toLocalDate(dateValue: string | null | undefined): Date | null {
   }
 
   return new Date(year, month - 1, day);
+}
+
+function toCalendarDay(
+  date: Date | null,
+  cantidad: number,
+  fueraDeMes: boolean
+): DashboardCalendarDayViewModel {
+  return {
+    fecha: date ? toLocalIsoDate(date) : null,
+    diaMes: date ? date.getDate().toString() : '',
+    diaSemana: date
+      ? new Intl.DateTimeFormat('es-AR', { weekday: 'short' }).format(date)
+      : '',
+    cantidad,
+    fueraDeMes
+  };
+}
+
+function buildCalendarDays(
+  desdeIso: string,
+  hastaIso: string,
+  asistenciasPorFecha: { fecha?: string | null; cantidad: number }[]
+): DashboardCalendarDayViewModel[] {
+  const desde = toLocalDate(desdeIso);
+  const hasta = toLocalDate(hastaIso);
+
+  if (!desde || !hasta) {
+    return [];
+  }
+
+  const cantidadesPorFecha = new Map(
+    asistenciasPorFecha
+      .filter((item) => !!item.fecha)
+      .map((item) => [item.fecha as string, item.cantidad])
+  );
+  const calendarDays: DashboardCalendarDayViewModel[] = [];
+  const firstDayOffset = (desde.getDay() + 6) % 7;
+
+  for (let index = 0; index < firstDayOffset; index += 1) {
+    calendarDays.push(toCalendarDay(null, 0, true));
+  }
+
+  const currentDate = new Date(desde);
+
+  while (currentDate <= hasta) {
+    const currentIso = toLocalIsoDate(currentDate);
+    calendarDays.push(toCalendarDay(
+      new Date(currentDate),
+      cantidadesPorFecha.get(currentIso) ?? 0,
+      false
+    ));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  while (calendarDays.length % 7 !== 0) {
+    calendarDays.push(toCalendarDay(null, 0, true));
+  }
+
+  return calendarDays;
 }
 
 function startOfDay(date: Date): Date {
@@ -196,6 +256,7 @@ export class DashboardService {
               (asistencia) => asistencia.estado === 'ABIERTA'
             ).length;
             const asistenciasPorDia = resumenAsistencias.asistenciasPorDia ?? [];
+            const asistenciasPorFecha = resumenAsistencias.asistenciasPorFecha ?? [];
             const asistenciasPorFranjaHoraria =
               resumenAsistencias.asistenciasPorFranjaHoraria ?? [];
             const asistenciasPorDiaYFranja =
@@ -209,6 +270,15 @@ export class DashboardService {
             const maxAsistenciasPorCelda = Math.max(
               0,
               ...asistenciasPorDiaYFranja.map((item) => item.cantidad)
+            );
+            const calendarioAsistenciasMesAnterior = buildCalendarDays(
+              previousMonthStartIso,
+              previousMonthEndIso,
+              asistenciasPorFecha
+            );
+            const maxAsistenciasPorFecha = Math.max(
+              0,
+              ...calendarioAsistenciasMesAnterior.map((item) => item.cantidad)
             );
             const maxAsistenciasPorFranja = Math.max(
               0,
@@ -401,8 +471,11 @@ export class DashboardService {
               diasAsistencia,
               franjasAsistencia,
               asistenciasPorDia,
+              asistenciasPorFecha,
               asistenciasPorFranjaHoraria,
               asistenciasPorDiaYFranja,
+              calendarioAsistenciasMesAnterior,
+              maxAsistenciasPorFecha,
               maxAsistenciasPorCelda,
               maxAsistenciasPorFranja,
               resumenAsistencias,

@@ -229,10 +229,36 @@ public class AsistenciaService {
         response.setPromedioDiario(promedioDiario);
         response.setTopSocios(topSocios);
         response.setSociosConMenosAsistencias(sociosConMenosAsistencias);
+        response.setAsistenciasPorFecha(buildAsistenciasPorFecha(asistencias, fechaDesde, fechaHasta));
         response.setAsistenciasPorDia(buildAsistenciasPorDia(asistencias));
         response.setAsistenciasPorFranjaHoraria(buildAsistenciasPorFranjaHoraria(asistencias));
         response.setAsistenciasPorDiaYFranja(buildAsistenciasPorDiaYFranja(asistencias));
         return response;
+    }
+
+    private List<DistribucionAsistenciaResponse> buildAsistenciasPorFecha(
+            List<AsistenciaEntity> asistencias,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta
+    ) {
+        Map<LocalDate, Long> conteoPorFecha = new LinkedHashMap<>();
+        LocalDate fechaActual = fechaDesde;
+
+        while (!fechaActual.isAfter(fechaHasta)) {
+            conteoPorFecha.put(fechaActual, 0L);
+            fechaActual = fechaActual.plusDays(1);
+        }
+
+        asistencias.stream()
+                .filter(asistencia -> asistencia.getFechaHoraEntrada() != null)
+                .forEach(asistencia -> {
+                    LocalDate fecha = asistencia.getFechaHoraEntrada().toLocalDate();
+                    conteoPorFecha.computeIfPresent(fecha, (key, value) -> value + 1);
+                });
+
+        return conteoPorFecha.entrySet().stream()
+                .map(entry -> mapDistribucion(entry.getKey(), formatDia(entry.getKey().getDayOfWeek()), null, entry.getValue()))
+                .collect(Collectors.toList());
     }
 
     private List<DistribucionAsistenciaResponse> buildAsistenciasPorDia(List<AsistenciaEntity> asistencias) {
@@ -340,7 +366,12 @@ public class AsistenciaService {
     }
 
     private DistribucionAsistenciaResponse mapDistribucion(String dia, String franja, Long cantidad) {
+        return mapDistribucion(null, dia, franja, cantidad);
+    }
+
+    private DistribucionAsistenciaResponse mapDistribucion(LocalDate fecha, String dia, String franja, Long cantidad) {
         DistribucionAsistenciaResponse response = new DistribucionAsistenciaResponse();
+        response.setFecha(fecha);
         response.setDia(dia);
         response.setFranja(franja);
         response.setCantidad(cantidad != null ? cantidad : 0L);

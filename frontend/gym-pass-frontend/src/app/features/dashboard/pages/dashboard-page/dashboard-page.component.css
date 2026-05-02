@@ -247,6 +247,77 @@
   align-items: start;
 }
 
+.month-calendar {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(64px, 1fr));
+  gap: 0.45rem;
+}
+
+.calendar-weekdays span {
+  color: #4b5563;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendar-day {
+  min-height: 82px;
+  display: grid;
+  align-content: start;
+  gap: 0.2rem;
+  padding: 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-day-number {
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.calendar-day strong {
+  color: #111827;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.calendar-day small {
+  color: #4b5563;
+  font-size: 0.72rem;
+}
+
+.calendar-day--empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.calendar-day--quiet {
+  background: #f9fafb;
+  color: #9ca3af;
+}
+
+.calendar-day--low {
+  border-color: #bfdbfe;
+  background: #dbeafe;
+}
+
+.calendar-day--medium {
+  border-color: #fde68a;
+  background: #fef3c7;
+}
+
+.calendar-day--high {
+  border-color: #fca5a5;
+  background: #fee2e2;
+}
+
 .heatmap-wrapper {
   overflow-x: auto;
   padding-bottom: 0.25rem;
@@ -398,5 +469,24 @@
 
   .attendance-insights {
     grid-template-columns: 1fr;
+  }
+
+  .calendar-weekdays,
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(42px, 1fr));
+    gap: 0.3rem;
+  }
+
+  .calendar-day {
+    min-height: 66px;
+    padding: 0.4rem;
+  }
+
+  .calendar-day strong {
+    font-size: 1rem;
+  }
+
+  .calendar-day small {
+    display: none;
   }
 }

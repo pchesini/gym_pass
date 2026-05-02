@@ -31,6 +31,7 @@ export interface TopSocioAsistenciaApiResponse {
 }
 
 export interface DistribucionAsistenciaApiResponse {
+  fecha?: string | null;
   dia: string | null;
   franja: string | null;
   cantidad: number;
@@ -45,6 +46,7 @@ export interface AsistenciaResumenApiResponse {
   promedioDiario: number;
   topSocios: TopSocioAsistenciaApiResponse[];
   sociosConMenosAsistencias: TopSocioAsistenciaApiResponse[];
+  asistenciasPorFecha: DistribucionAsistenciaApiResponse[];
   asistenciasPorDia: DistribucionAsistenciaApiResponse[];
   asistenciasPorFranjaHoraria: DistribucionAsistenciaApiResponse[];
   asistenciasPorDiaYFranja: DistribucionAsistenciaApiResponse[];

@@ -20,6 +20,7 @@ public class AsistenciaResumenResponse {
     private BigDecimal promedioDiario = BigDecimal.ZERO;
     private List<TopSocioAsistenciaResponse> topSocios = new ArrayList<>();
     private List<TopSocioAsistenciaResponse> sociosConMenosAsistencias = new ArrayList<>();
+    private List<DistribucionAsistenciaResponse> asistenciasPorFecha = new ArrayList<>();
     private List<DistribucionAsistenciaResponse> asistenciasPorDia = new ArrayList<>();
     private List<DistribucionAsistenciaResponse> asistenciasPorFranjaHoraria = new ArrayList<>();
     private List<DistribucionAsistenciaResponse> asistenciasPorDiaYFranja = new ArrayList<>();

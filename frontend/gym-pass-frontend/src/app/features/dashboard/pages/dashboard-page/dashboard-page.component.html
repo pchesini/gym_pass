@@ -173,26 +173,22 @@
           </div>
 
           <div class="attendance-insights">
-            <div class="heatmap-wrapper">
-              <div
-                class="heatmap-grid"
-                [style.grid-template-columns]="getHeatmapGridColumns(currentSummary)"
-                [style.min-width]="getHeatmapMinWidth(currentSummary)"
-              >
-                <div class="heatmap-corner"></div>
-                @for (franja of currentSummary.franjasAsistencia; track trackByString($index, franja)) {
-                  <div class="heatmap-header">{{ franja }}</div>
+            <div class="month-calendar">
+              <div class="calendar-weekdays">
+                @for (dia of calendarWeekDays; track trackByString($index, dia)) {
+                  <span>{{ dia }}</span>
                 }
+              </div>
 
-                @for (dia of currentSummary.diasAsistencia; track trackByString($index, dia)) {
-                  <div class="heatmap-day">{{ dia }}</div>
-                  @for (franja of currentSummary.franjasAsistencia; track trackByString($index, franja)) {
-                    <div
-                      [class]="getHeatmapClass(getHeatmapCantidad(currentSummary, dia, franja), currentSummary.maxAsistenciasPorCelda)"
-                    >
-                      {{ getHeatmapCantidad(currentSummary, dia, franja) }}
-                    </div>
-                  }
+              <div class="calendar-grid">
+                @for (dia of currentSummary.calendarioAsistenciasMesAnterior; track trackByCalendarDay($index, dia)) {
+                  <div [class]="getCalendarDayClass(dia, currentSummary.maxAsistenciasPorFecha)">
+                    @if (!dia.fueraDeMes) {
+                      <span class="calendar-day-number">{{ dia.diaMes }}</span>
+                      <strong>{{ dia.cantidad }}</strong>
+                      <small>asistencias</small>
+                    }
+                  </div>
                 }
               </div>
             </div>

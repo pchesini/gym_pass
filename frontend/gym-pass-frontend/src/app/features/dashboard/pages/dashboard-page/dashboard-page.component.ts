@@ -24,6 +24,7 @@ export class DashboardPageComponent {
   protected readonly summary = signal<DashboardSummaryViewModel | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly calendarWeekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
   constructor() {
     this.loadDashboard();
@@ -94,6 +95,13 @@ export class DashboardPageComponent {
     return item.franja ?? index.toString();
   }
 
+  protected trackByCalendarDay(
+    index: number,
+    dia: DashboardSummaryViewModel['calendarioAsistenciasMesAnterior'][number]
+  ): string {
+    return dia.fecha ?? `empty-${index}`;
+  }
+
   protected getHeatmapCantidad(
     summary: DashboardSummaryViewModel,
     dia: string,
@@ -122,6 +130,31 @@ export class DashboardPageComponent {
     }
 
     return 'heatmap-cell heatmap-cell--low';
+  }
+
+  protected getCalendarDayClass(
+    dia: DashboardSummaryViewModel['calendarioAsistenciasMesAnterior'][number],
+    maxCantidad: number
+  ): string {
+    if (dia.fueraDeMes) {
+      return 'calendar-day calendar-day--empty';
+    }
+
+    if (!dia.cantidad || !maxCantidad) {
+      return 'calendar-day calendar-day--quiet';
+    }
+
+    const ratio = dia.cantidad / maxCantidad;
+
+    if (ratio >= 0.75) {
+      return 'calendar-day calendar-day--high';
+    }
+
+    if (ratio >= 0.45) {
+      return 'calendar-day calendar-day--medium';
+    }
+
+    return 'calendar-day calendar-day--low';
   }
 
   protected getBarWidth(cantidad: number, maxCantidad: number): string {

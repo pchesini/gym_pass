@@ -20,6 +20,14 @@ export interface DashboardMetricGroupViewModel {
   metrics: DashboardMetricCardViewModel[];
 }
 
+export interface DashboardCalendarDayViewModel {
+  fecha: string | null;
+  diaMes: string;
+  diaSemana: string;
+  cantidad: number;
+  fueraDeMes: boolean;
+}
+
 export interface DashboardSummaryViewModel {
   mesReferencia: string;
   mesAnteriorReferencia: string;
@@ -49,8 +57,11 @@ export interface DashboardSummaryViewModel {
   diasAsistencia: string[];
   franjasAsistencia: string[];
   asistenciasPorDia: DistribucionAsistenciaApiResponse[];
+  asistenciasPorFecha: DistribucionAsistenciaApiResponse[];
   asistenciasPorFranjaHoraria: DistribucionAsistenciaApiResponse[];
   asistenciasPorDiaYFranja: DistribucionAsistenciaApiResponse[];
+  calendarioAsistenciasMesAnterior: DashboardCalendarDayViewModel[];
+  maxAsistenciasPorFecha: number;
   maxAsistenciasPorCelda: number;
   maxAsistenciasPorFranja: number;
   resumenAsistencias: AsistenciaResumenApiResponse;
