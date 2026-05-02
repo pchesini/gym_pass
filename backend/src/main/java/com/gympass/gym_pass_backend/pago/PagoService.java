@@ -15,7 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.RoundingMode;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,15 +59,8 @@ public class PagoService {
         SocioEntity socio = socioRepository.findById(request.getSocioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado"));
 
-        MembresiaEntity membresia = null;
-        if (request.getMembresiaId() != null) {
-            membresia = membresiaRepository.findById(request.getMembresiaId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
-
-            if (!membresia.getSocio().getId().equals(socio.getId())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia no pertenece al socio informado");
-            }
-
+        MembresiaEntity membresia = obtenerMembresiaParaPago(request, socio);
+        if (membresia != null) {
             validarMontoContraSaldoPendiente(membresia, montoPago);
         }
 
@@ -137,12 +133,32 @@ public class PagoService {
         }
     }
 
+    private MembresiaEntity obtenerMembresiaParaPago(PagoCrearRequest request, SocioEntity socio) {
+        if (request.getMembresiaId() != null) {
+            MembresiaEntity membresia = membresiaRepository.findById(request.getMembresiaId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membresia no encontrada"));
+
+            if (!membresia.getSocio().getId().equals(socio.getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La membresia no pertenece al socio informado");
+            }
+
+            return membresia;
+        }
+
+        return membresiaRepository.findBySocioId(socio.getId()).stream()
+                .filter(membresia -> membresia.getEstado() != EstadoMembresia.CANCELADA)
+                .max(Comparator
+                        .comparing(MembresiaEntity::getFechaVencimiento, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(MembresiaEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElse(null);
+    }
+
     private void validarMontoContraSaldoPendiente(MembresiaEntity membresia, BigDecimal montoPago) {
         if (membresia.getSaldoPendiente() == null) {
             return;
         }
 
-        if (montoPago.compareTo(membresia.getSaldoPendiente()) > 0) {
+        if (montoPago.compareTo(membresia.getSaldoPendiente()) > 0 && !estaVencida(membresia)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "El monto del pago no puede superar el saldo pendiente de la membresia"
@@ -151,6 +167,7 @@ public class PagoService {
     }
 
     private void actualizarSaldoYEstadoMembresia(MembresiaEntity membresia, BigDecimal montoPago) {
+        boolean estabaVencida = estaVencida(membresia);
         BigDecimal saldoActual = membresia.getSaldoPendiente() == null
                 ? BigDecimal.ZERO
                 : membresia.getSaldoPendiente();
@@ -162,14 +179,42 @@ public class PagoService {
 
         membresia.setSaldoPendiente(nuevoSaldo);
 
-        if (membresia.getEstado() == EstadoMembresia.CANCELADA || membresia.getEstado() == EstadoMembresia.VENCIDA) {
+        if (membresia.getEstado() == EstadoMembresia.CANCELADA) {
             return;
+        }
+
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) == 0 && estabaVencida) {
+            renovarPeriodoVencido(membresia);
         }
 
         membresia.setEstado(
                 nuevoSaldo.compareTo(BigDecimal.ZERO) == 0
                         ? EstadoMembresia.ACTIVA
                         : EstadoMembresia.PENDIENTE_PAGO
+        );
+    }
+
+    private boolean estaVencida(MembresiaEntity membresia) {
+        return membresia.getEstado() == EstadoMembresia.VENCIDA
+                || membresia.getFechaVencimiento() != null
+                && membresia.getFechaVencimiento().isBefore(LocalDate.now());
+    }
+
+    private void renovarPeriodoVencido(MembresiaEntity membresia) {
+        LocalDate nuevoInicio = LocalDate.now();
+        LocalDate fechaInicioAnterior = membresia.getFechaInicio();
+        LocalDate fechaVencimientoAnterior = membresia.getFechaVencimiento();
+        long duracionDias = 0;
+
+        if (fechaInicioAnterior != null && fechaVencimientoAnterior != null) {
+            duracionDias = ChronoUnit.DAYS.between(fechaInicioAnterior, fechaVencimientoAnterior);
+        }
+
+        membresia.setFechaInicio(nuevoInicio);
+        membresia.setFechaVencimiento(
+                duracionDias > 0
+                        ? nuevoInicio.plusDays(duracionDias)
+                        : nuevoInicio.plusMonths(1)
         );
     }
 

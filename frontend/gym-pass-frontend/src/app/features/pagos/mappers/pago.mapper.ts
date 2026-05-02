@@ -103,7 +103,8 @@ export function buildPagoPreview(
     socioNombre: socio?.nombreCompleto ?? 'Selecciona un socio',
     socioDni: socio?.dni ?? null,
     membresiaId: formValue.membresiaId,
-    descripcionMembresia: buildMembresiaDescription(formValue.membresiaId),
+    descripcionMembresia: buildMembresiaDescription(formValue.membresiaId)
+      ?? (socio ? 'Se asociara automaticamente' : null),
     precioLista: membresia?.precioLista ?? null,
     saldoPendienteActual,
     fechaPago: formatDateTimeToIso(formValue.fechaPago),
