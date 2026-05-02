@@ -187,6 +187,11 @@ export class DashboardService {
             const ultimasAsistencias = [...asistencias]
               .sort((left, right) => (right.fechaHoraEntrada ?? '').localeCompare(left.fechaHoraEntrada ?? ''))
               .slice(0, 5);
+            const sociosUnicosHoy = new Set(
+              asistencias
+                .map((asistencia) => asistencia.socioId)
+                .filter((socioId): socioId is number => socioId !== null)
+            ).size;
             const asistenciasAbiertasHoy = asistencias.filter(
               (asistencia) => asistencia.estado === 'ABIERTA'
             ).length;
@@ -253,19 +258,19 @@ export class DashboardService {
 
             const asistenciasMetrics: DashboardMetricCardViewModel[] = [
               {
-                label: 'Hoy',
-                value: asistencias.length.toString(),
-                helper: 'Entradas registradas hoy.'
+                label: 'Socios hoy',
+                value: sociosUnicosHoy.toString(),
+                helper: 'Socios distintos que asistieron en el dia actual.'
               },
               {
-                label: 'Mes',
+                label: 'Registros mes anterior',
                 value: resumenAsistencias.totalAsistencias.toString(),
-                helper: `Asistencias en ${mesAnteriorReferencia}.`
+                helper: `Dias/asistencias registradas en ${mesAnteriorReferencia}.`
               },
               {
-                label: 'Socios unicos',
+                label: 'Unicos mes anterior',
                 value: resumenAsistencias.sociosUnicos.toString(),
-                helper: `Socios que asistieron en ${mesAnteriorReferencia}.`
+                helper: `Socios distintos que asistieron en ${mesAnteriorReferencia}.`
               }
             ];
 
@@ -377,16 +382,15 @@ export class DashboardService {
               membresiasPendientesPago,
               membresiasVencidas,
               membresiasCanceladas,
-              asistenciasHoy: asistencias.length,
+              asistenciasHoy: sociosUnicosHoy,
               totalPagos: pagos.length,
               montoTotalCobrado,
               pagosHoy: pagosHoy.length,
               montoCobradoHoy,
               pagosMes: pagosMes.length,
               montoCobradoMes,
-              asistenciasMes: resumenAsistencias.totalAsistencias,
-              sociosUnicosAsistenciaMes: resumenAsistencias.sociosUnicos,
-              promedioDiarioAsistenciasMes: resumenAsistencias.promedioDiario,
+              asistenciasMesAnterior: resumenAsistencias.totalAsistencias,
+              sociosUnicosAsistenciaMesAnterior: resumenAsistencias.sociosUnicos,
               asistenciasAbiertasHoy,
               membresiasPorVencer,
               membresiasConDeuda,

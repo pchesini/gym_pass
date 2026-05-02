@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,6 +103,32 @@ class AsistenciaServiceTest {
 
         assertThat(response.getId()).isEqualTo(20L);
         assertThat(response.getSocioId()).isEqualTo(1L);
+    }
+
+    @Test
+    void registrarEntradaBloqueaCuandoElSocioYaRegistroAsistenciaEseDia() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = membresiaPendienteDePago(socio);
+        LocalDateTime fechaHoraEntrada = LocalDateTime.of(2026, 5, 2, 9, 0);
+        AsistenciaCrearRequest request = new AsistenciaCrearRequest();
+        request.setSocioId(1L);
+        request.setCredencialId(100L);
+        request.setFechaHoraEntrada(fechaHoraEntrada);
+        request.setTipoRegistro(TipoRegistroAsistencia.STAFF);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findBySocioId(1L)).thenReturn(List.of(membresia));
+        when(asistenciaRepository.existsBySocioIdAndFechaHoraEntradaBetween(
+                1L,
+                fechaHoraEntrada.toLocalDate().atStartOfDay(),
+                fechaHoraEntrada.toLocalDate().plusDays(1).atStartOfDay()
+        )).thenReturn(true);
+
+        assertThatThrownBy(() -> asistenciaService.registrarEntrada(request))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getReason()).isEqualTo("El socio ya registro asistencia hoy")
+                );
+        verify(asistenciaRepository, never()).save(any(AsistenciaEntity.class));
     }
 
     @Test

@@ -23,5 +23,7 @@ public interface AsistenciaRepository extends JpaRepository<AsistenciaEntity, Lo
     // Método para buscar asistencias de un socio específico en un rango de fechas que me va a servir para reortes y para el portal de socio.
     List<AsistenciaEntity> findBySocioIdAndFechaHoraEntradaBetween(Long socioId, LocalDateTime fechaDesde, LocalDateTime fechaHasta);
 
+    boolean existsBySocioIdAndFechaHoraEntradaBetween(Long socioId, LocalDateTime fechaDesde, LocalDateTime fechaHasta);
+
     Optional<AsistenciaEntity> findFirstBySocioIdAndFechaHoraSalidaIsNull(Long socioId);
 }

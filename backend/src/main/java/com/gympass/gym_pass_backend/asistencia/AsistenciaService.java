@@ -102,16 +102,18 @@ public class AsistenciaService {
             throw construirAccesoBloqueado(socio, membresias);
         }
 
-        asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(request.getSocioId())
-                .ifPresent(asistencia -> {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio ya tiene una asistencia abierta");
-                });
-
         AsistenciaEntity entity = AsistenciaMapper.fromCrearRequest(request);
         entity.setSocio(socio);
         if (entity.getFechaHoraEntrada() == null) {
             entity.setFechaHoraEntrada(LocalDateTime.now());
         }
+
+        validarSinAsistenciaDiaria(request.getSocioId(), entity.getFechaHoraEntrada());
+
+        asistenciaRepository.findFirstBySocioIdAndFechaHoraSalidaIsNull(request.getSocioId())
+                .ifPresent(asistencia -> {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio ya tiene una asistencia abierta");
+                });
 
         AsistenciaEntity guardada = asistenciaRepository.save(entity);
         return AsistenciaMapper.toResponse(guardada);
@@ -359,6 +361,19 @@ public class AsistenciaService {
     private void validarSocioExiste(Long socioId) {
         if (!socioRepository.existsById(socioId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Socio no encontrado");
+        }
+    }
+
+    private void validarSinAsistenciaDiaria(Long socioId, LocalDateTime fechaHoraEntrada) {
+        LocalDate fechaEntrada = fechaHoraEntrada.toLocalDate();
+        boolean yaRegistroAsistencia = asistenciaRepository.existsBySocioIdAndFechaHoraEntradaBetween(
+                socioId,
+                fechaEntrada.atStartOfDay(),
+                fechaEntrada.plusDays(1).atStartOfDay()
+        );
+
+        if (yaRegistroAsistencia) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio ya registro asistencia hoy");
         }
     }
 
