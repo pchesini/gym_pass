@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,6 +101,41 @@ class AsistenciaServiceTest {
         assertThat(response.getSocioId()).isEqualTo(1L);
     }
 
+    @Test
+    void obtenerResumenDevuelveRankingDeSociosPorAsistencias() {
+        LocalDate desde = LocalDate.of(2026, 5, 1);
+        LocalDate hasta = LocalDate.of(2026, 5, 3);
+        SocioEntity socioFrecuente = socio();
+        SocioEntity socioOcasional = SocioEntity.builder()
+                .id(2L)
+                .nombreCompleto("Socio Ocasional")
+                .dni("87654321")
+                .estado(EstadoSocio.ACTIVO)
+                .qrCode("QR-TEST-2")
+                .fechaAlta(LocalDate.now())
+                .build();
+
+        when(asistenciaRepository.findByFechaHoraEntradaBetween(
+                desde.atStartOfDay(),
+                hasta.plusDays(1).atStartOfDay()
+        )).thenReturn(List.of(
+                asistencia(1L, socioFrecuente, LocalDateTime.of(2026, 5, 1, 9, 0)),
+                asistencia(2L, socioFrecuente, LocalDateTime.of(2026, 5, 2, 9, 0)),
+                asistencia(3L, socioOcasional, LocalDateTime.of(2026, 5, 2, 18, 0))
+        ));
+
+        var response = asistenciaService.obtenerResumen(desde, hasta);
+
+        assertThat(response.getTotalAsistencias()).isEqualTo(3);
+        assertThat(response.getSociosUnicos()).isEqualTo(2);
+        assertThat(response.getPromedioDiario()).isEqualByComparingTo("1.00");
+        assertThat(response.getTopSocios()).hasSize(2);
+        assertThat(response.getTopSocios().get(0).getSocioId()).isEqualTo(1L);
+        assertThat(response.getTopSocios().get(0).getCantidadAsistencias()).isEqualTo(2);
+        assertThat(response.getTopSocios().get(1).getSocioId()).isEqualTo(2L);
+        assertThat(response.getTopSocios().get(1).getCantidadAsistencias()).isEqualTo(1);
+    }
+
     private SocioEntity socio() {
         return SocioEntity.builder()
                 .id(1L)
@@ -132,6 +168,16 @@ class AsistenciaServiceTest {
                 .precioLista(new BigDecimal("10000.00"))
                 .saldoPendiente(new BigDecimal("6000.00"))
                 .estado(EstadoMembresia.PENDIENTE_PAGO)
+                .build();
+    }
+
+    private AsistenciaEntity asistencia(Long id, SocioEntity socio, LocalDateTime fechaHoraEntrada) {
+        return AsistenciaEntity.builder()
+                .id(id)
+                .socio(socio)
+                .credencialId(socio.getId())
+                .fechaHoraEntrada(fechaHoraEntrada)
+                .tipoRegistro(TipoRegistroAsistencia.STAFF)
                 .build();
     }
 }

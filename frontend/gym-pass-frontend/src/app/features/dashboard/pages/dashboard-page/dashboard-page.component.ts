@@ -33,6 +33,13 @@ export class DashboardPageComponent {
     return metric.label;
   }
 
+  protected trackByMetricGroup(
+    _: number,
+    group: DashboardSummaryViewModel['metricGroups'][number]
+  ): string {
+    return group.title;
+  }
+
   protected trackByPagoId(_: number, pago: NonNullable<DashboardSummaryViewModel['ultimosPagos']>[number]): number {
     return pago.id;
   }
@@ -58,6 +65,13 @@ export class DashboardPageComponent {
     socio: NonNullable<DashboardSummaryViewModel['sociosRecientes']>[number]
   ): number {
     return socio.id;
+  }
+
+  protected trackByTopSocioAsistencia(
+    index: number,
+    socio: NonNullable<DashboardSummaryViewModel['topSociosAsistencias']>[number]
+  ): number {
+    return socio.socioId ?? index;
   }
 
   private loadDashboard(): void {

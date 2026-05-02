@@ -2,6 +2,7 @@ package com.gympass.gym_pass_backend.asistencia;
 
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResumenResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,14 @@ public class AsistenciaController {
     @GetMapping("/hoy")
     public List<AsistenciaResponse> listarAsistenciasDeHoy() {
         return asistenciaService.listarAsistenciasDeHoy();
+    }
+
+    @GetMapping("/resumen")
+    public AsistenciaResumenResponse obtenerResumen(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta
+    ) {
+        return asistenciaService.obtenerResumen(desde, hasta);
     }
 
     @GetMapping

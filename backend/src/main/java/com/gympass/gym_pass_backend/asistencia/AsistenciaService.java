@@ -3,6 +3,8 @@ package com.gympass.gym_pass_backend.asistencia;
 import com.gympass.gym_pass_backend.membresia.EstadoMembresia;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaCrearRequest;
 import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResponse;
+import com.gympass.gym_pass_backend.asistencia.dto.AsistenciaResumenResponse;
+import com.gympass.gym_pass_backend.asistencia.dto.TopSocioAsistenciaResponse;
 import com.gympass.gym_pass_backend.membresia.MembresiaEntity;
 import com.gympass.gym_pass_backend.membresia.MembresiaEstadoResolver;
 import com.gympass.gym_pass_backend.membresia.MembresiaRepository;
@@ -15,11 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -138,6 +143,60 @@ public class AsistenciaService {
                 ).stream()
                 .map(AsistenciaMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public AsistenciaResumenResponse obtenerResumen(LocalDate desde, LocalDate hasta) {
+        LocalDate fechaDesde = desde != null ? desde : LocalDate.now().withDayOfMonth(1);
+        LocalDate fechaHasta = hasta != null ? hasta : LocalDate.now();
+
+        if (fechaHasta.isBefore(fechaDesde)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha hasta no puede ser anterior a la fecha desde");
+        }
+
+        List<AsistenciaEntity> asistencias = asistenciaRepository.findByFechaHoraEntradaBetween(
+                fechaDesde.atStartOfDay(),
+                fechaHasta.plusDays(1).atStartOfDay()
+        );
+
+        Map<Long, List<AsistenciaEntity>> asistenciasPorSocio = asistencias.stream()
+                .filter(asistencia -> asistencia.getSocio() != null && asistencia.getSocio().getId() != null)
+                .collect(Collectors.groupingBy(asistencia -> asistencia.getSocio().getId()));
+
+        long cantidadDias = ChronoUnit.DAYS.between(fechaDesde, fechaHasta) + 1;
+        BigDecimal promedioDiario = cantidadDias > 0
+                ? BigDecimal.valueOf(asistencias.size()).divide(BigDecimal.valueOf(cantidadDias), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        List<TopSocioAsistenciaResponse> topSocios = asistenciasPorSocio.values().stream()
+                .map(this::mapTopSocio)
+                .sorted(
+                        Comparator.comparing(TopSocioAsistenciaResponse::getCantidadAsistencias).reversed()
+                                .thenComparing(TopSocioAsistenciaResponse::getSocioNombre, Comparator.nullsLast(String::compareToIgnoreCase))
+                )
+                .limit(5)
+                .collect(Collectors.toList());
+
+        AsistenciaResumenResponse response = new AsistenciaResumenResponse();
+        response.setFechaDesde(fechaDesde);
+        response.setFechaHasta(fechaHasta);
+        response.setTotalAsistencias(asistencias.size());
+        response.setSociosUnicos(asistenciasPorSocio.size());
+        response.setPromedioDiario(promedioDiario);
+        response.setTopSocios(topSocios);
+        return response;
+    }
+
+    private TopSocioAsistenciaResponse mapTopSocio(List<AsistenciaEntity> asistenciasSocio) {
+        AsistenciaEntity asistenciaReferencia = asistenciasSocio.get(0);
+        SocioEntity socio = asistenciaReferencia.getSocio();
+
+        TopSocioAsistenciaResponse response = new TopSocioAsistenciaResponse();
+        response.setSocioId(socio.getId());
+        response.setSocioNombre(socio.getNombreCompleto());
+        response.setSocioDni(socio.getDni());
+        response.setCantidadAsistencias(asistenciasSocio.size());
+        return response;
     }
 
     private void validarSocioExiste(Long socioId) {

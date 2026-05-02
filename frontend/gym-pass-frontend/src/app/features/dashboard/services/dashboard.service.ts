@@ -8,6 +8,7 @@ import { PagosService } from '../../pagos/services/pagos.service';
 import { SociosService } from '../../socios/services/socios.service';
 import {
   DashboardMetricCardViewModel,
+  DashboardMetricGroupViewModel,
   DashboardSummaryViewModel
 } from '../models/dashboard.model';
 
@@ -16,6 +17,14 @@ function toLocalIsoDate(date: Date): string {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
 function toLocalDate(dateValue: string | null | undefined): Date | null {
@@ -113,17 +122,20 @@ export class DashboardService {
           sociosRecientes: sortedSocios.slice(0, 5),
           today,
           todayIso: toLocalIsoDate(today),
+          monthStartIso: toLocalIsoDate(startOfMonth(today)),
+          monthEndIso: toLocalIsoDate(endOfMonth(today)),
           sociosActivos: socios.filter((socio) => socio.estado === 'ACTIVO').length,
           sociosInactivos: socios.filter((socio) => socio.estado === 'INACTIVO').length
         };
       }),
-      switchMap(({ socios, sociosRecientes, today, todayIso, sociosActivos, sociosInactivos }) =>
+      switchMap(({ socios, sociosRecientes, today, todayIso, monthStartIso, monthEndIso, sociosActivos, sociosInactivos }) =>
         forkJoin({
           membresias: this.membresiasService.getMembresias(socios),
           asistencias: this.asistenciasService.getAsistenciasHoy(socios),
+          resumenAsistencias: this.asistenciasService.getResumenAsistencias(monthStartIso, monthEndIso),
           pagos: this.pagosService.getPagos(socios)
         }).pipe(
-          map(({ membresias, asistencias, pagos }) => {
+          map(({ membresias, asistencias, resumenAsistencias, pagos }) => {
             const pagosHoy = pagos.filter((pago) => isSameDay(pago.fechaPago, todayIso));
             const pagosMes = pagos.filter((pago) => isSameMonth(pago.fechaPago, today));
             const montoTotalCobrado = pagos.reduce((total, pago) => total + pago.monto, 0);
@@ -160,6 +172,98 @@ export class DashboardService {
             const ultimasAsistencias = [...asistencias]
               .sort((left, right) => (right.fechaHoraEntrada ?? '').localeCompare(left.fechaHoraEntrada ?? ''))
               .slice(0, 5);
+            const asistenciasAbiertasHoy = asistencias.filter(
+              (asistencia) => asistencia.estado === 'ABIERTA'
+            ).length;
+
+            const sociosMetrics: DashboardMetricCardViewModel[] = [
+              {
+                label: 'Total',
+                value: socios.length.toString(),
+                helper: 'Socios registrados.'
+              },
+              {
+                label: 'Activos',
+                value: sociosActivos.toString(),
+                helper: 'Socios habilitados.'
+              },
+              {
+                label: 'Inactivos',
+                value: sociosInactivos.toString(),
+                helper: 'Socios dados de baja.'
+              }
+            ];
+
+            const membresiasMetrics: DashboardMetricCardViewModel[] = [
+              {
+                label: 'Activas',
+                value: membresiasActivas.toString(),
+                helper: 'Vigentes al dia.'
+              },
+              {
+                label: 'Vencidas',
+                value: membresiasVencidas.toString(),
+                helper: 'Requieren renovacion.'
+              },
+              {
+                label: 'Pendientes',
+                value: membresiasPendientesPago.toString(),
+                helper: 'Con saldo pendiente.'
+              },
+              {
+                label: 'Canceladas',
+                value: membresiasCanceladas.toString(),
+                helper: 'Bajas manuales.'
+              }
+            ];
+
+            const asistenciasMetrics: DashboardMetricCardViewModel[] = [
+              {
+                label: 'Hoy',
+                value: asistencias.length.toString(),
+                helper: 'Entradas registradas hoy.'
+              },
+              {
+                label: 'Mes',
+                value: resumenAsistencias.totalAsistencias.toString(),
+                helper: `Asistencias en ${mesReferencia}.`
+              },
+              {
+                label: 'Socios unicos',
+                value: resumenAsistencias.sociosUnicos.toString(),
+                helper: 'Socios que asistieron este mes.'
+              },
+              {
+                label: 'Promedio diario',
+                value: resumenAsistencias.promedioDiario.toString(),
+                helper: 'Asistencias promedio por dia.'
+              }
+            ];
+
+            const pagosMetrics: DashboardMetricCardViewModel[] = [
+              {
+                label: 'Hoy',
+                value: pagosHoy.length.toString(),
+                helper: formatCurrency(montoCobradoHoy)
+              },
+              {
+                label: 'Mes',
+                value: pagosMes.length.toString(),
+                helper: formatCurrency(montoCobradoMes)
+              },
+              {
+                label: 'Total',
+                value: pagos.length.toString(),
+                helper: formatCurrency(montoTotalCobrado)
+              }
+            ];
+
+            const metricGroups: DashboardMetricGroupViewModel[] = [
+              { title: 'Socios', icon: 'groups', metrics: sociosMetrics },
+              { title: 'Membresias', icon: 'card_membership', metrics: membresiasMetrics },
+              { title: 'Asistencias', icon: 'fact_check', metrics: asistenciasMetrics },
+              { title: 'Pagos', icon: 'payments', metrics: pagosMetrics }
+            ];
 
             const metrics: DashboardMetricCardViewModel[] = [
               {
@@ -250,12 +354,19 @@ export class DashboardService {
               montoCobradoHoy,
               pagosMes: pagosMes.length,
               montoCobradoMes,
+              asistenciasMes: resumenAsistencias.totalAsistencias,
+              sociosUnicosAsistenciaMes: resumenAsistencias.sociosUnicos,
+              promedioDiarioAsistenciasMes: resumenAsistencias.promedioDiario,
+              asistenciasAbiertasHoy,
               membresiasPorVencer,
               membresiasConDeuda,
               ultimosPagos,
               ultimasAsistencias,
+              topSociosAsistencias: resumenAsistencias.topSocios,
+              resumenAsistencias,
               sociosRecientes,
-              metrics
+              metrics,
+              metricGroups
             };
           })
         )

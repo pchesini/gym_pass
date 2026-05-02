@@ -8,6 +8,7 @@ import {
   AsistenciaApiResponse,
   AsistenciaCreateApiRequest,
   AsistenciaFilters,
+  AsistenciaResumenApiResponse,
   AsistenciaViewModel
 } from '../models/asistencia.model';
 import { SocioViewModel } from '../../socios/models/socio.model';
@@ -51,6 +52,14 @@ export class AsistenciasService {
     return this.http
       .get<AsistenciaApiResponse[]>(this.asistenciasUrl, { params })
       .pipe(map((asistencias) => asistencias.map((asistencia) => this.mapWithSocio(asistencia, socios))));
+  }
+
+  getResumenAsistencias(desde: string, hasta: string): Observable<AsistenciaResumenApiResponse> {
+    const params = new HttpParams()
+      .set('desde', desde)
+      .set('hasta', hasta);
+
+    return this.http.get<AsistenciaResumenApiResponse>(`${this.asistenciasUrl}/resumen`, { params });
   }
 
   getAsistenciasBySocioId(socioId: number, socios?: SocioViewModel[]): Observable<AsistenciaViewModel[]> {

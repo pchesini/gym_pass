@@ -23,6 +23,22 @@ export interface AsistenciaCreateApiRequest {
   registradoPorUsuarioId?: number | null;
 }
 
+export interface TopSocioAsistenciaApiResponse {
+  socioId: number | null;
+  socioNombre: string | null;
+  socioDni: string | null;
+  cantidadAsistencias: number;
+}
+
+export interface AsistenciaResumenApiResponse {
+  fechaDesde: string | null;
+  fechaHasta: string | null;
+  totalAsistencias: number;
+  sociosUnicos: number;
+  promedioDiario: number;
+  topSocios: TopSocioAsistenciaApiResponse[];
+}
+
 export interface AsistenciaAccesoBloqueadoResponse {
   message: string;
   socioId: number | null;
