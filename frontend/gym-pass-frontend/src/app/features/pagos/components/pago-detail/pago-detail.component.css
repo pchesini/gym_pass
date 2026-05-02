@@ -65,6 +65,18 @@
   background: linear-gradient(180deg, #ffffff 0%, #ccfbf1 100%);
 }
 
+.detail-grid .label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.detail-grid strong {
+  display: block;
+  color: #0f172a;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .detail-grid__full {
   grid-column: 1 / -1;
 }
