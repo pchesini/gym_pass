@@ -92,6 +92,7 @@ export interface SocioAsistenciaLookup {
   estadoMembresia: string | null;
   saldoPendienteMembresia: number | null;
   tieneSaldoPendiente: boolean;
+  membresiaSinPagoRegistrado: boolean;
   puedeRegistrarEntrada: boolean;
   puedeRegistrarSalida: boolean;
 }

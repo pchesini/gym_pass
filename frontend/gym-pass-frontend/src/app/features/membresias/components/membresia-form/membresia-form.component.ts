@@ -79,18 +79,19 @@ export class MembresiaFormComponent {
     'CREDITO',
     'OTRO'
   ] as const;
-  protected readonly saldoRestante = computed(() => {
+  protected saldoRestante(): number {
     const precioLista = Number(this.form.controls.precioLista.value ?? 0);
     const montoPagado = Number(this.form.controls.montoPagado.value ?? 0);
     return Math.max(Math.round(precioLista - montoPagado), 0);
-  });
-  protected readonly saldoPendienteAlta = computed(() => {
+  }
+
+  protected saldoPendienteAlta(): number {
     const precioLista = Number(this.form.controls.precioLista.value ?? 0);
 
     return this.form.controls.registrarPagoInicial.value
       ? this.saldoRestante()
       : Math.max(Math.round(precioLista), 0);
-  });
+  }
   protected readonly puedeRegistrarPagoInicial = this.authService.isAdmin;
   protected readonly socios = signal<SocioViewModel[]>([]);
   protected readonly loading = signal(true);

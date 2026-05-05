@@ -418,7 +418,14 @@ export class AsistenciasCheckinComponent {
 
   private resolveErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
-      return error.error?.message ?? 'No se pudo completar la operacion de asistencia.';
+      if (typeof error.error === 'string' && error.error.trim()) {
+        return error.error;
+      }
+
+      return error.error?.message
+        ?? error.error?.reason
+        ?? error.message
+        ?? 'No se pudo completar la operacion de asistencia.';
     }
 
     return 'Ocurrio un error inesperado al procesar la asistencia.';

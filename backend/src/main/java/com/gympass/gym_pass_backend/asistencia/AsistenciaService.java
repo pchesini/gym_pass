@@ -417,12 +417,7 @@ public class AsistenciaService {
             SocioEntity socio,
             List<MembresiaEntity> membresias
     ) {
-        MembresiaEntity membresiaReferencia = membresias.stream()
-                .max(Comparator.comparing(
-                        MembresiaEntity::getFechaVencimiento,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .orElse(null);
+        MembresiaEntity membresiaReferencia = obtenerMembresiaReferencia(membresias);
 
         EstadoMembresia estadoMembresia = membresiaReferencia != null
                 ? membresiaEstadoResolver.resolveEstadoAutomatico(membresiaReferencia)
@@ -474,6 +469,15 @@ public class AsistenciaService {
         return membresia.getSaldoPendiente() != null
                 ? membresia.getSaldoPendiente()
                 : BigDecimal.ZERO;
+    }
+
+    private MembresiaEntity obtenerMembresiaReferencia(List<MembresiaEntity> membresias) {
+        return membresias.stream()
+                .max(Comparator.comparing(
+                        MembresiaEntity::getFechaVencimiento,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .orElse(null);
     }
 
     private record FranjaHoraria(String label, LocalTime desde, LocalTime hasta) {

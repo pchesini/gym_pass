@@ -201,9 +201,19 @@
   background: #f8fafc;
 }
 
+.admin-actions-section--required {
+  border-style: solid;
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
 .admin-actions-section__header strong {
   display: block;
   color: #1e3a8a;
+}
+
+.admin-actions-section--required .admin-actions-section__header strong {
+  color: #78350f;
 }
 
 .results-list {

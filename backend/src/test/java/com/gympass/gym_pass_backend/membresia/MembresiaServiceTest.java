@@ -16,10 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,8 +48,8 @@ class MembresiaServiceTest {
                 new MembresiaEstadoResolver()
         );
 
-        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio()));
-        when(membresiaRepository.save(any(MembresiaEntity.class))).thenAnswer(invocation -> {
+        lenient().when(socioRepository.findById(1L)).thenReturn(Optional.of(socio()));
+        lenient().when(membresiaRepository.save(any(MembresiaEntity.class))).thenAnswer(invocation -> {
             MembresiaEntity membresia = invocation.getArgument(0);
             if (membresia.getId() == null) {
                 membresia.setId(10L);
@@ -63,6 +65,7 @@ class MembresiaServiceTest {
         request.setFechaInicio(LocalDate.now());
         request.setFechaVencimiento(LocalDate.now().plusMonths(1));
         request.setPrecioLista(new BigDecimal("10000"));
+        request.setSaldoPendiente(BigDecimal.ZERO);
 
         MembresiaResponse response = membresiaService.crearMembresia(request);
 
@@ -85,6 +88,28 @@ class MembresiaServiceTest {
         assertThat(response.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(response.getEstado()).isEqualTo(EstadoMembresia.ACTIVA);
         verify(pagoRepository).save(any());
+    }
+
+    @Test
+    void obtenerPorIdCorrigeMembresiaSinPagoGuardadaComoActiva() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = MembresiaEntity.builder()
+                .id(20L)
+                .socio(socio)
+                .fechaInicio(LocalDate.now())
+                .fechaVencimiento(LocalDate.now().plusMonths(1))
+                .precioLista(new BigDecimal("10000.00"))
+                .saldoPendiente(BigDecimal.ZERO)
+                .estado(EstadoMembresia.ACTIVA)
+                .build();
+
+        when(membresiaRepository.findById(20L)).thenReturn(Optional.of(membresia));
+        when(pagoRepository.findByMembresiaId(20L)).thenReturn(List.of());
+
+        MembresiaResponse response = membresiaService.obtenerPorId(20L);
+
+        assertThat(response.getSaldoPendiente()).isEqualByComparingTo("10000.00");
+        assertThat(response.getEstado()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
     }
 
     private SocioEntity socio() {

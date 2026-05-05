@@ -88,6 +88,9 @@ public class MembresiaController {
 
     private boolean puedeVerDatosFinancieros(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority ->
+                        "ROLE_ADMIN".equals(authority.getAuthority())
+                                || "ROLE_STAFF".equals(authority.getAuthority())
+                );
     }
 }

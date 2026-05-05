@@ -150,6 +150,9 @@ export function buildSocioAsistenciaLookup(
     .filter((membresia) => membresia.estadoVisual === 'ACTIVA' || membresia.estadoVisual === 'PENDIENTE_PAGO')
     .sort((left, right) => (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? ''))[0] ?? null;
   const tieneSaldoPendiente = (membresiaVigente?.saldoPendiente ?? 0) > 0;
+  const membresiaSinPagoRegistrado =
+    (membresiaVigente?.precioLista ?? 0) > 0
+    && (membresiaVigente?.saldoPendiente ?? 0) >= (membresiaVigente?.precioLista ?? 0);
   const tieneMembresiaAsignada = membresias.length > 0;
 
   let mensajeRecepcion: string | null = null;
@@ -160,6 +163,8 @@ export function buildSocioAsistenciaLookup(
     mensajeRecepcion = 'El socio tiene una asistencia abierta. Podes registrar la salida.';
   } else if (!tieneMembresiaAsignada) {
     mensajeRecepcion = 'El socio no tiene una membresia asignada. Crea una membresia antes de registrar la entrada.';
+  } else if (membresiaSinPagoRegistrado) {
+    mensajeRecepcion = 'Puede ingresar, pero la membresia fue creada sin pago registrado.';
   } else if (tieneSaldoPendiente) {
     mensajeRecepcion = 'Puede ingresar, pero tiene un saldo pendiente en su membresia.';
   } else {
@@ -175,7 +180,10 @@ export function buildSocioAsistenciaLookup(
     estadoMembresia: membresiaVigente?.estadoVisual ?? membresiaReferencia?.estadoVisual ?? null,
     saldoPendienteMembresia: membresiaVigente?.saldoPendiente ?? null,
     tieneSaldoPendiente,
-    puedeRegistrarEntrada: socio.estado === 'ACTIVO' && tieneMembresiaAsignada && !asistenciaAbierta,
+    membresiaSinPagoRegistrado,
+    puedeRegistrarEntrada: socio.estado === 'ACTIVO'
+      && tieneMembresiaAsignada
+      && !asistenciaAbierta,
     puedeRegistrarSalida: !!asistenciaAbierta
   };
 }

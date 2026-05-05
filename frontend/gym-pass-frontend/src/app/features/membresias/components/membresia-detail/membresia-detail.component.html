@@ -96,16 +96,14 @@
           <span class="label">Estado</span>
           <strong>{{ currentMembresia.estadoVisual }}</strong>
         </div>
-        @if (isAdmin()) {
-          <div>
-            <span class="label">Precio lista</span>
-            <strong>{{ (currentMembresia.precioLista ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
-          </div>
-          <div>
-            <span class="label">Saldo pendiente</span>
-            <strong>{{ (currentMembresia.saldoPendiente ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
-          </div>
-        }
+        <div>
+          <span class="label">Precio lista</span>
+          <strong>{{ (currentMembresia.precioLista ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </div>
+        <div>
+          <span class="label">Saldo pendiente</span>
+          <strong>{{ (currentMembresia.saldoPendiente ?? 0) | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
+        </div>
       </div>
     </mat-card>
   }

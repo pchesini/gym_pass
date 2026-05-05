@@ -223,11 +223,25 @@
       </div>
 
       @if (currentSocio.tieneSaldoPendiente && currentSocio.membresiaId) {
-        <div class="admin-actions-section">
+        <div class="admin-actions-section" [class.admin-actions-section--required]="currentSocio.membresiaSinPagoRegistrado">
           <div class="admin-actions-section__header">
-            <span class="label">Accion administrativa</span>
-            <strong>La membresia registra saldo pendiente.</strong>
-            <p>Usa esta accion solo cuando quieras registrar el pago del socio.</p>
+            <span class="label">
+              {{ currentSocio.membresiaSinPagoRegistrado ? 'Saldo pendiente total' : 'Accion administrativa' }}
+            </span>
+            <strong>
+              @if (currentSocio.membresiaSinPagoRegistrado) {
+                La membresia fue creada sin pago registrado.
+              } @else {
+                La membresia registra saldo pendiente.
+              }
+            </strong>
+            <p>
+              @if (currentSocio.membresiaSinPagoRegistrado) {
+                El socio puede ingresar, pero aun debe el valor completo de la membresia.
+              } @else {
+                Usa esta accion solo cuando quieras registrar el pago del socio.
+              }
+            </p>
           </div>
 
           <button
