@@ -144,6 +144,37 @@
   background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
 }
 
+.required-membership-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.15rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid #f59e0b;
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  box-shadow: 0 14px 28px rgba(245, 158, 11, 0.14);
+}
+
+.required-membership-card mat-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 36px;
+  color: #b45309;
+}
+
+.required-membership-card strong {
+  display: block;
+  color: #78350f;
+}
+
+.required-membership-card p,
+.admin-actions-section p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
 .label {
   display: block;
   margin-bottom: 0.35rem;
@@ -157,6 +188,22 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, max-content));
   gap: 1rem;
+}
+
+.admin-actions-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  border: 1px dashed #93c5fd;
+  background: #f8fafc;
+}
+
+.admin-actions-section__header strong {
+  display: block;
+  color: #1e3a8a;
 }
 
 .results-list {
@@ -214,6 +261,8 @@
   .search-form,
   .meta-grid,
   .access-blocked-card__grid,
+  .required-membership-card,
+  .admin-actions-section,
   .action-row {
     grid-template-columns: 1fr;
   }

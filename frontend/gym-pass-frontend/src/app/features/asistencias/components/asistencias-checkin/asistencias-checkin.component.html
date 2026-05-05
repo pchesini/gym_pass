@@ -114,6 +114,27 @@
         <mat-chip [class]="statusChipClass()">{{ currentSocio.socio.estado }}</mat-chip>
       </div>
 
+      @if (shouldShowCrearMembresia(currentSocio)) {
+        <div class="required-membership-card">
+          <mat-icon>card_membership</mat-icon>
+          <div class="required-membership-card__content">
+            <span class="label">Membresia requerida</span>
+            <strong>Este socio no tiene una membresia asignada.</strong>
+            <p>Para registrar la entrada primero crea una membresia para el socio.</p>
+          </div>
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="actionLoading() !== null"
+            (click)="crearMembresiaSocio()"
+          >
+            Crear membresia
+          </button>
+        </div>
+      }
+
       <div class="meta-grid">
         <div>
           <span class="label">DNI</span>
@@ -173,18 +194,6 @@
           </button>
         }
 
-        @if (currentSocio.tieneSaldoPendiente && currentSocio.membresiaId) {
-          <button
-            mat-stroked-button
-            type="button"
-            [disabled]="actionLoading() !== null"
-            (click)="registrarPagoSocio()"
-          >
-            <mat-icon>payments</mat-icon>
-            Registrar pago
-          </button>
-        }
-
         <button
           mat-flat-button
           color="primary"
@@ -212,6 +221,26 @@
           }
         </button>
       </div>
+
+      @if (currentSocio.tieneSaldoPendiente && currentSocio.membresiaId) {
+        <div class="admin-actions-section">
+          <div class="admin-actions-section__header">
+            <span class="label">Accion administrativa</span>
+            <strong>La membresia registra saldo pendiente.</strong>
+            <p>Usa esta accion solo cuando quieras registrar el pago del socio.</p>
+          </div>
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="actionLoading() !== null"
+            (click)="registrarPagoSocio()"
+          >
+            <mat-icon>payments</mat-icon>
+            Registrar pago
+          </button>
+        </div>
+      }
     </div>
   } @else if (resultados().length) {
     <div class="results-list">

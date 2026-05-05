@@ -313,6 +313,28 @@ export class AsistenciasCheckinComponent {
     );
   }
 
+  protected crearMembresiaSocio(): void {
+    const currentSocio = this.socio();
+
+    if (!currentSocio) {
+      return;
+    }
+
+    void this.router.navigate(['/membresias/nueva'], {
+      queryParams: {
+        socioId: currentSocio.socio.id
+      }
+    });
+  }
+
+  protected shouldShowCrearMembresia(
+    currentSocio: SocioAsistenciaLookup
+  ): boolean {
+    return currentSocio.socio.estado === 'ACTIVO'
+      && currentSocio.membresiaId === null
+      && currentSocio.estadoMembresia === null;
+  }
+
   private navegarARegistroPago(
     socioId: number,
     membresiaId: number,

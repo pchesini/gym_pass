@@ -92,7 +92,7 @@ public class AsistenciaService {
         List<MembresiaEntity> membresias = membresiaRepository.findBySocioId(request.getSocioId());
 
         if (membresias.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia vigente");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El socio no tiene una membresia asignada");
         }
 
         boolean permiteIngreso = membresias.stream()

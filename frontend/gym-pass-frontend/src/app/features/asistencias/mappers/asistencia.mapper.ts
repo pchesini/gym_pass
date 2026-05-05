@@ -143,10 +143,14 @@ export function buildSocioAsistenciaLookup(
   );
   const asistenciaAbierta = sortedAsistencias.find((asistencia) => asistencia.estado === 'ABIERTA') ?? null;
   const ultimaAsistencia = sortedAsistencias[0] ?? null;
+  const membresiaReferencia = [...membresias]
+    .filter((membresia) => membresia.estadoVisual !== 'CANCELADA')
+    .sort((left, right) => (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? ''))[0] ?? null;
   const membresiaVigente = [...membresias]
     .filter((membresia) => membresia.estadoVisual === 'ACTIVA' || membresia.estadoVisual === 'PENDIENTE_PAGO')
     .sort((left, right) => (right.fechaVencimiento ?? '').localeCompare(left.fechaVencimiento ?? ''))[0] ?? null;
   const tieneSaldoPendiente = (membresiaVigente?.saldoPendiente ?? 0) > 0;
+  const tieneMembresiaAsignada = membresias.length > 0;
 
   let mensajeRecepcion: string | null = null;
 
@@ -154,6 +158,8 @@ export function buildSocioAsistenciaLookup(
     mensajeRecepcion = 'El socio esta inactivo y no puede registrar asistencia.';
   } else if (asistenciaAbierta) {
     mensajeRecepcion = 'El socio tiene una asistencia abierta. Podes registrar la salida.';
+  } else if (!tieneMembresiaAsignada) {
+    mensajeRecepcion = 'El socio no tiene una membresia asignada. Crea una membresia antes de registrar la entrada.';
   } else if (tieneSaldoPendiente) {
     mensajeRecepcion = 'Puede ingresar, pero tiene un saldo pendiente en su membresia.';
   } else {
@@ -165,11 +171,11 @@ export function buildSocioAsistenciaLookup(
     asistenciaAbierta,
     ultimaAsistencia,
     mensajeRecepcion,
-    membresiaId: membresiaVigente?.id ?? null,
-    estadoMembresia: membresiaVigente?.estadoVisual ?? null,
+    membresiaId: membresiaVigente?.id ?? membresiaReferencia?.id ?? null,
+    estadoMembresia: membresiaVigente?.estadoVisual ?? membresiaReferencia?.estadoVisual ?? null,
     saldoPendienteMembresia: membresiaVigente?.saldoPendiente ?? null,
     tieneSaldoPendiente,
-    puedeRegistrarEntrada: socio.estado === 'ACTIVO' && !asistenciaAbierta,
+    puedeRegistrarEntrada: socio.estado === 'ACTIVO' && tieneMembresiaAsignada && !asistenciaAbierta,
     puedeRegistrarSalida: !!asistenciaAbierta
   };
 }

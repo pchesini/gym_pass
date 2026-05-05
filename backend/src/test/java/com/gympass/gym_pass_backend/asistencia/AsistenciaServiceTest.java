@@ -132,6 +132,24 @@ class AsistenciaServiceTest {
     }
 
     @Test
+    void registrarEntradaBloqueaCuandoElSocioNoTieneMembresiaAsignada() {
+        SocioEntity socio = socio();
+        AsistenciaCrearRequest request = new AsistenciaCrearRequest();
+        request.setSocioId(1L);
+        request.setCredencialId(100L);
+        request.setTipoRegistro(TipoRegistroAsistencia.STAFF);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findBySocioId(1L)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> asistenciaService.registrarEntrada(request))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getReason()).isEqualTo("El socio no tiene una membresia asignada")
+                );
+        verify(asistenciaRepository, never()).save(any(AsistenciaEntity.class));
+    }
+
+    @Test
     void obtenerResumenDevuelveRankingDeSociosPorAsistencias() {
         LocalDate desde = LocalDate.of(2026, 5, 1);
         LocalDate hasta = LocalDate.of(2026, 5, 3);
