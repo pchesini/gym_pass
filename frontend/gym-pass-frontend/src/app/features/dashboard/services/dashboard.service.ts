@@ -217,6 +217,15 @@ export class DashboardService {
             const montoCobradoHoy = pagosHoy.reduce((total, pago) => total + pago.monto, 0);
             const montoCobradoMes = pagosMes.reduce((total, pago) => total + pago.monto, 0);
             const mesReferencia = formatMonthLabel(today);
+            const sociosConMembresia = new Set(
+              membresias
+                .map((membresia) => membresia.socioId)
+                .filter((socioId): socioId is number => socioId !== null)
+            );
+            const sociosSinMembresia = socios.filter(
+              (socio) => socio.estado === 'ACTIVO' && !sociosConMembresia.has(socio.id)
+            );
+            const sociosActivosSinMembresia = sociosSinMembresia.length;
             const membresiasActivas = membresias.filter(
               (membresia) => membresia.estadoVisual === 'ACTIVA'
             ).length;
@@ -323,6 +332,11 @@ export class DashboardService {
                 label: 'Canceladas',
                 value: membresiasCanceladas.toString(),
                 helper: 'Bajas manuales.'
+              },
+              {
+                label: 'Sin membresia',
+                value: sociosActivosSinMembresia.toString(),
+                helper: 'Socios activos sin membresia cargada.'
               }
             ];
 
@@ -448,6 +462,7 @@ export class DashboardService {
               totalSocios: socios.length,
               sociosActivos,
               sociosInactivos,
+              sociosActivosSinMembresia,
               membresiasActivas,
               membresiasPendientesPago,
               membresiasVencidas,
@@ -462,6 +477,7 @@ export class DashboardService {
               asistenciasMesAnterior: resumenAsistencias.totalAsistencias,
               sociosActivosSinAsistenciaMesAnterior: resumenAsistencias.sociosActivosSinAsistencia,
               asistenciasAbiertasHoy,
+              sociosSinMembresia,
               membresiasPorVencer,
               membresiasConDeuda,
               ultimosPagos,

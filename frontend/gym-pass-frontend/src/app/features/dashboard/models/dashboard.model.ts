@@ -34,6 +34,7 @@ export interface DashboardSummaryViewModel {
   totalSocios: number;
   sociosActivos: number;
   sociosInactivos: number;
+  sociosActivosSinMembresia: number;
   membresiasActivas: number;
   membresiasPendientesPago: number;
   membresiasVencidas: number;
@@ -48,6 +49,7 @@ export interface DashboardSummaryViewModel {
   asistenciasMesAnterior: number;
   sociosActivosSinAsistenciaMesAnterior: number;
   asistenciasAbiertasHoy: number;
+  sociosSinMembresia: SocioViewModel[];
   membresiasPorVencer: MembresiaViewModel[];
   membresiasConDeuda: MembresiaViewModel[];
   ultimosPagos: PagoViewModel[];

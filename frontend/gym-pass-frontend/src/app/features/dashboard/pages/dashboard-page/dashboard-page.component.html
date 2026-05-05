@@ -99,6 +99,37 @@
         </div>
 
         <div class="panel-grid panel-grid--alerts">
+          <mat-card appearance="outlined" class="panel-card panel-card--info">
+            <div class="panel-header">
+              <div>
+                <span class="eyebrow">Sin membresia</span>
+                <h3>Socios activos sin membresia</h3>
+              </div>
+            </div>
+
+            @if (!currentSummary.sociosSinMembresia.length) {
+              <p class="panel-empty">Todos los socios activos tienen al menos una membresia cargada.</p>
+            } @else {
+              <div class="list-grid">
+                @for (socio of currentSummary.sociosSinMembresia; track trackBySocioId($index, socio)) {
+                  <article class="list-item list-item--info">
+                    <strong>{{ socio.nombreCompleto }}</strong>
+                    <span>DNI: {{ socio.dni ?? 'No disponible' }}</span>
+                    <span>Telefono: {{ socio.telefono ?? 'No disponible' }}</span>
+                    <a
+                      mat-stroked-button
+                      [routerLink]="['/membresias/nueva']"
+                      [queryParams]="{ socioId: socio.id }"
+                    >
+                      <mat-icon>add</mat-icon>
+                      Crear membresia
+                    </a>
+                  </article>
+                }
+              </div>
+            }
+          </mat-card>
+
           <mat-card appearance="outlined" class="panel-card panel-card--warning">
             <div class="panel-header">
               <div>

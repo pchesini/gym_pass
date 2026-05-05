@@ -167,6 +167,10 @@
   border-top: 4px solid #f59e0b;
 }
 
+.panel-card--info {
+  border-top: 4px solid #2563eb;
+}
+
 .panel-card--danger {
   border-top: 4px solid #ef4444;
 }
@@ -174,6 +178,16 @@
 .list-item--warning {
   border-color: #fed7aa;
   background: #fff7ed;
+}
+
+.list-item--info {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.list-item a {
+  justify-self: start;
+  margin-top: 0.4rem;
 }
 
 .due-date-box {
