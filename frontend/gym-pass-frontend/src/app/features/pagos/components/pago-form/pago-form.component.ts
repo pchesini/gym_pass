@@ -167,7 +167,9 @@ export class PagoFormComponent {
               next: ({ membresia }) => {
                 this.membresiaContext.set(membresia);
 
-                if (membresia?.saldoPendiente !== null && membresia?.saldoPendiente !== undefined) {
+                const montoPrecargado = this.route.snapshot.queryParamMap.has('monto');
+
+                if (!montoPrecargado && membresia?.saldoPendiente !== null && membresia?.saldoPendiente !== undefined) {
                   this.form.patchValue({
                     monto: membresia.saldoPendiente
                   });

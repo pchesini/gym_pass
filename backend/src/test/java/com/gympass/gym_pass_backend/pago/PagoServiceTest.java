@@ -193,7 +193,7 @@ class PagoServiceTest {
         assertThat(deudores.get(0).getSocioNombre()).isEqualTo("Socio Test");
         assertThat(deudores.get(0).getSocioDni()).isEqualTo("12345678");
         assertThat(deudores.get(0).getMembresiaId()).isEqualTo(11L);
-        assertThat(deudores.get(0).getSaldoPendiente()).isEqualByComparingTo("0.00");
+        assertThat(deudores.get(0).getSaldoPendiente()).isEqualByComparingTo("10000.00");
         assertThat(deudores.get(0).getEstadoMembresia()).isEqualTo(EstadoMembresia.VENCIDA);
         assertThat(deudores.get(1).getMembresiaId()).isEqualTo(10L);
         assertThat(deudores.get(1).getSaldoPendiente()).isEqualByComparingTo("10000.00");

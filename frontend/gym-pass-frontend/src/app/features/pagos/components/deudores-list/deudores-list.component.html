@@ -25,7 +25,7 @@
         <strong>{{ totalVencidas() }}</strong>
       </article>
       <article class="summary-item">
-        <span class="summary-label">Saldo pendiente total</span>
+        <span class="summary-label">Total a cobrar</span>
         <strong>{{ totalPendiente() | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
       </article>
     </div>
@@ -83,7 +83,7 @@
         </ng-container>
 
         <ng-container matColumnDef="saldoPendiente">
-          <th mat-header-cell *matHeaderCellDef>Saldo pendiente</th>
+          <th mat-header-cell *matHeaderCellDef>Saldo a cobrar</th>
           <td mat-cell *matCellDef="let deudor">
             <strong>{{ deudor.saldoPendiente | currency: 'ARS' : 'symbol' : '1.0-0' }}</strong>
           </td>

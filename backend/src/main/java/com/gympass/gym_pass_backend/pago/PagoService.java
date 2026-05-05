@@ -252,7 +252,7 @@ public class PagoService {
         response.setMembresiaId(membresia.getId());
         response.setFechaVencimiento(membresia.getFechaVencimiento());
         response.setEstadoMembresia(estaVencida(membresia) ? EstadoMembresia.VENCIDA : membresia.getEstado());
-        response.setSaldoPendiente(membresia.getSaldoPendiente());
+        response.setSaldoPendiente(obtenerSaldoACobrar(membresia));
         return response;
     }
 
