@@ -60,6 +60,7 @@ public class PagoService {
 
         MembresiaEntity membresia = obtenerMembresiaParaPago(request, socio);
         if (membresia != null) {
+            syncSaldoPendienteSinPago(membresia);
             validarMontoContraSaldoPendiente(membresia, montoPago);
         }
 
@@ -213,6 +214,22 @@ public class PagoService {
         return membresia.getEstado() == EstadoMembresia.VENCIDA
                 || membresia.getFechaVencimiento() != null
                 && membresia.getFechaVencimiento().isBefore(LocalDate.now());
+    }
+
+    private void syncSaldoPendienteSinPago(MembresiaEntity membresia) {
+        if (membresia.getId() == null
+                || membresia.getPrecioLista() == null
+                || membresia.getPrecioLista().compareTo(BigDecimal.ZERO) <= 0
+                || membresia.getSaldoPendiente() == null
+                || membresia.getSaldoPendiente().compareTo(BigDecimal.ZERO) != 0
+                || !pagoRepository.findByMembresiaId(membresia.getId()).isEmpty()) {
+            return;
+        }
+
+        membresia.setSaldoPendiente(normalizeMoney(membresia.getPrecioLista()));
+        if (membresia.getEstado() != EstadoMembresia.CANCELADA && !estaVencida(membresia)) {
+            membresia.setEstado(EstadoMembresia.PENDIENTE_PAGO);
+        }
     }
 
     private void renovarPeriodoVencido(MembresiaEntity membresia) {

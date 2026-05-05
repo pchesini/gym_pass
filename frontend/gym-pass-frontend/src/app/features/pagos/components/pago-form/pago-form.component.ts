@@ -246,7 +246,22 @@ export class PagoFormComponent {
 
   private resolveErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
-      return error.error?.message ?? 'No se pudo procesar la informacion del pago.';
+      if (error.status === 401) {
+        return 'Tu sesion vencio o no esta activa. Inicia sesion nuevamente para registrar el pago.';
+      }
+
+      if (error.status === 403) {
+        return 'Tu usuario no tiene permiso para registrar pagos.';
+      }
+
+      if (typeof error.error === 'string' && error.error.trim()) {
+        return error.error;
+      }
+
+      return error.error?.message
+        ?? error.error?.reason
+        ?? error.message
+        ?? 'No se pudo procesar la informacion del pago.';
     }
 
     return 'Ocurrio un error inesperado al procesar la solicitud.';

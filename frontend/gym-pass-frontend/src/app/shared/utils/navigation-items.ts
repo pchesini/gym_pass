@@ -5,5 +5,5 @@ export const navigationItems: NavItem[] = [
   { label: 'Socios', route: '/socios', roles: ['ADMIN', 'STAFF'] },
   { label: 'Asistencias', route: '/asistencias', roles: ['ADMIN', 'STAFF'] },
   { label: 'Membresias', route: '/membresias', roles: ['ADMIN', 'STAFF'] },
-  { label: 'Pagos', route: '/pagos', roles: ['ADMIN'] }
+  { label: 'Pagos', route: '/pagos', roles: ['ADMIN', 'STAFF'] }
 ];

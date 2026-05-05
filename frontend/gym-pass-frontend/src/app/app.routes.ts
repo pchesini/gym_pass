@@ -51,7 +51,7 @@ export const routes: Routes = [
       },
       {
         path: 'pagos',
-        canActivate: [roleGuard(['ADMIN'])],
+        canActivate: [roleGuard(['ADMIN', 'STAFF'])],
         loadChildren: () => import('./features/pagos/pagos.routes').then((m) => m.pagosRoutes)
       }
     ]

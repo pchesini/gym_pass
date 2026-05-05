@@ -77,6 +77,43 @@ class PagoServiceTest {
     }
 
     @Test
+    void crearPagoParcialCorrigeMembresiaSinPagoGuardadaSinSaldo() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = membresia(socio);
+        membresia.setSaldoPendiente(BigDecimal.ZERO);
+        membresia.setEstado(EstadoMembresia.ACTIVA);
+        PagoCrearRequest request = pagoRequest(new BigDecimal("4000"));
+        request.setMembresiaId(10L);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findById(10L)).thenReturn(Optional.of(membresia));
+        when(pagoRepository.findByMembresiaId(10L)).thenReturn(List.of());
+        when(pagoRepository.save(any(PagoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        pagoService.crearPago(request);
+
+        assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("6000.00");
+        assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
+    }
+
+    @Test
+    void crearPagoParcialMantieneSaldoPendienteRestante() {
+        SocioEntity socio = socio();
+        MembresiaEntity membresia = membresia(socio);
+        PagoCrearRequest request = pagoRequest(new BigDecimal("4000"));
+        request.setMembresiaId(10L);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(membresiaRepository.findById(10L)).thenReturn(Optional.of(membresia));
+        when(pagoRepository.save(any(PagoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        pagoService.crearPago(request);
+
+        assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("6000.00");
+        assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
+    }
+
+    @Test
     void crearPagoSinMembresiaIdAsociaLaMembresiaMasRecienteDelSocio() {
         SocioEntity socio = socio();
         MembresiaEntity membresiaAnterior = membresia(socio);

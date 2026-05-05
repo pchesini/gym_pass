@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/pagos/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/pagos/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STAFF")
                         .requestMatchers(HttpMethod.POST, "/api/membresias/alta-con-pago").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/socios/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STAFF")
                         .requestMatchers("/api/asistencias/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STAFF")
