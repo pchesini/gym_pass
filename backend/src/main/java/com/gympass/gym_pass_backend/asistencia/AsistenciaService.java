@@ -427,10 +427,8 @@ public class AsistenciaService {
         EstadoMembresia estadoMembresia = membresiaReferencia != null
                 ? membresiaEstadoResolver.resolveEstadoAutomatico(membresiaReferencia)
                 : null;
-        BigDecimal saldoPendiente = membresiaReferencia != null && membresiaReferencia.getSaldoPendiente() != null
-                ? membresiaReferencia.getSaldoPendiente()
-                : BigDecimal.ZERO;
         boolean membresiaVencida = estadoMembresia == EstadoMembresia.VENCIDA;
+        BigDecimal saldoPendiente = obtenerSaldoAAbonarParaIngreso(membresiaReferencia, membresiaVencida);
         boolean tieneSaldoPendiente = saldoPendiente.compareTo(BigDecimal.ZERO) > 0;
 
         return new AsistenciaAccesoBloqueadoException(
@@ -457,6 +455,25 @@ public class AsistenciaService {
             return "No se puede registrar asistencia porque la membresia registra saldo pendiente";
         }
         return "El socio no tiene una membresia habilitada para registrar asistencia";
+    }
+
+    private BigDecimal obtenerSaldoAAbonarParaIngreso(
+            MembresiaEntity membresia,
+            boolean membresiaVencida
+    ) {
+        if (membresia == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (membresiaVencida) {
+            return membresia.getPrecioLista() != null
+                    ? membresia.getPrecioLista()
+                    : BigDecimal.ZERO;
+        }
+
+        return membresia.getSaldoPendiente() != null
+                ? membresia.getSaldoPendiente()
+                : BigDecimal.ZERO;
     }
 
     private record FranjaHoraria(String label, LocalTime desde, LocalTime hasta) {

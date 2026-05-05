@@ -75,7 +75,7 @@ class AsistenciaServiceTest {
                     assertThat(exception.getMembresiaId()).isEqualTo(10L);
                     assertThat(exception.getEstadoMembresia()).isEqualTo(EstadoMembresia.VENCIDA);
                     assertThat(exception.getFechaVencimiento()).isEqualTo(LocalDate.now().minusDays(1));
-                    assertThat(exception.getSaldoPendiente()).isEqualByComparingTo("5000.00");
+                    assertThat(exception.getSaldoPendiente()).isEqualByComparingTo("10000.00");
                     assertThat(exception.isMembresiaVencida()).isTrue();
                     assertThat(exception.isTieneSaldoPendiente()).isTrue();
                 });
