@@ -65,8 +65,8 @@ export class SocioFormComponent {
   );
   protected readonly pageDescription = computed(() =>
     this.isEditMode()
-      ? 'Actualiza los datos principales del socio segun el contrato real del backend.'
-      : 'Registra un nuevo socio con los datos disponibles actualmente en la API.'
+      ? 'Actualiza los datos principales del socio.'
+      : 'Registra un nuevo socio con la informacion necesaria para operar en recepcion.'
   );
   protected readonly form = this.formBuilder.group({
     nombre: ['', [Validators.required, Validators.maxLength(60)]],

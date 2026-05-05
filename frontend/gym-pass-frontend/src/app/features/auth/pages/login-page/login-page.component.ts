@@ -97,6 +97,6 @@ export class LoginPageComponent {
       return 'Usuario o contraseña incorrectos.';
     }
 
-    return 'No se pudo iniciar sesion. Revisa que el backend este levantado.';
+    return 'No se pudo iniciar sesion. Intenta nuevamente en unos minutos.';
   }
 }

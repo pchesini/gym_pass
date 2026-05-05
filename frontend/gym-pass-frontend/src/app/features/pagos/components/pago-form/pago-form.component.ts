@@ -241,7 +241,7 @@ export class PagoFormComponent {
   protected getPageDescription(): string {
     return this.membresiaContext()
       ? 'Registra un pago asociado a una membresia pendiente, mostrando el saldo actual y el impacto estimado antes de confirmar.'
-      : 'Registra un pago real contra el backend actual. La membresia del socio se asocia automaticamente al confirmar.';
+      : 'Registra un pago del socio. Si corresponde, la membresia se asocia automaticamente al confirmar.';
   }
 
   private resolveErrorMessage(error: unknown): string {

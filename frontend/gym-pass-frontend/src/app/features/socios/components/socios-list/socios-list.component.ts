@@ -170,7 +170,7 @@ export class SociosListComponent {
 
   private resolveErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
-      return error.error?.message ?? 'No se pudo conectar con la API de socios.';
+      return error.error?.message ?? 'No se pudo cargar la informacion de socios.';
     }
 
     return 'Ocurrio un error inesperado al procesar la solicitud.';

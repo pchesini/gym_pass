@@ -422,12 +422,12 @@ export class DashboardService {
               {
                 label: 'Asistencias de hoy',
                 value: asistencias.length.toString(),
-                helper: 'Registros devueltos por la API del dia actual.'
+                helper: 'Registros cargados durante el dia actual.'
               },
               {
                 label: 'Pagos registrados',
                 value: pagos.length.toString(),
-                helper: 'Cantidad total de pagos cargados en backend.'
+                helper: 'Cantidad total de pagos cargados.'
               },
               {
                 label: 'Monto total cobrado',

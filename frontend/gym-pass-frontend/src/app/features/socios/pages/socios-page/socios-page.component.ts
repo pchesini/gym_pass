@@ -9,7 +9,7 @@ import { FeaturePlaceholderComponent } from '../../../../shared/components/featu
   template: `
     <app-feature-placeholder
       title="Socios"
-      description="Modulo preparado para administrar altas, bajas, estados y futuras integraciones con membresias y pagos."
+      description="Administra altas, bajas y estados de los socios."
     />
   `
 })

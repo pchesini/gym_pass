@@ -103,7 +103,7 @@ export class MembresiaFormComponent {
   protected readonly pageDescription = computed(() =>
     this.isEditMode()
       ? 'Actualiza fechas, precio y saldo de una membresia ya asignada a un socio.'
-      : 'Crea una nueva membresia vinculada a un socio real del sistema.'
+      : 'Crea una nueva membresia vinculada a un socio.'
   );
   protected readonly form = this.formBuilder.group({
     socioId: [null as number | null, [Validators.required]],
