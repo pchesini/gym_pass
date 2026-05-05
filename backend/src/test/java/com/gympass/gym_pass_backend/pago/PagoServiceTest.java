@@ -105,8 +105,9 @@ class PagoServiceTest {
     void crearPagoAsociadoCancelaSaldoRenuevaYActivaMembresiaVencida() {
         SocioEntity socio = socio();
         MembresiaEntity membresia = membresia(socio);
-        membresia.setFechaInicio(LocalDate.now().minusMonths(2));
-        membresia.setFechaVencimiento(LocalDate.now().minusMonths(1));
+        LocalDate vencimientoAnterior = LocalDate.now().minusMonths(1);
+        membresia.setFechaInicio(vencimientoAnterior.minusMonths(1).plusDays(1));
+        membresia.setFechaVencimiento(vencimientoAnterior);
         membresia.setEstado(EstadoMembresia.VENCIDA);
         PagoCrearRequest request = pagoRequest(new BigDecimal("10000"));
         request.setMembresiaId(10L);
@@ -119,16 +120,17 @@ class PagoServiceTest {
 
         assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.ACTIVA);
-        assertThat(membresia.getFechaInicio()).isEqualTo(LocalDate.now());
-        assertThat(membresia.getFechaVencimiento()).isAfter(LocalDate.now());
+        assertThat(membresia.getFechaInicio()).isEqualTo(vencimientoAnterior.plusDays(1));
+        assertThat(membresia.getFechaVencimiento()).isEqualTo(vencimientoAnterior.plusMonths(1));
     }
 
     @Test
     void crearPagoPermiteRenovarMembresiaVencidaSinSaldoPendiente() {
         SocioEntity socio = socio();
         MembresiaEntity membresia = membresia(socio);
-        membresia.setFechaInicio(LocalDate.now().minusMonths(2));
-        membresia.setFechaVencimiento(LocalDate.now().minusMonths(1));
+        LocalDate vencimientoAnterior = LocalDate.now().minusMonths(1);
+        membresia.setFechaInicio(vencimientoAnterior.minusMonths(1).plusDays(1));
+        membresia.setFechaVencimiento(vencimientoAnterior);
         membresia.setSaldoPendiente(BigDecimal.ZERO);
         membresia.setEstado(EstadoMembresia.VENCIDA);
         PagoCrearRequest request = pagoRequest(new BigDecimal("10000"));
@@ -142,16 +144,17 @@ class PagoServiceTest {
 
         assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.ACTIVA);
-        assertThat(membresia.getFechaInicio()).isEqualTo(LocalDate.now());
-        assertThat(membresia.getFechaVencimiento()).isAfter(LocalDate.now());
+        assertThat(membresia.getFechaInicio()).isEqualTo(vencimientoAnterior.plusDays(1));
+        assertThat(membresia.getFechaVencimiento()).isEqualTo(vencimientoAnterior.plusMonths(1));
     }
 
     @Test
     void crearPagoParcialDeMembresiaVencidaCalculaSaldoContraPrecioLista() {
         SocioEntity socio = socio();
         MembresiaEntity membresia = membresia(socio);
-        membresia.setFechaInicio(LocalDate.now().minusMonths(2));
-        membresia.setFechaVencimiento(LocalDate.now().minusMonths(1));
+        LocalDate vencimientoAnterior = LocalDate.now().minusMonths(1);
+        membresia.setFechaInicio(vencimientoAnterior.minusMonths(1).plusDays(1));
+        membresia.setFechaVencimiento(vencimientoAnterior);
         membresia.setSaldoPendiente(BigDecimal.ZERO);
         membresia.setEstado(EstadoMembresia.VENCIDA);
         PagoCrearRequest request = pagoRequest(new BigDecimal("4000"));
@@ -165,8 +168,8 @@ class PagoServiceTest {
 
         assertThat(membresia.getSaldoPendiente()).isEqualByComparingTo("6000.00");
         assertThat(membresia.getEstado()).isEqualTo(EstadoMembresia.PENDIENTE_PAGO);
-        assertThat(membresia.getFechaInicio()).isEqualTo(LocalDate.now());
-        assertThat(membresia.getFechaVencimiento()).isAfter(LocalDate.now());
+        assertThat(membresia.getFechaInicio()).isEqualTo(vencimientoAnterior.plusDays(1));
+        assertThat(membresia.getFechaVencimiento()).isEqualTo(vencimientoAnterior.plusMonths(1));
     }
 
     @Test

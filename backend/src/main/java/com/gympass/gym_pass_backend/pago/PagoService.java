@@ -17,7 +17,6 @@ import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -217,19 +216,15 @@ public class PagoService {
     }
 
     private void renovarPeriodoVencido(MembresiaEntity membresia) {
-        LocalDate nuevoInicio = LocalDate.now();
-        LocalDate fechaInicioAnterior = membresia.getFechaInicio();
         LocalDate fechaVencimientoAnterior = membresia.getFechaVencimiento();
-        long duracionDias = 0;
-
-        if (fechaInicioAnterior != null && fechaVencimientoAnterior != null) {
-            duracionDias = ChronoUnit.DAYS.between(fechaInicioAnterior, fechaVencimientoAnterior);
-        }
+        LocalDate nuevoInicio = fechaVencimientoAnterior != null
+                ? fechaVencimientoAnterior.plusDays(1)
+                : LocalDate.now();
 
         membresia.setFechaInicio(nuevoInicio);
         membresia.setFechaVencimiento(
-                duracionDias > 0
-                        ? nuevoInicio.plusDays(duracionDias)
+                fechaVencimientoAnterior != null
+                        ? fechaVencimientoAnterior.plusMonths(1)
                         : nuevoInicio.plusMonths(1)
         );
     }
